@@ -1,0 +1,66 @@
+<!DOCTYPE html "-//W3C//DTD XHTML 1.0 Strict//EN"
+	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>DBJ GPS Testbed</title>
+    <script type="text/javascript"
+	    src="http://maps.google.com/maps/api/js?sensor=false&callback;=initialize"></script>
+    
+    <script type="text/javascript">
+      var polyline;
+      var map;
+      var _fixes = new Array();
+
+      {% for fix in fixes %}
+        _fixes.push(new google.maps.LatLng({{fix[2]}}, {{fix[1]}}));
+      {% end %}
+
+      //initMap()函数，将地图程序加入页面
+      function initMap() {
+        //在ID为"Gmap"的层内显示地图
+        var myOptions = {
+          zoom: 13,
+          center: _fixes[0],
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+
+        map = new google.maps.Map(document.getElementById("map_canvas"),
+                                  myOptions);
+
+
+
+        for (var i in _fixes) {
+            var markerPoint = new google.maps.Marker({  
+                               position: _fixes[i],   
+                               title: "todo for geocode",
+ 	                       map: map});
+	    fn_clickMarker(markerPoint, map);
+        }
+
+        var polyline = new google.maps.Polyline({
+			   path: _fixes, //指定线上的点对象数据 
+			   strokeColor: "#FF0000",  
+			   strokeOpacity: 1.0,  
+			   strokeWeight: 2});  
+      
+        polyline.setMap(map);  
+
+      }
+
+      function fn_clickMarker(mPoint, map) {
+        google.maps.event.addListener(mPoint, 'click', function() {  
+			   infowindow = new google.maps.InfoWindow(  
+                              {content: mPoint.getTitle(),
+                               position: mPoint.getPosition()});  
+			   infowindow.open(map);});
+       }
+
+    </script>
+  </head>
+  <body onload="initMap()">
+    <h1>Current Mobile: {{mobile}} <a href="/logout">Logout</a></h1>
+    <hr>
+    <div id="map_canvas" style="width: 100%; height: 100%"></div>
+  </body>
+</html>
