@@ -36,6 +36,7 @@ class Application(tornado.web.Application):
     def __init__(self, debug=False):
         handlers = [
             (r"/gps", GPSHandler),
+            (r"/track/([0-9]*)/([0-9]*)", TrackHandler),
             (r"/login", LoginHandler),
             (r"/logout", LogoutHandler),
             (r"/", MainHandler),
@@ -88,6 +89,19 @@ class MainHandler(BaseHandler):
         fixes = self.db.fetchall()
         print fixes
         self.render("map.html", fixes=fixes, mobile=mobile)
+
+
+class TrackHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self, start, end):
+        mobile = self.current_user
+        print mobile, start, end
+        self.db.execute("SELECT * from gps WHERE mobile=?"
+                        "  AND timestamp BETWEEN ? AND ?"
+                        "  ORDER BY timestamp", (mobile, start, end))
+        fixes = dict(fixes=self.db.fetchall())
+        self.write(fixes)
+
 
 class GPSHandler(BaseHandler):
     def _work(self):
