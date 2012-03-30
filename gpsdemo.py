@@ -3,7 +3,7 @@
 
 import os
 import logging
-
+import time
 import sqlite3
 
 import tornado.httpserver
@@ -76,16 +76,23 @@ class LoginHandler(BaseHandler):
         self.set_secure_cookie("mobile", self.get_argument("mobile"))
         self.redirect("/")
 
+
 class LogoutHandler(BaseHandler):
     def get(self):
         self.clear_cookie("mobile")
         self.redirect("/")
 
+
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         mobile = self.current_user
-        self.db.execute("SELECT * from gps WHERE mobile=? ORDER BY timestamp", (mobile,))
+        current = int(time.time())
+        delta = 5 * 60 * 60
+        self.db.execute("SELECT * from gps WHERE mobile=?"
+                        "  AND timestamp BETWEEN ? AND ?"
+                        "  ORDER BY timestamp",
+                        (mobile, (current - delta), current))
         fixes = self.db.fetchall()
         print fixes
         self.render("map.html", fixes=fixes, mobile=mobile)
@@ -95,11 +102,10 @@ class TrackHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self, start, end):
         mobile = self.current_user
-        print mobile, start, end
         self.db.execute("SELECT * from gps WHERE mobile=?"
                         "  AND timestamp BETWEEN ? AND ?"
                         "  ORDER BY timestamp", (mobile, start, end))
-        fixes = dict(fixes=self.db.fetchall())
+        fixes = tornado.escape.json_encode({"fixes": self.db.fetchall()})
         self.write(fixes)
 
 
