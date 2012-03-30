@@ -94,7 +94,6 @@ class MainHandler(BaseHandler):
                         "  ORDER BY timestamp",
                         (mobile, (current - delta), current))
         fixes = self.db.fetchall()
-        print fixes
         self.render("map.html", fixes=fixes, mobile=mobile)
 
 
