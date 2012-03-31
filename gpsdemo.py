@@ -92,7 +92,7 @@ class MainHandler(BaseHandler):
         self.db.execute("SELECT * from gps WHERE mobile=?"
                         "  AND timestamp BETWEEN ? AND ?"
                         "  ORDER BY timestamp",
-                        (mobile, (current - delta), current))
+                        (mobile, (current - delta), (current + delta)))
         fixes = self.db.fetchall()
         self.render("map.html", fixes=fixes, mobile=mobile)
 
@@ -110,12 +110,20 @@ class TrackHandler(BaseHandler):
 
 class GPSHandler(BaseHandler):
     def _work(self):
-        record = (self.get_argument("mobile", None),
+        record = [self.get_argument("mobile", None),
                   self.get_argument("lon", None),
                   self.get_argument("lat", None),
-                  self.get_argument("timestamp", None))
+                  self.get_argument("timestamp", None)]
         if not all(record):
-            raise HTTPError(400)
+            raise tornado.web.HTTPError(400)
+
+        if (len(record[-1]) != 14):
+            raise tornado.web.HTTPError(400)
+        try:
+            record[-1] = int(time.mktime(time.strptime(record[-1], "%Y%m%d%H%M%S")))
+        except:
+            raise tornado.web.HTTPError(400)
+
         self.db.execute("INSERT INTO gps VALUES(?,?,?,?)",
                         record)
         self.write("OK")
