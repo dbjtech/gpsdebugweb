@@ -1,9 +1,9 @@
 BEGIN TRANSACTION;
-CREATE TABLE gps(
+CREATE TABLE IF NOT EXISTS gps(
        mobile VARCHAR(20) NOT NULL,
-       lon REAL NOT NULL,
        lat REAL NOT NULL,
-       timestamp INTEGER NOT NULL);
+       lon REAL NOT NULL,
+       timestamp TEXT NOT NULL);
 
 CREATE INDEX gps_mobile_idx ON gps(mobile);
 

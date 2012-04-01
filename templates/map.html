@@ -13,10 +13,12 @@
       var map;
       var polyline;
       var _fixes = new Array();
+      var _ts = new Array();
       var _markers = [];
 
       {% for fix in fixes %}
-        _fixes.push(new google.maps.LatLng({{fix[2]}}, {{fix[1]}}));
+        _fixes.push(new google.maps.LatLng({{fix[1]}}, {{fix[2]}}));
+        _ts.push("{{fix[3]}}");
       {% end %}
 
       //initMap()函数，将地图程序加入页面
@@ -31,12 +33,12 @@
         map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
 
         for (var i in _fixes) {
-            var markerPoint = new google.maps.Marker({
-                       position: _fixes[i],
-                       map: map});
-            markerPoint.set("id", i);
-            _markers.push(markerPoint);
-            fn_clickMarker(markerPoint, map, new Date());
+          var markerPoint = new google.maps.Marker({
+                     position: _fixes[i],
+                     map: map});
+          markerPoint.set("id", i);
+          _markers.push(markerPoint);
+          fn_clickMarker(markerPoint, map, _ts[i]);
         }
         fn_drawLine();
 
@@ -49,163 +51,102 @@
 
       function fn_drawLine() {
         if (polyline) {
-            polyline.setMap(null);
+          polyline.setMap(null);
         }
         polyline = new google.maps.Polyline({
-           path: _fixes, //指定线上的点对象数据
+           path: _fixes,
            strokeColor: "#FF0000",
            strokeOpacity: 0.6,
            strokeWeight: 2});
 
-		polyline.setMap(map);
-	  }
+        polyline.setMap(map);
+      }
 
-    // marker点击事件
-    var infowindow = new google.maps.InfoWindow();
-    function fn_clickMarker(mPoint, map, tempDate) {
-		google.maps.event.addListener(mPoint, "click", function() {
-			var geocoder = new google.maps.Geocoder();
-			geocoder.geocode({"latLng": mPoint.getPosition()}, function(results, status) {
-				if (status == google.maps.GeocoderStatus.OK) {
-					if (results[0]) {
-						var str = "Point "+mPoint.get("id")
-							+"<ul><li>Address: "+results[0].formatted_address+"</li>"
-							+"<li>Lng: "+mPoint.getPosition().lng()+"</li>"
-							+"<li>Lat: "+mPoint.getPosition().lat()+"</li>"
-							+"<li>Time: "+tempDate+"</li></ul>";
-						// 填充吹出框内容并显示
-						infowindow.setContent(str);
-						infowindow.open(map, mPoint);
-					}
-				} else {
-					alert("Geocode error: " + status);
-				}
-			});
-		});
-    }
-
-    // locusConfirm
-    function fn_locusConfirm() {
-		var tempDate = $("#locusDate").val();
-		var str_begin = $("#locusBeginSlider").val();
-		var str_end = $("#locusEndSlider").val();
-		var str_locusDate = "/" +fn_changeDateStringToNum(tempDate+" "+str_begin+":00")
-			+ "/" + fn_changeDateStringToNum(tempDate+" "+str_end+":00");
-
-        $.get("/track"+str_locusDate, "", function(data) {
-            var fixes = data.fixes;
-			_fixes = [];
-            if (_markers) {
-                for (i in _markers) {
-                    _markers[i].setMap(null);
-                }
-                _markers.length = 0;
+      var infowindow = new google.maps.InfoWindow();
+      function fn_clickMarker(mPoint, map, tempDate) {
+        google.maps.event.addListener(mPoint, "click", function() {
+          var geocoder = new google.maps.Geocoder();
+          //TODO: cache in title
+          geocoder.geocode({"latLng": mPoint.getPosition()}, function(results, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+              if (results[0]) {
+                var str = "Point "+mPoint.get("id")
+                  +"<ul><li>Address: "+results[0].formatted_address+"</li>"
+                  +"<li>Lng: "+mPoint.getPosition().lng()+"</li>"
+                  +"<li>Lat: "+mPoint.getPosition().lat()+"</li>"
+                  +"<li>Time: "+tempDate+"</li></ul>";
+                // 填充吹出框内容并显示
+                infowindow.setContent(str);
+                infowindow.open(map, mPoint);
+              }
+            } else {
+              alert("Geocode error: " + status);
             }
+          });
+        });
+      }
 
-			if (fixes.length > 0) {
-				for (var i = 0; i < fixes.length; i++) {
-				    _fixes[i] = new google.maps.LatLng(fixes[i][2], fixes[i][1]);
-					var markerPoint = new google.maps.Marker({
-					   position: _fixes[i],
-					   map: map});
-					markerPoint.set("id", i);
-					_markers.push(markerPoint);
-					fn_clickMarker(markerPoint, map, fn_changeNumToDateString(fixes[i][3]*1000));
-				}
-				map.setCenter(_fixes[0]);
-				map.setZoom(12);
-			}
-			fn_drawLine();
-		}, "json");
-    }
-    /**
-    * 转化日期字符串为整数
-    * dateString格式有两种2011-11-11 20:20:20, 20:20
-    * 如果直传第二中小时和分钟，则在使用今天日期构造数据
-    */
-    function fn_changeDateStringToNum(dateString) {
-		var year = "",
-			month = "",
-			day = "",
-			hour = "",
-			min = "",
-			seconds = "00",
-			timeArr = "";
+      function fn_locusConfirm() {
+        var tempDate = $("#locusDate").val().replace(/-/g, "");
+        var str_begin = $("#locusBeginSlider").val().replace(/:/g, "") + "00";
+        var str_end = $("#locusEndSlider").val().replace(/:/g, "") + "00";
+        var str_locusDate = "/track/".concat(tempDate, str_begin) + "/".concat(tempDate, str_end);
 
-		if (dateString.search("-") != -1) {
-			var tmpArr = dateString.split(" "),
-			dateArr = tmpArr[0].split("-");
+        $.get(str_locusDate, "", function(data) {
+          var fixes = data.fixes;
+          _fixes = [];
+          if (_markers) {
+            for (i in _markers) {
+              _markers[i].setMap(null);
+            }
+            _markers.length = 0;
+          }
 
-			year = dateArr[0],
-			month = dateArr[1]-1,
-			day = dateArr[2],
-			timeArr = tmpArr[1].split(":"),
-			hour = timeArr[0],
-			min = timeArr[1],
-			seconds = timeArr[2];
-		} else {
-			var date = new Date();
-			year = date.getFullYear(),
-			month = date.getMonth(),
-			day = date.getDate();
+          if (fixes.length > 0) {
+            for (var i in fixes) {
+              _fixes[i] = new google.maps.LatLng(fixes[i][1], fixes[i][2]);
+              var markerPoint = new google.maps.Marker({
+                       position: _fixes[i],
+                       map: map});
+              markerPoint.set("id", i);
+              _markers.push(markerPoint);
+              fn_clickMarker(markerPoint, map, fixes[i][3]);
+            }
+            map.setCenter(_fixes[0]);
+            map.setZoom(12);
+          }
+          fn_drawLine();
+        }, "json");
+     }
 
-			month = month < 10 ? "0"+month : month;
-			day = day < 10 ? "0"+day : day;
+     // 初始化slide
+     function fn_initSlider() {
+       $("#locusSlider").slider({
+            min: 0,
+            max: 1439,
+            values: [420, 1140],
+            range: true,
+            slide: function (event, ui) {
+                var str_slideVal1 = fn_slideValToTimeVal(ui.values[0]);
+                var str_slideVal2 = fn_slideValToTimeVal(ui.values[1]);
+                $("#locusBeginSlider").val(str_slideVal1);
+                $("#locusEndSlider").val(str_slideVal2);
+            }
+        });
 
-			timeArr = dateString.split(":"),
-			hour = timeArr[0],
-			min = timeArr[1];
-		}
-		return new Date(year,month,day,hour,min,seconds).getTime()/1000; // Your timezone!
-    }
-    // 将日期整数转化为字符串
-    function fn_changeNumToDateString(myEpoch, str_isYear) {
-        var myDate = new Date(myEpoch),
-            year = myDate.getFullYear(),
-            month = myDate.getMonth()+1,
-            day = myDate.getDate(),
-            hours = myDate.getHours(),
-            min = myDate.getMinutes(),
-            seconds = myDate.getSeconds();
-        month = month < 10 ? "0"+month : month;
-        day = day < 10 ? "0"+day : day;
-        hours = hours < 10 ? "0"+hours : hours;
-        min = min < 10 ? "0"+min : min;
-        seconds = seconds < 10 ? "0"+seconds : seconds;
-        if (str_isYear) {
-            return new Date(year, month - 1, day);
-        } else {
-            return year +"-"+ month +"-"+ day +" "+ hours +":"+ min +":"+ seconds;
-        }
-    }
-    // 初始化slide
-    function fn_initSlider() {
-		$("#locusSlider").slider({
-			min: 0,
-			max: 1439,
-			values: [420, 1140],
-			range: true,
-			slide: function (event, ui) {
-				var str_slideVal1 = fn_slideValToTimeVal(ui.values[0]);
-			    var	str_slideVal2 = fn_slideValToTimeVal(ui.values[1]);
-				$("#locusBeginSlider").val(str_slideVal1);
-				$("#locusEndSlider").val(str_slideVal2);
-			}
-		});
-
-		// 页面没有滑动进进行初始化数据
-		$("#locusBeginSlider").val("07:00");
-		$("#locusEndSlider").val("19:00");
-		$("#locusSlider").slider("option", "values", [420, 1140]);
+        // 页面没有滑动进进行初始化数据
+        $("#locusBeginSlider").val("07:00");
+        $("#locusEndSlider").val("19:00");
+        $("#locusSlider").slider("option", "values", [420, 1140]);
     }
 
     // 通过slide滑块的值判断显示的时间点
     function fn_slideValToTimeVal(n_slideVal) {
-		var n_hour = Math.floor(n_slideVal/60);
-        var n_minute = n_slideVal%60;
-		n_hour = n_hour < 10 ? "0"+ n_hour : n_hour;
-		n_minute = n_minute < 10 ? "0"+ n_minute : n_minute;
-		return n_hour+":"+n_minute;
+      var n_hour = Math.floor(n_slideVal / 60);
+      var n_minute = n_slideVal % 60;
+      n_hour = n_hour < 10 ? "0"+ n_hour : n_hour;
+      n_minute = n_minute < 10 ? "0"+ n_minute : n_minute;
+      return n_hour + ":" + n_minute;
     }
     </script>
   </head>

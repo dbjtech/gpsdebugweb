@@ -73,7 +73,9 @@ class LoginHandler(BaseHandler):
         self.render("login.html")
 
     def post(self):
-        self.set_secure_cookie("mobile", self.get_argument("mobile"))
+        mobile = self.get_argument("mobile", None)
+        if mobile:
+            self.set_secure_cookie("mobile", mobile)
         self.redirect("/")
 
 
@@ -88,22 +90,32 @@ class MainHandler(BaseHandler):
     def get(self):
         mobile = self.current_user
         current = int(time.time())
-        delta = 5 * 60 * 60
+        delta = 24 * 60 * 60
+        start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(current - delta))
+        end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(current + delta))
         self.db.execute("SELECT * from gps WHERE mobile=?"
                         "  AND timestamp BETWEEN ? AND ?"
                         "  ORDER BY timestamp",
-                        (mobile, (current - delta), (current + delta)))
+                        (mobile, start, end))
         fixes = self.db.fetchall()
         self.render("map.html", fixes=fixes, mobile=mobile)
 
+def _format_timestamp(ts):
+    """Format YYYYMMDDHHMMSS to YYYY-mm-dd HH:MM:SS
+    """
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.strptime(ts, "%Y%m%d%H%M%S"))
+
 
 class TrackHandler(BaseHandler):
+
     @tornado.web.authenticated
     def get(self, start, end):
         mobile = self.current_user
+        start, end = _format_timestamp(start), _format_timestamp(end)
         self.db.execute("SELECT * from gps WHERE mobile=?"
                         "  AND timestamp BETWEEN ? AND ?"
-                        "  ORDER BY timestamp", (mobile, start, end))
+                        "  ORDER BY timestamp",
+                        (mobile, start, end))
         fixes = tornado.escape.json_encode({"fixes": self.db.fetchall()})
         self.write(fixes)
 
@@ -111,8 +123,8 @@ class TrackHandler(BaseHandler):
 class GPSHandler(BaseHandler):
     def _work(self):
         record = [self.get_argument("mobile", None),
-                  self.get_argument("lon", None),
                   self.get_argument("lat", None),
+                  self.get_argument("lon", None),
                   self.get_argument("timestamp", None)]
         if not all(record):
             raise tornado.web.HTTPError(400)
@@ -120,7 +132,7 @@ class GPSHandler(BaseHandler):
         if (len(record[-1]) != 14):
             raise tornado.web.HTTPError(400)
         try:
-            record[-1] = int(time.mktime(time.strptime(record[-1], "%Y%m%d%H%M%S")))
+            record[-1] = _format_timestamp(record[-1])
         except:
             raise tornado.web.HTTPError(400)
 
