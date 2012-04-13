@@ -178,6 +178,26 @@
       n_minute = n_minute < 10 ? "0"+ n_minute : n_minute;
       return n_hour + ":" + n_minute;
     }
+
+    function getParameterByName(name) {
+      name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+      var regexS = "[\\?&]" + name + "=([^&#]*)";
+      var regex = new RegExp(regexS);
+      var results = regex.exec(window.location.search);
+      if (results == null)
+        return "";
+      else
+        return decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    function switch_map() {
+      if (getParameterByName("t") == "b") {
+        window.location.href = window.location.origin;
+      } else {
+        window.location.href = window.location.origin + "/?t=b";
+      
+      }
+    }
     </script>
   </head>
 
@@ -190,7 +210,7 @@
     End: <input id="locusEndSlider" type="text" />
     </div>
     <div id="locusSlider" title="Slide to adjust the time slot."></div>
-    <input type="button" value="Query" id="locusConfirm" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only ui-state-hover" onclick="fn_locusConfirm();"/> <div id="info">Points number: <span id="fixnum"> </span></div>
+    <input type="button" value="Query" id="locusConfirm" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only ui-state-hover" onclick="fn_locusConfirm();"/> <input type="button" onclick="switch_map();" value="Switch Map" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only ui-state-hover" /><div id="info">Points number: <span id="fixnum"> </span></div>
     <hr>
     <div id="map_canvas" style="width: 100%; height: 90%"></div>
   </body>
