@@ -1,15 +1,36 @@
 <html>
   <head>
     <title>DBJ GPS Testbed</title>
+    <style type="text/css">
+	body {
+		/* font-family: "Lucida Grande", "Arial", "Helvetica", "Verdana", "sans-serif"; */
+		font-family: "Arial", "Helvetica", "Verdana", "sans-serif";
+	}
+	</style>
   </head>
 
   <body>
-  <div style="position: absolute; left: 25%; top: 10%;">
+  <div style="width:400px; margin:100 auto;">
     <form action="/login" method="post">
       <fieldset>
 	<legend>DBJ GPS Testbed</legend>
 	<table><tr><td title="Check out this value in your testing terminal. It's a hash of IMSI.">Mobile ID: <input type="text" name="mobile"></td>
-	<td title="Check it if your testing terminal is in China."><input type="checkbox" name="ischina" value="y" checked>At China?</td></tr>
+	<td title="Check it if your testing terminal is in
+	China."><input type="checkbox" name="ischina" value="y"
+	checked>At China?</td></tr>
+	<tr><td colspan="2">
+<script type="text/javascript"
+       src="http://www.google.com/recaptcha/api/challenge?k=6LebMNASAAAAAF_6TpT5ULZnBHV55syupSTL7y1U">
+    </script>
+    <noscript>
+       <iframe src="http://www.google.com/recaptcha/api/noscript?k=6LebMNASAAAAAF_6TpT5ULZnBHV55syupSTL7y1U"
+           height="300" width="500" frameborder="0"></iframe><br>
+       <textarea name="recaptcha_challenge_field" rows="3" cols="40">
+       </textarea>
+       <input type="hidden" name="recaptcha_response_field"
+           value="manual_challenge">
+    </noscript>
+        </td></tr>
 	<tr><td style="text-align: right;" colspan="2"><input type="submit" /><input type="reset" /></td></tr>
 	</table>
       </fieldset>
