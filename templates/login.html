@@ -7,7 +7,11 @@
     <form action="/login" method="post">
       <fieldset>
 	<legend>Input tested mobile number:</legend>
-      Mobile: <input type="text" name="mobile">
+	Mobile ID: <input type="text" name="mobile" title="Check out
+	this value in your testing terminal. It's a hash of IMSI.">
+	<input type="checkbox" name="ischina" value="y" title="Check
+	it if your testing terminal is in China."  checked>At
+	China?<br>
       <input type="submit" value="Sign in">
       </fieldset>
   </form>

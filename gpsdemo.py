@@ -74,9 +74,13 @@ class LoginHandler(BaseHandler):
 
     def post(self):
         mobile = self.get_argument("mobile", None)
+        ischina = self.get_argument("ischina", "").upper() == "Y"
         if mobile:
             self.set_secure_cookie("mobile", mobile)
-        self.redirect("/")
+        s = "/"
+        if ischina:
+            s = "/?t=b"
+        self.redirect(s)
 
 
 class LogoutHandler(BaseHandler):
@@ -89,6 +93,7 @@ class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         mobile = self.current_user
+        map_type = "bmap.html" if self.get_argument("t", None) == "b" else "map.html"
         current = int(time.time())
         delta = 24 * 60 * 60
         start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(current - delta))
@@ -98,7 +103,7 @@ class MainHandler(BaseHandler):
                         "  ORDER BY timestamp",
                         (mobile, start, end))
         fixes = self.db.fetchall()
-        self.render("map.html", fixes=fixes, mobile=mobile)
+        self.render(map_type, fixes=fixes, mobile=mobile)
 
 def _format_timestamp(ts):
     """Format YYYYMMDDHHMMSS to YYYY-mm-dd HH:MM:SS
