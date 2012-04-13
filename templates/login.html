@@ -4,17 +4,17 @@
   </head>
 
   <body>
+  <div style="position: absolute; left: 25%; top: 10%;">
     <form action="/login" method="post">
       <fieldset>
-	<legend>Input tested mobile number:</legend>
-	Mobile ID: <input type="text" name="mobile" title="Check out
-	this value in your testing terminal. It's a hash of IMSI.">
-	<input type="checkbox" name="ischina" value="y" title="Check
-	it if your testing terminal is in China."  checked>At
-	China?<br>
-      <input type="submit" value="Sign in">
+	<legend>DBJ GPS Testbed</legend>
+	<table><tr><td title="Check out this value in your testing terminal. It's a hash of IMSI.">Mobile ID: <input type="text" name="mobile"></td>
+	<td title="Check it if your testing terminal is in China."><input type="checkbox" name="ischina" value="y" checked>At China?</td></tr>
+	<tr><td style="text-align: right;" colspan="2"><input type="submit" /><input type="reset" /></td></tr>
+	</table>
       </fieldset>
   </form>
+  </div>
 
   </body>
 </html>
