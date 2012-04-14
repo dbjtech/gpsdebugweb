@@ -1,5 +1,6 @@
 {% extends "map_base.html" %}
     {% block mapjsscript %}
+    <script type="text/javascript" src="http://www.google.com/jsapi"></script>
     <script type="text/javascript"
         src="http://maps.google.com/maps/api/js?sensor=false&callback;=initialize"></script>
     {% end %}
@@ -21,9 +22,10 @@
         $("#fixnum").text(_fixes.length);
 
         //在ID为"Gmap"的层内显示地图
+        var clientloc = google.loader.ClientLocation;
         var myOptions = {
           zoom: 13,
-          center: (_fixes.length > 0) ? _fixes[0] : (new google.maps.LatLng(40.000091, 116.35906999)),
+          center: (_fixes.length > 0) ? _fixes[0] : (new google.maps.LatLng(clientloc.latitude, clientloc.longitude)),
           scaleControl: true,
           overviewMapControl: true,
           overviewMapControlOptions: {opened: true},

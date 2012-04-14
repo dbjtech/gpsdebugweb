@@ -17,8 +17,11 @@
 
       //initMap()函数，将地图程序加入页面
       function initMap() {
-          map = new BMap.Map("map_canvas"); // 创建地图实例
-          map.centerAndZoom(new BMap.Point(116.36343, 40.0045), 15);
+          map = new BMap.Map("map_canvas");
+          var localCity = new BMap.LocalCity();
+          localCity.get(function(r) {
+                          map.centerAndZoom(r.center, r.level);
+                        });
           map.enableScrollWheelZoom();
           //map.addControl(new BMap.NavigationControl());
           map.addControl(new BMap.ScaleControl());
@@ -41,9 +44,9 @@
 
       function fn_drawLine() {
         polyline = new BMap.Polyline(_fixes, 
-                                     {strokeColor:"red", 
-                                      strokeWeight:6, 
-                                      strokeOpacity:0.5});
+                                     {strokeColor: "red",
+                                      strokeWeight: 6,
+                                      strokeOpacity: 0.5});
         map.addOverlay(polyline);
       }
 
