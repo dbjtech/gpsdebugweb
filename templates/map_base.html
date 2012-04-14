@@ -9,17 +9,16 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/jquery-ui.min.js"></script>
     <link type="text/css" href="http://code.jquery.com/ui/1.8.18/themes/base/jquery-ui.css" rel="stylesheet" />
     <style type="text/css">
-	body {
-		margin: 3;
-		padding: 0 0 20px;
-		min-height: 100%;
-		/* font-family: "Lucida Grande", "Arial", "Helvetica", "Verdana", "sans-serif"; */
-		font-family: "Arial", "Helvetica", "Verdana", "sans-serif";
-		font-size: 10px;
-	}
-        #locusDate, #locusBeginSlider, #locusEndSlider {
-           width: 80px;
-        }
+    body {
+        /* font-family: "Lucida Grande", "Arial", "Helvetica", "Verdana", "sans-serif"; */
+        font-family: "Arial", "Helvetica", "Verdana", "sans-serif";
+        font-size: 10px;
+        min-height: 100%;
+        height: 100%;
+    }
+    #locusDate, #locusBeginSlider, #locusEndSlider {
+        width: 80px;
+    }
     #locusSlider {
         margin: 7 10 0 10;
         width: 150px;
@@ -27,12 +26,12 @@
     }
 
     #info {
-	font-size: 1.8em;
-	font-weight: bold;
-	color: darkred;
-	float: right;
+        font-size: 1.6em;
+        font-weight: bold;
+        color: darkred;
+        float: right;
     }
-	</style>
+    </style>
     <script type="text/javascript">
     {% block jsscript %}
       var map;
@@ -200,19 +199,24 @@
       
       }
     }
+    $(function() {
+      $("button").button();
+    });
     </script>
   </head>
 
   <body onload="initMap()">
     <h2>Current Mobile: {{mobile}} <a href="/logout" style="float: right;">Logout</a></h2>
     <hr>
-    <div style="float: left">
-    Date: <input type="text" id="locusDate" readonly="readonly" />
-    Start: <input id="locusBeginSlider" type="text" readonly="readonly" />
-    End: <input id="locusEndSlider" type="text" readonly="readonly" />
+    <div style="float: left; font-size: 12px;">
+    Date: <input type="text" id="locusDate" />
+    From: <input id="locusBeginSlider" type="text" />
+    To: <input id="locusEndSlider" type="text" />
     </div>
     <div id="locusSlider" title="Slide to adjust the time slot."></div>
-    <input type="button" value="Query" id="locusConfirm" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only ui-state-hover" onclick="fn_locusConfirm();"/> <input type="button" onclick="switch_map();" value="Switch Map" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only ui-state-hover" /><div id="info">Points number: <span id="fixnum"> </span></div>
+    <button id="locusConfirm" onclick="fn_locusConfirm();">Query</button>
+    <button onclick="switch_map();">Switch Map</button>
+    <div id="info">Points number: <span id="fixnum"> </span></div>
     <hr>
     <div id="map_canvas" style="width: 100%;"></div>
     <script type="text/javascript">
