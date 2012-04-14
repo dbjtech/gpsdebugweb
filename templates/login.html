@@ -2,11 +2,11 @@
   <head>
     <title>DBJ GPS Testbed</title>
     <style type="text/css">
-	body {
-		/* font-family: "Lucida Grande", "Arial", "Helvetica", "Verdana", "sans-serif"; */
-		font-family: "Arial", "Helvetica", "Verdana", "sans-serif";
-	}
-	</style>
+      body {
+        /* font-family: "Lucida Grande", "Arial", "Helvetica", "Verdana", "sans-serif"; */
+        font-family: "Arial", "Helvetica", "Verdana", "sans-serif";
+      }
+    </style>
   </head>
 
   <body>
@@ -17,7 +17,8 @@
 	<table><tr><td title="Check out this value in your testing terminal. It's a hash of IMSI.">Mobile ID: <input type="text" name="mobile"></td>
 	<td title="Check it if your testing terminal is in
 	China."><input type="checkbox" name="ischina" value="y"
-	checked>At China?</td></tr>
+	checked>in China?</td></tr>
+	  {% if is_public %}
 	<tr><td colspan="2">
 <script type="text/javascript"
        src="http://www.google.com/recaptcha/api/challenge?k=6LebMNASAAAAAF_6TpT5ULZnBHV55syupSTL7y1U">
@@ -31,6 +32,7 @@
            value="manual_challenge">
     </noscript>
         </td></tr>
+	{% end %}
 	<tr><td style="text-align: right;" colspan="2"><input type="submit" /><input type="reset" /></td></tr>
 	</table>
       </fieldset>

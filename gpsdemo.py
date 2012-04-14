@@ -5,8 +5,9 @@ import os
 import logging
 import time
 import sqlite3
-from urllib import urlencode
-import urllib2
+
+from recaptcha.client import captcha
+from IPy import IP
 
 import tornado.httpserver
 import tornado.ioloop
@@ -15,6 +16,16 @@ from tornado.options import define, options
 define('db', default="gps.db")
 define('port', type=int, default=10000)
 define('mode', default="deploy")
+
+_RECAPTCHA_PRIVATE_KEY = "6LebMNASAAAAAKyGlK0qhoRAOr8wo2I5-lJ3-fnZ"
+
+def _verify_recaptcha(challenge, response, remoteip):
+    response = captcha.submit(challenge,
+                              response,
+                              _RECAPTCHA_PRIVATE_KEY,
+                              remoteip)
+    return response.is_valid
+
 
 class DBConnection(object):
     def __init__(self, db_file):
@@ -61,6 +72,7 @@ class Application(tornado.web.Application):
     def __del__(self):
         self.clean()
 
+
 class BaseHandler(tornado.web.RequestHandler):
     @property
     def db(self):
@@ -72,42 +84,26 @@ class BaseHandler(tornado.web.RequestHandler):
 
 class LoginHandler(BaseHandler):
     def get(self):
-        self.render("login.html")
-
-    def verify_captcha(self, remoteip, challenge, response):
-        d = dict(privatekey="6LebMNASAAAAAKyGlK0qhoRAOr8wo2I5-lJ3-fnZ",
-                 remoteip=remoteip,
-                 challenge=challenge,
-                 response=response)
-        req = urllib2.Request(url="http://www.google.com/recaptcha/api/verify",
-                              data=urlencode(d))
-        try:
-            f = urllib2.urlopen(req)
-            msg = f.readline().rstrip()
-            if msg == "true":
-                return True
-            else:
-                return False
-        except:
-            return False
+        is_public = IP(self.request.remote_ip).iptype() == "PUBLIC"
+        self.render("login.html", is_public=is_public)
 
     def post(self):
         mobile = self.get_argument("mobile", None)
-        challenge = self.get_argument("recaptcha_challenge_field", None)
-        response = self.get_argument("recaptcha_response_field", None)
-        ischina = self.get_argument("ischina", "").upper() == "Y"
         dest = "/"
-        if ((not all((mobile, challenge, response))) or
-            (not self.verify_captcha(self.request.remote_ip, challenge, response))):
-            self.redirect(dest)
-            return
-
         if mobile:
+            is_public = IP(self.request.remote_ip).iptype() == "PUBLIC"
+            challenge = self.get_argument("recaptcha_challenge_field", None)
+            response = self.get_argument("recaptcha_response_field", None)
+            if is_public and not _verify_recaptcha(challenge, response, self.request.remote_ip):
+                self.redirect(dest)
+                return
             self.set_secure_cookie("mobile", mobile)
 
+        ischina = self.get_argument("ischina", "").upper() == "Y"
         if ischina:
             # use baidu map
             dest = "/?t=b"
+
         self.redirect(dest)
 
 
