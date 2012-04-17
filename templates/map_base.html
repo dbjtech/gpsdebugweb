@@ -192,9 +192,9 @@
     }
 
     function switch_map() {
-	  if (!window.location.origin) {
-	    window.location.origin = window.location.protocol + "//" + window.location.host
-	  }
+      if (!window.location.origin) {
+	    window.location.origin = window.location.protocol + "//" + window.location.host;
+      }
       if (getParameterByName("t") == "b") {
         window.location.href = window.location.origin;
       } else {

@@ -23,6 +23,9 @@
 
         //在ID为"Gmap"的层内显示地图
         var clientloc = google.loader.ClientLocation;
+        if (!clientloc) {
+            clientloc = {latitude: 39.9100, longitude: 116.4000};
+        }
         var myOptions = {
           zoom: 13,
           center: (_fixes.length > 0) ? _fixes[0] : (new google.maps.LatLng(clientloc.latitude, clientloc.longitude)),

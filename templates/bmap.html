@@ -18,12 +18,16 @@
       //initMap()函数，将地图程序加入页面
       function initMap() {
           map = new BMap.Map("map_canvas");
+          var set_center = false;
           var localCity = new BMap.LocalCity();
           localCity.get(function(r) {
+                          set_center = true;
                           map.centerAndZoom(r.center, r.level);
                         });
+          if (!set_center) {
+              map.centerAndZoom("北京");
+          }
           map.enableScrollWheelZoom();
-          //map.addControl(new BMap.NavigationControl());
           map.addControl(new BMap.ScaleControl());
           var overvierOption = new BMap.OverviewMapControl();
           overvierOption.isOpen = true;
