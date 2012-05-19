@@ -202,6 +202,12 @@
       }
     }
     $(function() {
+      if (getParameterByName("t") == "b") {
+        $("#mapswitcher").text("Switch to Google Map");
+	  } else {
+	    $("#mapswitcher").text("Switch to Baidu Map");
+	  }
+
       $("button").button();
     });
     </script>
@@ -217,7 +223,7 @@
     </div>
     <div id="locusSlider" title="Slide to adjust the time slot."></div>
     <button id="locusConfirm" onclick="fn_locusConfirm();">Query</button>
-    <button onclick="switch_map();">Switch Map</button>
+    <button id="mapswitcher" onclick="switch_map();" title="Do use Baidu Map if ther mobile is in China."></button>
     <div id="info">Points number: <span id="fixnum"> </span></div>
     <hr>
     <div id="map_canvas" style="width: 100%;"></div>
