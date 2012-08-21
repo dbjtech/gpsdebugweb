@@ -55,6 +55,34 @@
         fn_initSlider();
       }
 
+      function show_point(lat, lon, dop, markertime) {
+        if (polyline) {
+          polyline.setMap(null);
+        }
+        for (i in _markers) {
+          _markers[i].setMap(null);
+        }
+        _markers.length = 0;
+
+        var fix = new google.maps.LatLng(lat, lon);
+        var markerPoint = new google.maps.Marker({
+                            position: fix,
+                            title: "Current Fix",
+                            map: map});
+        _markers.push(markerPoint);
+        fn_clickMarker(markerPoint, map, markertime);
+
+        var circle = new google.maps.Circle({
+                      map: map,
+                      radius: dop,
+                      fillColor: '#AA0000'});
+        circle.bindTo('center', markerPoint, 'position');
+        _markers.push(circle);
+
+        map.setCenter(fix);
+        map.setZoom(12);
+      }
+
       function fn_drawLine() {
         if (polyline) {
           polyline.setMap(null);

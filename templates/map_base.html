@@ -201,6 +201,56 @@
         window.location.href = window.location.origin + "/?t=b";
       }
     }
+
+    // collecting debug info?
+    var is_collecting = false;
+    var seq = 0;
+    var handler = null;
+
+    function periodical_query() {
+      var url = ["/gpsdebug?",
+	         "seq=" + seq,
+                 "freq=" + $("#freq").val()].join("&")
+      $.ajax({
+        url: url,
+        type: "GET",
+        dataType: "json",
+        success: function(data) {
+          $.each(data.res, function(index, entry) {
+            var option =[entry.timestamp,
+			 entry.lon,
+                         entry.lat,
+                         entry.dop,
+                         entry.satellites].join(" ");
+            $("<option/>").val([entry.lon, entry.lat, entry.dop].join(":")).html(option).appendTo("#result");
+          });
+          if ($("#scrollinfo").is(":checked")) {
+            var l = $("#result option").length;
+            if (l > 0) {
+              $("#result option")[l - 1].selected = true;
+            }
+          }
+        },
+        complete: function(a, b) {
+          if (is_collecting) {
+            setTimeout(periodical_query, parseInt($("#freq").val()) * 1000);
+          }
+        }
+      });
+    }
+
+    function switch_collect() {
+      is_collecting = !is_collecting
+
+      if (is_collecting) {
+        $("#startstop span").text("Stop!")
+        seq = seq + 1;
+        periodical_query();
+      } else {
+        $("#startstop span").text("Start!")
+      }
+    }
+
     $(function() {
       if (getParameterByName("t") == "b") {
         $("#mapswitcher").text("Switch to Google Map");
@@ -209,6 +259,18 @@
 	  }
 
       $("button").button();
+
+      $("#result").change(function() {
+        console.log("change...");
+        var v = $("#result :selected").val().split(":").map(parseFloat);
+        var d = $("#result :selected").text().split(" ");
+
+	if ((v[0] == 0) || (v[1] == 0)) {
+          alert("Non-fixed point. Will not update the map.");
+        } else {
+          show_point(v[1], v[0], v[2], d[0] + " " + d[1]);
+        }
+      });
     });
     </script>
   </head>
@@ -227,9 +289,37 @@
     <div id="info">Points number: <span id="fixnum"> </span></div>
     <hr>
     <div id="map_canvas" style="width: 100%;"></div>
+    <div id="debug_info" style="width: 100%; height: 250px;">
+      <fieldset>
+	<legend>Debug Info:</legend>
+	<div style="float: left; width: 20%;">
+	  <label for="freq">Freq(s):</label>
+	  <select id="freq" title="Terminal reports GPS info in this frequency.">
+	    <option>1</option>
+	    <option>2</option>
+	    <option>5</option>
+	    <option>10</option>
+	    <option>20</option>
+	    <option>30</option>
+	    <option>60</option>
+	  </select>
+	  <label for="scrollinfo">Scroll on new data?</label>
+	  <input type="checkbox" title="Scroll the bar on new data." id="scrollinfo" checked></input><br>
+	  <button id="startstop" onclick="switch_collect();"><span>Start!</span></button>
+	</div>
+	<div style="float: right; padding-left: 5px; border-left: 1pt
+		    dashed; width: 78%;">
+          <h2>Timestamp Longitude Latitude Dop Satellites</h2>
+	  <select id="result" style="width: 100%;" size=10>
+	  </select>
+	</div>
+      </fieldset>
+    </div>
     <script type="text/javascript">
       function set_map_size() {
-          $("#map_canvas").height(($(window).height() - 90) + "px");
+          header = 90;
+          footer = 250;
+          $("#map_canvas").height(($(window).height() - header - footer) + "px");
       }
 
       $(window).resize(set_map_size);
