@@ -75,7 +75,11 @@
         var circle = new google.maps.Circle({
                       map: map,
                       radius: dop,
-                      fillColor: '#AA0000'});
+                      fillColor: '#AA0000',
+                      fillOpacity: 0.5,
+                      strokeOpacity: 0.6,
+                      strokeWeight: 1,
+                      strokeColor: "blue"});
         circle.bindTo('center', markerPoint, 'position');
         _markers.push(circle);
 
