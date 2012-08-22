@@ -208,12 +208,10 @@
     var handler = null;
 
     function periodical_query() {
-      var url = ["/gpsdebug?",
-	         "seq=" + seq,
-                 "freq=" + $("#freq").val()].join("&")
       $.ajax({
-        url: url,
+        url: "/gpsdebug",
         type: "GET",
+        data: {seq: seq, freq: $("#freq").val()},
         dataType: "json",
         success: function(data) {
           $.each(data.res, function(index, entry) {
@@ -261,7 +259,6 @@
       $("button").button();
 
       $("#result").change(function() {
-        console.log("change...");
         var v = $("#result :selected").val().split(":").map(parseFloat);
         var d = $("#result :selected").text().split(" ");
 

@@ -46,6 +46,28 @@
           $("#fixnum").text(_fixes.length);
       }
 
+      var callback = null;
+
+      function show_point(lat, lon, dop, markertime) {
+        map.clearOverlays();
+        var point = new BMap.Point(lon, lat);
+        callback = sp_callback;
+        BMap.Convertor.transMore([point], 0, callback);
+
+        function sp_callback(res) {
+          var point = new BMap.Point(res[0].x, res[0].y);
+          var marker = new BMap.Marker(point, {title: "Current Fix"});
+          fn_clickMarker(marker, markertime);
+          var circle = new BMap.Circle(point, dop,
+                                       {fillColor: '#AA0000',
+                                        fillOpacity: 0.5,
+                                        strokeWeight: 2});
+          map.addOverlay(marker);
+          map.addOverlay(circle);
+          map.centerAndZoom(point, 15);
+        }
+      }
+
       function fn_drawLine() {
         polyline = new BMap.Polyline(_fixes, 
                                      {strokeColor: "red",
@@ -54,7 +76,7 @@
         map.addOverlay(polyline);
       }
 
-      var gc = new BMap.Geocoder();    
+      var gc = new BMap.Geocoder();
       function fn_clickMarker(marker, tempDate) {
         marker.addEventListener("click", function(e){ 
           gc.getLocation(e.point, function(rs){
@@ -86,12 +108,14 @@
               _fixes[i] = new BMap.Point(fixes[i][2], fixes[i][1]);
               _ts[i] = fixes[i][3];
             }
+            console.log("what?");
+            callback = line_callback;
             BMap.Convertor.transMore(_fixes, 0, callback);
           }
         }, "json");
      }
 
-     function callback(res){
+     function line_callback(res) {
        _fixes = [];
        for(var i in res) {
          if (res[i].error != 0) {
