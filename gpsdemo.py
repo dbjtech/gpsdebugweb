@@ -34,11 +34,10 @@ class DBConnection(object):
         self.conn = sqlite3.connect(db_file, isolation_level=None)
         self.cursor = self.conn.cursor()
 
-    def close():
+    def close(self):
         try:
             self.cursor.close()
             self.conn.close()
-            logging.info("db closed.")
         except:
             logging.exception("db close error.")
 
@@ -69,7 +68,7 @@ class Application(tornado.web.Application):
 
         tornado.web.Application.__init__(self, handlers, **settings)
         self.db = DBConnection(options.db)
-        # dict(mobile=dict(seq, freq, last, fixes))
+        # dict(mobile=dict(seq, freq, last, fixes=[dict(),...]))
         self.mobile_info = dict()
 
     def clean(self):
@@ -79,12 +78,10 @@ class Application(tornado.web.Application):
         self.clean()
 
     def cleanup_mobile_info(self):
-        logging.warn("cleaning mobile_info...")
         current = int(time.time())
         for k, v in self.mobile_info.items():
-            if (v["last"] - current > DEBUG_FIXES_TIMEOUT):
+            if (current - v["last"] >= DEBUG_FIXES_TIMEOUT):
                 del self.mobile_info[k]
-        logging.warn("mobile_info: %s", self.mobile_info)
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -112,7 +109,8 @@ class LoginHandler(BaseHandler):
             is_public = IP(self.request.remote_ip).iptype() == "PUBLIC"
             challenge = self.get_argument("recaptcha_challenge_field", None)
             response = self.get_argument("recaptcha_response_field", None)
-            if is_public and not _verify_recaptcha(challenge, response, self.request.remote_ip):
+            if is_public and not _verify_recaptcha(challenge, response,
+                                                   self.request.remote_ip):
                 self.redirect(dest)
                 return
             self.set_secure_cookie("mobile", mobile)
@@ -135,11 +133,15 @@ class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         mobile = self.current_user
-        map_type = "bmap.html" if self.get_argument("t", None) == "b" else "map.html"
+        map_type = "map.html"
+        if self.get_argument("t", None) == "b":
+            map_type = "bmap.html"
         current = int(time.time())
         delta = 24 * 60 * 60
-        start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(current - delta))
-        end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(current + delta))
+        start = time.strftime("%Y-%m-%d %H:%M:%S",
+                              time.localtime(current - delta))
+        end = time.strftime("%Y-%m-%d %H:%M:%S",
+                            time.localtime(current + delta))
         self.db.execute("SELECT * from gps WHERE mobile=?"
                         "  AND timestamp BETWEEN ? AND ?"
                         "  ORDER BY timestamp",
@@ -187,7 +189,7 @@ class GPSHandler(BaseHandler):
         self.db.execute("INSERT INTO gps VALUES(?,?,?,?)",
                         record)
         self.write("OK")
-        
+
     def post(self):
         self._work()
 
@@ -223,7 +225,8 @@ class GPSDebugHandler(BaseHandler):
         """Collect data from the terminal.
 
         format:
-        mobile=xxxxx&lat=xxx.xxxx&lon=xxxx.xxxx&dop=xxx&timestamp=YYYYmmddHHMMSS&seq=xxx&satellites=S1:N1,S2:N2...
+        mobile=xxxxx&lat=xxx.xxxx&lon=xxxx.xxxx&dop=xxx&
+        timestamp=YYYYmmddHHMMSS&seq=xxx&satellites=S1:N1,S2:N2...
         """
         record = dict(mobile=self.get_argument("mobile", None),
                       lat=self.get_argument("lat", 0),
@@ -249,7 +252,6 @@ class GPSDebugHandler(BaseHandler):
                        dop=record["dop"],
                        timestamp=record["timestamp"],
                        satellites=record["satellites"])
-
         if not record["mobile"] in self.mobile_info:
             # this is the first upload for a new terminal
             self.mobile_info[record["mobile"]] = dict(seq=record["seq"],
@@ -262,7 +264,6 @@ class GPSDebugHandler(BaseHandler):
                 self.mobile_info[record["mobile"]]["last"] = int(time.time())
                 self.mobile_info[record["mobile"]]["fixes"].append(new_fix)
 
-        logging.warn("mobile_info: %s", self.mobile_info)
         # response with the latest info
         update_info = dict(freq=self.mobile_info[record["mobile"]]["freq"],
                            seq=self.mobile_info[record["mobile"]]["seq"])
