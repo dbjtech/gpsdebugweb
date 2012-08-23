@@ -48,3 +48,6 @@ h2 {
     padding-left: 5px;
     border-left: 1pt dashed;
 }
+#result tbody tr td.selected {
+    background-color: lightcoral;
+}
