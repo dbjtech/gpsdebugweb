@@ -5,61 +5,13 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
     <title>DBJ GPS Testbed</title>
     {% block mapjsscript %}{% end %}
+    <link rel="stylesheet" type="text/css" href="/static/css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/scrolltable.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/mytabletheme.css"/>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/jquery-ui.min.js"></script>
     <link type="text/css" href="http://code.jquery.com/ui/1.8.18/themes/base/jquery-ui.css" rel="stylesheet" />
-    <style type="text/css">
-    body {
-        font-family: "Arial", "Helvetica", "Verdana", "sans-serif";
-        font-size: 12px;
-        margin: 3pt;
-    }
-    #locusDate, #locusBeginSlider, #locusEndSlider {
-        width: 80px;
-    }
-    #locusSlider {
-        margin: 7 10 0 10;
-        width: 150px;
-        float: left;
-    }
-    h2 {
-      font-size: 1.3em;
-    }
-    #info {
-        font-size: 1.3em;
-        font-weight: bold;
-        color: darkred;
-        float: right;
-    }
-    #map_canvas {
-        width: 100%;
-    }
-    #debug_info {
-        margin-top: 5px;
-        width: 100%;
-        height: 200px;
-    }
-    #debug_pane {
-        height: 99%;
-    }
-
-    #debug_pane legend {
-       font-size: 1.3em;
-       cursor: hand;
-    }
-    #log {
-        width: 78%;
-        float: right;
-        padding-left: 5px;
-        border-left: 1pt dashed;
-    }
-    #result {
-        height: auto;
-    }
-    select {
-        font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
-    }
-    </style>
+    <script type="text/javascript" src="/static/js/jquery.fixedheadertable.js"></script>
     <script type="text/javascript">
     {% block jsscript %}
       var map;
@@ -243,19 +195,26 @@
         dataType: "json",
         success: function(data) {
           $.each(data.res, function(index, entry) {
-            var option =[entry.timestamp,
-			 entry.lon,
-                         entry.lat,
-                         entry.dop,
-                         entry.satellites].join(" ");
-            $("<option/>").val([entry.lon, entry.lat, entry.dop].join(":")).html(option).appendTo("#result");
+            $s = $("<tr/>")
+            var segs =[entry.timestamp,
+                       entry.lon,
+                       entry.lat,
+                       entry.dop,
+                       entry.satellites];
+            for (i in segs) {
+               $s.append($("<td/>").html(segs[i]));
+            }
+            $s.appendTo("#result tbody");
+            click_loginfo();
           });
+/*
           if ($("#scrollinfo").is(":checked")) {
             var l = $("#result option").length;
             if (l > 0) {
               $("#result option")[l - 1].selected = true;
             }
           }
+*/
         },
         complete: function(a, b) {
           if (is_collecting) {
@@ -277,7 +236,7 @@
       }
     }
 
-    function adjust_sizes() {
+    function adjust_sizes(flag) {
       var wh = $(window).height()
       var hh = $("#header").height();
       var mh = $("#map_canvas").height();
@@ -285,9 +244,32 @@
       var magic_delta = 34;
 
       $("#map_canvas").height(wh - hh - dh - magic_delta);
+      if (flag) {
+        $("#result").fixedHeaderTable("destroy");
+        $("#result").fixedHeaderTable({height: 270});
+     }
     }
 
     $(window).resize(adjust_sizes);
+
+    function click_loginfo () {
+      $("#result tbody tr").click(function() {
+        //$(this).parent().find("tr").css();
+        //$(this).css("background-color", "black");
+	timestamp = $(this).find("td:nth-child(1)").text();
+        lon = parseFloat($(this).find("td:nth-child(2)").text());
+        lat = parseFloat($(this).find("td:nth-child(3)").text());
+        dop = parseFloat($(this).find("td:nth-child(4)").text());
+
+	if (!((0 < Math.abs(lon) && Math.abs(lon) < 180) &&
+              (0 < Math.abs(lat) && Math.abs(lat) <  90))) {
+          alert("Bad or Non-fixed point. Will not update the map." +
+              "\nLon: " + lon + "\nLat: " + lat);
+        } else {
+          show_point(lat, lon, dop, timestamp);
+        }
+      });
+    }
 
     $(function() {
       if (getParameterByName("t") == "b") {
@@ -298,36 +280,26 @@
 
       $("button").button();
 
-      $("#result").change(function() {
-        var v = $("#result :selected").val().split(":").map(parseFloat);
-        var d = $("#result :selected").text().split(" ");
-
-	if (!((0 < Math.abs(v[0]) && Math.abs(v[0]) < 180) &&
-              (0 < Math.abs(v[1]) && Math.abs(v[1]) <  90))) {
-          alert("Bad or Non-fixed point. Will not update the map." +
-              "\nLon: " + v[0] + "\nLat: " + v[1]);
-        } else {
-          show_point(v[1], v[0], v[2], d[0] + " " + d[1]);
-        }
-      });
+      $("#result").fixedHeaderTable({height: 270});
 
       var is_debugging = true;
       $("#debug_pane legend").click(function (event) {
         if (is_debugging) {
-          $("#helper").hide("slow");
+          $("#helper").hide();
           $(this).parent().parent().height(20);
-          adjust_sizes();
+          adjust_sizes(false);
           $(this).html("Debug Info &#x25B2;");
         } else {
-          $(this).parent().parent().height(200);
-          adjust_sizes();
+          $(this).parent().parent().height(300);
+          adjust_sizes(false);
           $("#helper").show("slow");
           $(this).html("Debug Info &#x25BC;");
         }
         is_debugging = !is_debugging;
       });
 
-      adjust_sizes();
+      adjust_sizes(true);
+      click_loginfo();
     });
     </script>
   </head>
@@ -380,9 +352,19 @@
 	    </table>
 	  </div>
 	  <div id="log">
-	    <table><tr><td>Timestamp</td><td>Longitude</td><td>Latitude</td><td>DOP</td><td>Satellites</td></tr></table>
-	    <select id="result" style="width: 100%;" size=9>
-	    </select>
+	    <table id="result" class="fancyTable" cellpadding="0" cellspacing="0">
+	      <thead>
+		<tr>
+		  <th>Timestamp</th>
+		  <th>Longitude</th>
+		  <th>Latitude</th>
+		  <th>DOP</th>
+		  <th>Satellites</th>
+		</tr>
+	      </thead>
+	      <tbody><tr><td>1</td><td>2</td><td>3</td><td>444444</td><td>5</td></tr>
+	      </tbody>
+	    </table>
 	  </div>
 	  </div>
       </fieldset>
