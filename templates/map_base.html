@@ -10,11 +10,9 @@
     <link type="text/css" href="http://code.jquery.com/ui/1.8.18/themes/base/jquery-ui.css" rel="stylesheet" />
     <style type="text/css">
     body {
-        /* font-family: "Lucida Grande", "Arial", "Helvetica", "Verdana", "sans-serif"; */
         font-family: "Arial", "Helvetica", "Verdana", "sans-serif";
         font-size: 12px;
-        min-height: 100%;
-        height: 100%;
+        margin: 3pt;
     }
     #locusDate, #locusBeginSlider, #locusEndSlider {
         width: 80px;
@@ -24,18 +22,40 @@
         width: 150px;
         float: left;
     }
-
     h2 {
       font-size: 1.3em;
     }
-
     #info {
         font-size: 1.3em;
         font-weight: bold;
         color: darkred;
         float: right;
     }
+    #map_canvas {
+        width: 100%;
+    }
+    #debug_info {
+        margin-top: 5px;
+        width: 100%;
+        height: 200px;
+    }
+    #debug_pane {
+        height: 99%;
+    }
 
+    #debug_pane legend {
+       font-size: 1.3em;
+       cursor: hand;
+    }
+    #log {
+        width: 78%;
+        float: right;
+        padding-left: 5px;
+        border-left: 1pt dashed;
+    }
+    #result {
+        height: auto;
+    }
     select {
         font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
     }
@@ -257,6 +277,18 @@
       }
     }
 
+    function adjust_sizes() {
+      var wh = $(window).height()
+      var hh = $("#header").height();
+      var mh = $("#map_canvas").height();
+      var dh = $("#debug_info").height();
+      var magic_delta = 34;
+
+      $("#map_canvas").height(wh - hh - dh - magic_delta);
+    }
+
+    $(window).resize(adjust_sizes);
+
     $(function() {
       if (getParameterByName("t") == "b") {
         $("#mapswitcher").text("Switch to Google Map");
@@ -278,58 +310,82 @@
           show_point(v[1], v[0], v[2], d[0] + " " + d[1]);
         }
       });
+
+      var is_debugging = true;
+      $("#debug_pane legend").click(function (event) {
+        if (is_debugging) {
+          $("#helper").hide("slow");
+          $(this).parent().parent().height(20);
+          adjust_sizes();
+          $(this).html("Debug Info &#x25B2;");
+        } else {
+          $(this).parent().parent().height(200);
+          adjust_sizes();
+          $("#helper").show("slow");
+          $(this).html("Debug Info &#x25BC;");
+        }
+        is_debugging = !is_debugging;
+      });
+
+      adjust_sizes();
     });
     </script>
   </head>
 
   <body onload="initMap()">
-    <h2>Current Mobile: {{mobile}} <a href="/logout" style="float: right;">Logout</a></h2>
+    <div id="header">
+      <h2>Current Mobile: {{mobile}} <a href="/logout" style="float: right;">Logout</a></h2>
+      <hr>
+      <div style="float: left">
+	<label for="locusDate">Date:</label><input type="text" id="locusDate" />
+	<label for="locusBeginSlider">From:</label><input id="locusBeginSlider" type="text" />
+	<label for="locusEndSlider">To:</label><input id="locusEndSlider" type="text" />
+      </div>
+      <div id="locusSlider" title="Slide to adjust the time slot."></div>
+      <button id="locusConfirm" onclick="fn_locusConfirm();">Query</button>
+      <button id="mapswitcher" onclick="switch_map();" title="Do use Baidu Map if ther mobile is in China."></button>
+      <div id="info">Points number: <span id="fixnum"> </span></div>
     <hr>
-    <div style="float: left">
-    Date: <input type="text" id="locusDate" />
-    From: <input id="locusBeginSlider" type="text" />
-    To: <input id="locusEndSlider" type="text" />
     </div>
-    <div id="locusSlider" title="Slide to adjust the time slot."></div>
-    <button id="locusConfirm" onclick="fn_locusConfirm();">Query</button>
-    <button id="mapswitcher" onclick="switch_map();" title="Do use Baidu Map if ther mobile is in China."></button>
-    <div id="info">Points number: <span id="fixnum"> </span></div>
-    <hr>
-    <div id="map_canvas" style="width: 100%;"></div>
-    <div id="debug_info" style="width: 100%; height: 250px;">
-      <fieldset>
-	<legend style="font-size: 1.3em;">Debug Info</legend>
-	<div style="float: left; width: 20%; font-size: 1.2em;">
-	  <label for="freq">Freq(s):</label>
-	  <select id="freq" title="Terminal reports GPS info in this frequency.">
-	    <option>1</option>
-	    <option>2</option>
-	    <option>5</option>
-	    <option>10</option>
-	    <option>20</option>
-	    <option>30</option>
-	    <option>60</option>
-	  </select><br>
-	  <label for="scrollinfo">Scroll on new data?</label>
-	  <input type="checkbox" title="Scroll the bar on new data." id="scrollinfo" checked></input><br>
-	  <button id="startstop" onclick="switch_collect();"><span>Start!</span></button>
-	</div>
-	<div style="float: right; padding-left: 5px; border-left: 1pt dashed; width: 78%;">
-	  <table><tr><td>Timestamp</td><td>Longitude</td><td>Latitude</td><td>DOP</td><td>Satellites</td></tr></table>
-	  <select id="result" style="width: 100%;" size=10>
-	  </select>
-	</div>
+    <div id="map_canvas"></div>
+    <div id="debug_info">
+      <fieldset id="debug_pane">
+	<legend title="Click to show or hide the debug window.">Debug Info &#x25BC;</legend>
+	<div id="helper">
+	  <div style="float: left; width: 20%; font-size: 1.2em;">
+	    <table>
+	      <tr>
+		<td><label for="freq">Freq(s):</label></td>
+		<td>
+		  <select id="freq" title="Terminal reports GPS info in this frequency.">
+		    <option>1</option>
+		    <option>2</option>
+		    <option>5</option>
+		    <option>10</option>
+		    <option>20</option>
+		    <option>30</option>
+		    <option>60</option>
+		  </select>
+		</td>
+	      </tr>
+	      <tr>
+		<td><label for="scrollinfo">Scroll on new data?</label></td>
+		<td><input type="checkbox" title="Scroll the bar on new
+						  data." id="scrollinfo" checked></input></td>
+	      </tr>
+	      <tr>
+		<td></td><td><button id="startstop"
+				     onclick="switch_collect();"><span>Start!</span></button></td>
+	      </tr>
+	    </table>
+	  </div>
+	  <div id="log">
+	    <table><tr><td>Timestamp</td><td>Longitude</td><td>Latitude</td><td>DOP</td><td>Satellites</td></tr></table>
+	    <select id="result" style="width: 100%;" size=9>
+	    </select>
+	  </div>
+	  </div>
       </fieldset>
     </div>
-    <script type="text/javascript">
-      function set_map_size() {
-          header = 90;
-          footer = 250;
-          $("#map_canvas").height(($(window).height() - header - footer) + "px");
-      }
-
-      $(window).resize(set_map_size);
-      set_map_size();
-    </script>
   </body>
 </html>
