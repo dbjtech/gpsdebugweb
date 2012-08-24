@@ -239,6 +239,12 @@
       }
     }
 
+    function clean_log() {
+        if (confirm("Clean all the logs?")) {
+          $("#result tbody tr").not(":first").remove();
+        }
+    }
+
     function adjust_sizes(flag) {
       var wh = $(window).height()
       var hh = $("#header").height();
@@ -358,6 +364,11 @@
 		<td></td><td><button id="startstop"
 				     onclick="switch_collect();"><span>Start!</span></button></td>
 	      </tr>
+	      <tr>
+		<td></td><td><button id="cleanlog"
+				     onclick="clean_log();"><span>Clean log</span></button></td>
+	      </tr>
+
 	    </table>
 	  </div>
 	  <div id="log">
