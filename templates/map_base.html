@@ -199,7 +199,7 @@
             var segs =[entry.timestamp,
                        entry.lon,
                        entry.lat,
-                       entry.dop,
+                       parseFloat(entry.dop) * 15,
                        entry.satellites];
             for (i in segs) {
                $s.append($("<td/>").html(segs[i]));
@@ -339,8 +339,6 @@
 		<td><label for="freq">Freq(s):</label></td>
 		<td>
 		  <select id="freq" title="Terminal reports GPS info in this frequency.">
-		    <option>1</option>
-		    <option>2</option>
 		    <option>5</option>
 		    <option>10</option>
 		    <option>20</option>
