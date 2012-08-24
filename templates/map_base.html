@@ -241,7 +241,7 @@
 
     function clean_log() {
         if (confirm("Clean all the logs?")) {
-          $("#result tbody tr").not(":first").remove();
+          $("#result tbody tr").not(":first").hide("slow", function(){$(this).remove();});
         }
     }
 
