@@ -5,7 +5,7 @@
 
 body {
     font-family: "Arial", "Helvetica", "Verdana", "sans-serif";
-    font-size: 12px;
+    font-size: 10pt;
     margin: 3pt;
 }
 
@@ -36,16 +36,23 @@ h2 {
 }
 #debug_pane {
     height: 99%;
+    margin-right: 0px;
+    padding-right: 0px;
 }
 
 #debug_pane legend {
-   font-size: 1.3em;
+   font-size: 130%;
    cursor: hand;
 }
+
+#debug_pane .controller {
+   font-size: 100%;
+}
+
 #log {
-    width: 78%;
+    width: 79%;
     float: right;
-    padding-left: 5px;
+    padding-left: 2px;
     border-left: 1pt dashed;
 }
 #result tbody tr td.selected {

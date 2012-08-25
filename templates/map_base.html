@@ -210,10 +210,8 @@
               adjust_sizes(true);
             }
             if ($("#scrollinfo").is(":checked")) {
-              // FIX: this is really strange. the top value is wrong
-              //      when there are many rows.
               var last_row = $("#result tbody tr").last();
-              $(".fht-tbody").animate({scrollTop: last_row.position().top + 100000});
+              $(".fht-tbody").animate({scrollTop: $(".fht-tbody").scrollTop() + last_row.position().top});
             }
           });
         },
@@ -339,7 +337,7 @@
 	<legend title="Click to show or hide the debug window.">Debug Info &#x25BC;</legend>
 	<div id="helper">
 	  <div style="float: left; width: 20%">
-	    <table>
+	    <table class="controller">
 	      <tr>
 		<td><label for="freq">Upload Frequency(s) </label></td>
 		<td>
