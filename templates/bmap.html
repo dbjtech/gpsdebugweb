@@ -61,10 +61,10 @@
           var circle = new BMap.Circle(point, dop,
                                        {fillColor: '#AA0000',
                                         fillOpacity: 0.5,
-                                        strokeWeight: 2});
+                                        strokeWeight: 1});
           map.addOverlay(marker);
           map.addOverlay(circle);
-          map.centerAndZoom(point, 15);
+          map.setCenter(point);
         }
       }
 

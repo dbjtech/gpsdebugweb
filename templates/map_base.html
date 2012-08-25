@@ -210,13 +210,17 @@
               adjust_sizes(true);
             }
             if ($("#scrollinfo").is(":checked")) {
-              $(".fht-tbody").animate({scrollTop: $("#result tbody tr:last").position().top});
+              // FIX: this is really strange. the top value is wrong
+              //      when there are many rows.
+              var last_row = $("#result tbody tr").last();
+              $(".fht-tbody").animate({scrollTop: last_row.position().top + 100000});
             }
           });
         },
         complete: function(a, b) {
-          if (is_collecting) {
-            setTimeout(periodical_query, parseInt($("#freq").val()) * 1000);
+          if (is_collecting) { 
+            // query more frequently than the terminal reports
+            setTimeout(periodical_query, parseInt($("#freq").val()) * 500);
           }
         }
       });
@@ -318,10 +322,10 @@
     <div id="header">
       <h2>Current Mobile: {{mobile}} <a href="/logout" style="float: right;">Logout</a></h2>
       <hr>
-      <div style="float: left">
-	<label for="locusDate">Date:</label><input type="text" id="locusDate" />
-	<label for="locusBeginSlider">From:</label><input id="locusBeginSlider" type="text" />
-	<label for="locusEndSlider">To:</label><input id="locusEndSlider" type="text" />
+      <div style="float: left; font-size: 1.2em;">
+	<label for="locusDate">Date: </label><input type="text" id="locusDate" />
+	<label for="locusBeginSlider">From: </label><input id="locusBeginSlider" type="text" />
+	<label for="locusEndSlider">To: </label><input id="locusEndSlider" type="text" />
       </div>
       <div id="locusSlider" title="Slide to adjust the time slot."></div>
       <button id="locusConfirm" onclick="fn_locusConfirm();">Query</button>
@@ -334,10 +338,10 @@
       <fieldset id="debug_pane">
 	<legend title="Click to show or hide the debug window.">Debug Info &#x25BC;</legend>
 	<div id="helper">
-	  <div style="float: left; width: 20%; font-size: 1.2em;">
+	  <div style="float: left; width: 20%">
 	    <table>
 	      <tr>
-		<td><label for="freq">Freq(s):</label></td>
+		<td><label for="freq">Upload Frequency(s) </label></td>
 		<td>
 		  <select id="freq" title="Terminal reports GPS info in this frequency.">
 		    <option>5</option>
@@ -371,8 +375,10 @@
 		  <th>Timestamp</th>
 		  <th>Longitude</th>
 		  <th>Latitude</th>
-		  <th>DOP</th>
-		  <th>Satellites</th>
+		  <th title="Actually, this is the skewed
+		  distance. 15m is not accurate for u-blox, and will
+		  be fixed later.">DOP (&delta;=15m)</th>
+		  <th>Satellites (ID:SNR)</th>
 		</tr>
 	      </thead>
 	      <tbody>
