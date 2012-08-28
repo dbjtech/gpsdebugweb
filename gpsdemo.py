@@ -225,19 +225,24 @@ class GPSDebugHandler(BaseHandler):
         """Collect data from the terminal.
 
         format:
-        mobile=xxxxx&lat=xxx.xxxx&lon=xxxx.xxxx&dop=xxx&
+        mobile=xxxxx&lat=xxx.xxxx&lon=xxxx.xxxx&range_rms=xxx&
+        std_lat=xxx&std_lon=xxx&std_alt=xxx&
         timestamp=YYYYmmddHHMMSS&seq=xxx&satellites=S1:N1,S2:N2...
         """
         record = dict(mobile=self.get_argument("mobile", None),
-                      lat=self.get_argument("lat", 0),
-                      lon=self.get_argument("lon", 0),
-                      dop=self.get_argument("dop", 0),
-                      timestamp=self.get_argument("timestamp", None),
+                      lat=self.get_argument("lat"),
+                      lon=self.get_argument("lon"),
+                      alt=self.get_argument("alt"),
+                      std_lat=self.get_argument("std_lat"),
+                      std_lon=self.get_argument("std_lon"),
+                      std_alt=self.get_argument("std_alt"),
+                      range_rms=self.get_argument("range_rms"),
+                      timestamp=self.get_argument("timestamp"),
                       satellites=self.get_argument("satellites", None),
+                      misc=self.get_argument("misc", None),
                       seq=int(self.get_argument("seq", 0)))
 
-        if not all(record.itervalues()):
-            raise tornado.web.HTTPError(400)
+        # TODO: reasonable sanity check
 
         if (len(record["timestamp"]) != 14):
             raise tornado.web.HTTPError(400)
@@ -247,11 +252,16 @@ class GPSDebugHandler(BaseHandler):
             raise tornado.web.HTTPError(400)
 
         new_fix = dict(seq=record["seq"],
-                       lat=record["lat"],
                        lon=record["lon"],
-                       dop=record["dop"],
+                       lat=record["lat"],
+                       alt=record["alt"],
+                       std_lon=record["std_lon"],
+                       std_lat=record["std_lat"],
+                       std_alt=record["std_alt"],
+                       range_rms=record["range_rms"],
                        timestamp=record["timestamp"],
-                       satellites=record["satellites"])
+                       satellites=record["satellites"],
+                       misc=record["misc"])
         if not record["mobile"] in self.mobile_info:
             # this is the first upload for a new terminal
             self.mobile_info[record["mobile"]] = dict(seq=record["seq"],

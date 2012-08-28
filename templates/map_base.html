@@ -196,13 +196,16 @@
         success: function(data) {
           $.each(data.res, function(index, entry) {
             $s = $("<tr/>")
-            var segs =[entry.timestamp,
-                       entry.lon,
-                       entry.lat,
-                       parseFloat(entry.dop) * 15,
-                       entry.satellites];
+            var segs =[[entry.timestamp],
+                       [entry.lon],
+                       [entry.lat],
+                       [entry.alt],
+                       [entry.std_lon, entry.std_lat, entry.std_alt],
+                       [entry.range_rms],
+                       [entry.satellites.replace(/,/g, ", ")],
+		       [entry.misc]];
             for (i in segs) {
-               $s.append($("<td/>").html(segs[i]));
+               $s.append($("<td/>").text(segs[i].join(", ")));
             }
             var ow = $("#result").width();
             $s.appendTo("#result tbody");
@@ -273,14 +276,14 @@
 	timestamp = $(this).find("td:nth-child(1)").text();
         lon = parseFloat($(this).find("td:nth-child(2)").text());
         lat = parseFloat($(this).find("td:nth-child(3)").text());
-        dop = parseFloat($(this).find("td:nth-child(4)").text());
-
+        delta = $(this).find("td:nth-child(5)").text().split(",").map(parseFloat);
+        
 	if (!((0 < Math.abs(lon) && Math.abs(lon) < 180) &&
               (0 < Math.abs(lat) && Math.abs(lat) <  90))) {
           alert("Bad or Non-fixed point. Will not update the map." +
               "\nLon: " + lon + "\nLat: " + lat);
         } else {
-          show_point(lat, lon, dop, timestamp);
+          show_point(lat, lon, Math.max(delta[0], delta[1]), timestamp);
         }
     });
 
@@ -373,14 +376,17 @@
 		  <th>Timestamp</th>
 		  <th>Longitude</th>
 		  <th>Latitude</th>
-		  <th title="Actually, this is the skewed
-		  distance. 15m is not accurate for u-blox, and will
-		  be fixed later.">DOP (&delta;=15m)</th>
-		  <th>Satellites (ID:SNR)</th>
+		  <th title="In most cases, this is useless.">Altitude</th>
+		  <th>&delta; (lon, lat, alt)</th>
+		  <th title="RMS value of the standard deviation of
+		  the ranges.">Range RMS</th>
+		  <th title="Show the statellite's id versus it's snr.">Satellites (ID:SNR)</th>
+		  <th title="Put everything else here if not belong to
+		  the existing fields.">Misc</th>
 		</tr>
 	      </thead>
 	      <tbody>
-		<tr><td>Waiting...</td><td></td><td></td><td></td><td></td></tr>
+		<tr><td>Waiting...</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 	      </tbody>
 	    </table>
 	  </div>
