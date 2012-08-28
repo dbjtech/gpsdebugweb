@@ -6,6 +6,7 @@ import logging
 import time
 import sqlite3
 from urllib import urlencode
+from datetime import datetime
 
 from recaptcha.client import captcha
 from IPy import IP
@@ -18,6 +19,15 @@ from tornado.options import define, options
 define('db', default="gps.db")
 define('port', type=int, default=10000)
 define('mode', default="deploy")
+
+# how long the fixes buffered in the server should be cleaned.
+# 5 minutes now.
+DEBUG_FIXES_TIMEOUT = 60 * 5
+# web page query frequency
+DEFAULT_FREQ = 5
+START_SEQ = 1
+SECONDS_A_DAY = 60 * 60 * 24
+PRECISION = 1E-6
 
 _RECAPTCHA_PRIVATE_KEY = "6LebMNASAAAAAKyGlK0qhoRAOr8wo2I5-lJ3-fnZ"
 
@@ -49,7 +59,6 @@ class Application(tornado.web.Application):
 
     def __init__(self, debug=False):
         handlers = [
-            (r"/test", TestHandler),
             (r"/gps", GPSHandler),
             (r"/track/([0-9]*)/([0-9]*)", TrackHandler),
             (r"/gpsdebug", GPSDebugHandler),
@@ -137,11 +146,10 @@ class MainHandler(BaseHandler):
         if self.get_argument("t", None) == "b":
             map_type = "bmap.html"
         current = int(time.time())
-        delta = 24 * 60 * 60
         start = time.strftime("%Y-%m-%d %H:%M:%S",
-                              time.localtime(current - delta))
+                              time.localtime(current - SECONDS_A_DAY))
         end = time.strftime("%Y-%m-%d %H:%M:%S",
-                            time.localtime(current + delta))
+                            time.localtime(current + SECONDS_A_DAY))
         self.db.execute("SELECT * from gps WHERE mobile=?"
                         "  AND timestamp BETWEEN ? AND ?"
                         "  ORDER BY timestamp",
@@ -208,8 +216,8 @@ class GPSDebugHandler(BaseHandler):
         """
         res = []
         if self.current_user in self.mobile_info:
-            seq = int(self.get_argument("seq", 1))
-            freq = int(self.get_argument("freq", 5))
+            seq = int(self.get_argument("seq", START_SEQ))
+            freq = int(self.get_argument("freq", DEFAULT_FREQ))
             # remove unmatched fixes
             res = [t for t in self.mobile_info[self.current_user]["fixes"]
                      if t["seq"] == seq]
@@ -230,13 +238,13 @@ class GPSDebugHandler(BaseHandler):
         timestamp=YYYYmmddHHMMSS&seq=xxx&satellites=S1:N1,S2:N2...
         """
         record = dict(mobile=self.get_argument("mobile", None),
-                      lat=self.get_argument("lat"),
-                      lon=self.get_argument("lon"),
-                      alt=self.get_argument("alt"),
-                      std_lat=self.get_argument("std_lat"),
-                      std_lon=self.get_argument("std_lon"),
-                      std_alt=self.get_argument("std_alt"),
-                      range_rms=self.get_argument("range_rms"),
+                      lat=float(self.get_argument("lat")),
+                      lon=float(self.get_argument("lon")),
+                      alt=float(self.get_argument("alt")),
+                      std_lat=float(self.get_argument("std_lat")),
+                      std_lon=float(self.get_argument("std_lon")),
+                      std_alt=float(self.get_argument("std_alt")),
+                      range_rms=float(self.get_argument("range_rms")),
                       timestamp=self.get_argument("timestamp"),
                       satellites=self.get_argument("satellites", None),
                       misc=self.get_argument("misc", None),
@@ -244,8 +252,8 @@ class GPSDebugHandler(BaseHandler):
 
         # TODO: reasonable sanity check
 
-        if (len(record["timestamp"]) != 14):
-            raise tornado.web.HTTPError(400)
+        # TODO: check the digest to avoid bad uploaders
+
         try:
             record["timestamp"] = _format_timestamp(record["timestamp"])
         except:
@@ -262,32 +270,52 @@ class GPSDebugHandler(BaseHandler):
                        timestamp=record["timestamp"],
                        satellites=record["satellites"],
                        misc=record["misc"])
-        if not record["mobile"] in self.mobile_info:
+        me = self.mobile_info.get(record["mobile"])
+        if not me:
             # this is the first upload for a new terminal
-            self.mobile_info[record["mobile"]] = dict(seq=record["seq"],
-                                                      last=int(time.time()),
-                                                      freq=5, # default
-                                                      fixes=[new_fix])
+            me = dict(seq=record["seq"],
+                     last=int(time.time()),
+                     freq=DEFAULT_FREQ,
+                     fixes=[new_fix])
+            self.mobile_info[record["mobile"]] = me
         else:
-            if self.mobile_info[record["mobile"]]["seq"] == record["seq"]:
+            if me["seq"] == record["seq"]:
                 # append the new_fix if seqs match
-                self.mobile_info[record["mobile"]]["last"] = int(time.time())
-                self.mobile_info[record["mobile"]]["fixes"].append(new_fix)
+                me["last"] = int(time.time())
+                me["fixes"].append(new_fix)
+
+        self.save_fix(record["mobile"], me, new_fix)
 
         # response with the latest info
-        update_info = dict(freq=self.mobile_info[record["mobile"]]["freq"],
-                           seq=self.mobile_info[record["mobile"]]["seq"])
+        update_info = dict(freq=me["freq"], seq=me["seq"])
         self.write(urlencode(update_info))
 
+    def is_valid_fix(self, fix):
+        if not (0 < abs(fix["lon"]) < 180):
+            return False
+        if not (0 < abs(fix["lat"]) < 90):
+            return False
+        t = datetime.strptime(fix["timestamp"], "%Y-%m-%d %H:%M:%S")
+        if abs((t - datetime.utcnow()).total_seconds()) > SECONDS_A_DAY:
+            return False
 
-class TestHandler(BaseHandler):
-    def post(self):
-        print repr(self.get_argument("a"))
+        return True
 
+    def save_fix(self, mobile, me, fix):
+        if not self.is_valid_fix(fix):
+            return
+        if me.get("last_fix"):
+            if ((abs(fix["lon"] - me["last_fix"]["lon"]) < PRECISION) and
+                (abs(fix["lat"] - me["last_fix"]["lat"]) < PRECISION)):
+                return
 
-# how long the fixes buffered in the server should be cleaned.
-# 5 minutes now.
-DEBUG_FIXES_TIMEOUT = 60 * 5
+        me["last_fix"] = fix
+        self.db.execute("INSERT INTO gps VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                        (mobile, fix["lat"], fix["lon"], fix["alt"],
+                         fix["std_lat"], fix["std_lon"], fix["std_alt"],
+                         fix["range_rms"], fix["timestamp"], fix["satellites"],
+                         fix["misc"]))
+
 
 if __name__ == "__main__":
     tornado.options.parse_command_line()

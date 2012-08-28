@@ -8,7 +8,10 @@ body {
     font-size: 10pt;
     margin: 3pt;
 }
-
+#topcontroller {
+    float: left;
+    font-size: 1.2em;
+}
 #locusDate, #locusBeginSlider, #locusEndSlider {
     width: 80px;
 }
@@ -44,11 +47,13 @@ h2 {
    font-size: 130%;
    cursor: hand;
 }
-
+#leftcontroller {
+   float: left;
+   width: 20%;
+}
 #debug_pane .controller {
    font-size: 100%;
 }
-
 #log {
     width: 79%;
     float: right;

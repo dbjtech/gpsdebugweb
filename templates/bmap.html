@@ -106,9 +106,8 @@
           if (fixes.length > 0) {
             for (var i in fixes) {
               _fixes[i] = new BMap.Point(fixes[i][2], fixes[i][1]);
-              _ts[i] = fixes[i][3];
+              _ts[i] = fixes[i][8];
             }
-            console.log("what?");
             callback = line_callback;
             BMap.Convertor.transMore(_fixes, 0, callback);
           }

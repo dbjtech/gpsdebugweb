@@ -8,9 +8,9 @@
     <link rel="stylesheet" type="text/css" href="/static/css/base.css"/>
     <link rel="stylesheet" type="text/css" href="/static/css/scrolltable.css"/>
     <link rel="stylesheet" type="text/css" href="/static/css/mytabletheme.css"/>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/jquery-ui.min.js"></script>
-    <link type="text/css" href="http://code.jquery.com/ui/1.8.18/themes/base/jquery-ui.css" rel="stylesheet" />
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js"></script>
+    <link type="text/css" href="http://code.jquery.com/ui/1.8.23/themes/base/jquery-ui.css" rel="stylesheet" />
     <script type="text/javascript" src="/static/js/jquery.fixedheadertable.js"></script>
     <script type="text/javascript">
     {% block jsscript %}
@@ -121,7 +121,7 @@
                        title: "Point " + i,
                        map: map});
                _markers.push(markerPoint);
-              fn_clickMarker(markerPoint, map, fixes[i][3]);
+              fn_clickMarker(markerPoint, map, fixes[i][8]);
             }
             map.setCenter(_fixes[0]);
             map.setZoom(12);
@@ -241,22 +241,21 @@
 
     function clean_log() {
         if (confirm("Clean all the logs?")) {
-          $("#result tbody tr").not(":first").hide("slow", function(){$(this).remove();});
+          $("#result tbody tr").not(":first").hide("slow", function (){
+            $(this).remove();});
         }
     }
 
-    function adjust_sizes(flag) {
-      var wh = $(window).height()
+    function adjust_sizes() {
+      var wh = $(window).height();
       var hh = $("#header").height();
       var mh = $("#map_canvas").height();
       var dh = $("#debug_info").height();
       var magic_delta = 34;
 
       $("#map_canvas").height(wh - hh - dh - magic_delta);
-      if (flag) {
-        $("#result").fixedHeaderTable("destroy");
-        $("#result").fixedHeaderTable({height: 270});
-     }
+      $("#result").fixedHeaderTable("destroy");
+      $("#result").fixedHeaderTable({height: 270});
     }
 
     $(window).resize(adjust_sizes);
@@ -270,7 +269,6 @@
            light.children().removeClass("selected");
         }
         light = $(this);
-        console.log("this: " + $(this));
         $(this).children().addClass("selected");
 
 	timestamp = $(this).find("td:nth-child(1)").text();
@@ -303,18 +301,18 @@
         if (is_debugging) {
           $("#helper").hide();
           $(this).parent().parent().height(20);
-          adjust_sizes(false);
+          adjust_sizes();
           $(this).html("Debug Info &#x25B2;");
         } else {
           $(this).parent().parent().height(300);
-          adjust_sizes(false);
-          $("#helper").show("slow");
+          $("#helper").show();
+          adjust_sizes();
           $(this).html("Debug Info &#x25BC;");
         }
         is_debugging = !is_debugging;
       });
 
-      adjust_sizes(true);
+      adjust_sizes();
     });
     </script>
   </head>
@@ -323,7 +321,7 @@
     <div id="header">
       <h2>Current Mobile: {{mobile}} <a href="/logout" style="float: right;">Logout</a></h2>
       <hr>
-      <div style="float: left; font-size: 1.2em;">
+      <div id="topcontroller">
 	<label for="locusDate">Date: </label><input type="text" id="locusDate" />
 	<label for="locusBeginSlider">From: </label><input id="locusBeginSlider" type="text" />
 	<label for="locusEndSlider">To: </label><input id="locusEndSlider" type="text" />
@@ -339,7 +337,7 @@
       <fieldset id="debug_pane">
 	<legend title="Click to show or hide the debug window.">Debug Info &#x25BC;</legend>
 	<div id="helper">
-	  <div style="float: left; width: 20%">
+	  <div id="leftcontroller">
 	    <table class="controller">
 	      <tr>
 		<td><label for="freq">Upload Frequency(s) </label></td>
@@ -377,7 +375,7 @@
 		  <th>Longitude</th>
 		  <th>Latitude</th>
 		  <th title="In most cases, this is useless.">Altitude</th>
-		  <th>&delta; (lon, lat, alt)</th>
+		  <th>&sigma; (lon, lat, alt)</th>
 		  <th title="RMS value of the standard deviation of
 		  the ranges.">Range RMS</th>
 		  <th title="Show the statellite's id versus it's snr.">Satellites (ID:SNR)</th>
