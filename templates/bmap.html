@@ -40,7 +40,7 @@
           map.addControl(new BMap.NavigationControl(opts));
           mc = new BMapLib.MarkerClusterer(map,
                   {maxZoom: (map.getMapType().getMaxZoom() - 1),
-                   isAverangeCenter: true});
+                   isAverageCenter: true});
       }
 
       function show_point(lat, lon, dop, markertime) {
