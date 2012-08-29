@@ -17,11 +17,9 @@
         _ts.push("{{fix[3]}}");
       {% end %}
 
-      //initMap()函数，将地图程序加入页面
       function initMap() {
         $("#fixnum").text(_fixes.length);
 
-        //在ID为"Gmap"的层内显示地图
         var clientloc = google.loader.ClientLocation;
         if (!clientloc) {
             clientloc = {latitude: 39.9100, longitude: 116.4000};
@@ -93,8 +91,8 @@
         polyline = new google.maps.Polyline({
            path: _fixes,
            strokeColor: "#FF0000",
-           strokeOpacity: 0.6,
-           strokeWeight: 2});
+           strokeOpacity: 0.5,
+           strokeWeight: 3});
 
         polyline.setMap(map);
       }
@@ -109,10 +107,9 @@
               if (results[0]) {
                 var str = mPoint.getTitle()
                   +"<ul><li>Address: "+results[0].formatted_address+"</li>"
-                  +"<li>Lng: "+mPoint.getPosition().lng()+"</li>"
+                  +"<li>Lon: "+mPoint.getPosition().lng()+"</li>"
                   +"<li>Lat: "+mPoint.getPosition().lat()+"</li>"
                   +"<li>Time: "+tempDate+"</li></ul>";
-                // 填充吹出框内容并显示
                 infowindow.setContent(str);
                 infowindow.open(map, mPoint);
               }

@@ -15,7 +15,6 @@
         _ts.push("{{fix[3]}}");
       {% end %}
 
-      //initMap()函数，将地图程序加入页面
       function initMap() {
           map = new BMap.Map("map_canvas");
           var set_center = false;
@@ -71,7 +70,7 @@
       function fn_drawLine() {
         polyline = new BMap.Polyline(_fixes, 
                                      {strokeColor: "red",
-                                      strokeWeight: 6,
+                                      strokeWeight: 3,
                                       strokeOpacity: 0.5});
         map.addOverlay(polyline);
       }
@@ -82,7 +81,7 @@
           gc.getLocation(e.point, function(rs){
               var s = marker.getTitle()
                   +"<ul><li>Address: "+rs.address+"</li>"
-                  +"<li>Lng: "+rs.point.lng+"</li>"
+                  +"<li>Lon: "+rs.point.lng+"</li>"
                   +"<li>Lat: "+rs.point.lat+"</li>"
                   +"<li>Time: "+tempDate+"</li></ul>";
             marker.openInfoWindow(new BMap.InfoWindow(s));
