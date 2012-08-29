@@ -14,7 +14,7 @@
 
       {% for fix in fixes %}
         _fixes.push(new google.maps.LatLng({{fix[1]}}, {{fix[2]}}));
-        _ts.push("{{fix[3]}}");
+        _ts.push("{{fix[8]}}");
       {% end %}
 
       function initMap() {
