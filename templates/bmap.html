@@ -9,22 +9,20 @@
       var polyline;
       var _fixes = [];
       var _ts = [];
-
-      {% for fix in fixes %}
-        _fixes.push(new BMap.Point({{fix[2]}}, {{fix[1]}}));
-        _ts.push("{{fix[3]}}");
-      {% end %}
+      var callback = null;
+      var set_center = false;
 
       function initMap() {
           map = new BMap.Map("map_canvas");
-          var set_center = false;
           var localCity = new BMap.LocalCity();
           localCity.get(function(r) {
-                          set_center = true;
-                          map.centerAndZoom(r.center, r.level);
+                          if (!set_center) {
+                            set_center = true;
+                            map.centerAndZoom(r.center, r.level);
+                          }
                         });
           if (!set_center) {
-              map.centerAndZoom("北京");
+              map.centerAndZoom("Beijing");
           }
           map.enableScrollWheelZoom();
           map.addControl(new BMap.ScaleControl());
@@ -34,18 +32,7 @@
           var opts = {anchor: BMAP_ANCHOR_TOP_LEFT,
                       offset: new BMap.Size(10, 10)};
           map.addControl(new BMap.NavigationControl(opts));
-
-          BMap.Convertor.transMore(_fixes, 0, callback);
-
-          var $locusElement = $("#locusDate");
-          $locusElement.datepicker();
-          $locusElement.datepicker("setDate", new Date());
-          $locusElement.datepicker("option", "dateFormat", "yy-mm-dd");
-          fn_initSlider();
-          $("#fixnum").text(_fixes.length);
       }
-
-      var callback = null;
 
       function show_point(lat, lon, dop, markertime) {
         map.clearOverlays();
@@ -68,7 +55,7 @@
       }
 
       function fn_drawLine() {
-        polyline = new BMap.Polyline(_fixes, 
+        polyline = new BMap.Polyline(_fixes,
                                      {strokeColor: "red",
                                       strokeWeight: 3,
                                       strokeOpacity: 0.5});
@@ -77,7 +64,7 @@
 
       var gc = new BMap.Geocoder();
       function fn_clickMarker(marker, tempDate) {
-        marker.addEventListener("click", function(e){ 
+        marker.addEventListener("click", function(e){
           gc.getLocation(e.point, function(rs){
               var s = marker.getTitle()
                   +"<ul><li>Address: "+rs.address+"</li>"
@@ -107,6 +94,7 @@
               _fixes[i] = new BMap.Point(fixes[i][2], fixes[i][1]);
               _ts[i] = fixes[i][8];
             }
+
             callback = line_callback;
             BMap.Convertor.transMore(_fixes, 0, callback);
           }
@@ -119,13 +107,17 @@
          if (res[i].error != 0) {
            continue;
          }
+
          var point = new BMap.Point(res[i].x, res[i].y);
          _fixes.push(point);
          var marker = new BMap.Marker(point, {title: "Point " + i});
          map.addOverlay(marker);
          fn_clickMarker(marker, _ts[i]);
        }
-       map.centerAndZoom(_fixes[0], 15);
-       fn_drawLine();
+       if (_fixes.length > 0) {
+           set_center = true;
+           map.centerAndZoom(_fixes[0], Math.max(13, map.getZoom()));
+           fn_drawLine();
+       }
     }
 {% end %}

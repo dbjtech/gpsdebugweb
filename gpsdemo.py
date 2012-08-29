@@ -145,17 +145,7 @@ class MainHandler(BaseHandler):
         map_type = "gmap.html"
         if self.get_argument("t", None) == "b":
             map_type = "bmap.html"
-        current = int(time.time())
-        start = time.strftime("%Y-%m-%d %H:%M:%S",
-                              time.localtime(current - SECONDS_A_DAY))
-        end = time.strftime("%Y-%m-%d %H:%M:%S",
-                            time.localtime(current + SECONDS_A_DAY))
-        self.db.execute("SELECT * from gps WHERE mobile=?"
-                        "  AND timestamp BETWEEN ? AND ?"
-                        "  ORDER BY timestamp",
-                        (mobile, start, end))
-        fixes = self.db.fetchall()
-        self.render(map_type, fixes=fixes, mobile=mobile)
+        self.render(map_type, mobile=mobile)
 
 
 def _format_timestamp(ts):
@@ -295,9 +285,12 @@ class GPSDebugHandler(BaseHandler):
             return False
         if not (0 < abs(fix["lat"]) < 90):
             return False
-        t = datetime.strptime(fix["timestamp"], "%Y-%m-%d %H:%M:%S")
-        if abs((t - datetime.utcnow()).total_seconds()) > SECONDS_A_DAY:
-            return False
+
+        # For the sake of the Agilen Simulator, which can only
+        # generates signals in 2007.5
+        # t = datetime.strptime(fix["timestamp"], "%Y-%m-%d %H:%M:%S")
+        # if abs((t - datetime.utcnow()).total_seconds()) > SECONDS_A_DAY:
+        #    return False
 
         return True
 

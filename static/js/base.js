@@ -2,7 +2,7 @@ function fn_initSlider() {
     $("#locusSlider").slider({
         min: 0,
         max: 1439,
-        values: [420, 1140],
+        values: [0, 1439],
         range: true,
         slide: function (event, ui) {
             var str_slideVal1 = fn_slideValToTimeVal(ui.values[0]);
@@ -12,9 +12,8 @@ function fn_initSlider() {
         }
     });
 
-    $("#locusBeginSlider").val("07:00");
-    $("#locusEndSlider").val("19:00");
-    $("#locusSlider").slider("option", "values", [420, 1140]);
+    $("#locusBeginSlider").val("00:00");
+    $("#locusEndSlider").val("23:59");
 }
 
 function fn_slideValToTimeVal(n_slideVal) {
@@ -152,6 +151,8 @@ $("#result tbody tr").live("click", function(){
 });
 
 $(function() {
+    initMap();
+
     if (getParameterByName("t") == "b") {
         $("#mapswitcher").text("Switch to Google Map");
     } else {
@@ -159,6 +160,14 @@ $(function() {
     }
 
     $("button").button();
+
+    $("#locusDate").datepicker({changeMonth: true,
+			        changeYear: true,
+			        dateFormat: "yy-mm-dd",
+			        showButtonPanel: true});
+    $("#locusDate").datepicker("setDate", new Date());
+
+    fn_initSlider();
 
     $("#result").fixedHeaderTable({height: 270});
 
@@ -178,4 +187,6 @@ $(function() {
     });
 
     adjust_sizes();
+    console.log("fire!!!");
+    $("#locusConfirm").trigger("click");
 });

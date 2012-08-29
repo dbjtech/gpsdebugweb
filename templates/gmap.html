@@ -12,14 +12,7 @@
       var _ts = [];
       var _markers = [];
 
-      {% for fix in fixes %}
-        _fixes.push(new google.maps.LatLng({{fix[1]}}, {{fix[2]}}));
-        _ts.push("{{fix[8]}}");
-      {% end %}
-
       function initMap() {
-        $("#fixnum").text(_fixes.length);
-
         var clientloc = google.loader.ClientLocation;
         if (!clientloc) {
             clientloc = {latitude: 39.9100, longitude: 116.4000};
@@ -33,27 +26,11 @@
           mapTypeId: google.maps.MapTypeId.ROADMAP
         };
 
-        map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-
-        for (var i in _fixes) {
-          var markerPoint = new google.maps.Marker({
-                     position: _fixes[i],
-                     title: "Point " + i,
-                     map: map});
-          markerPoint.set("id", i);
-          _markers.push(markerPoint);
-          fn_clickMarker(markerPoint, map, _ts[i]);
-        }
-        fn_drawLine();
-
-        var $locusElement = $("#locusDate");
-        $locusElement.datepicker();
-        $locusElement.datepicker("setDate", new Date());
-        $locusElement.datepicker("option", "dateFormat", "yy-mm-dd");
-        fn_initSlider();
+        map = new google.maps.Map(document.getElementById("map_canvas"),
+                                                          myOptions);
       }
 
-      function show_point(lat, lon, dop, markertime) {
+      function show_point(lat, lon, sigma, markertime) {
         if (polyline) {
           polyline.setMap(null);
         }
@@ -68,16 +45,16 @@
                             title: "Current Fix",
                             map: map});
         _markers.push(markerPoint);
-        fn_clickMarker(markerPoint, map, markertime);
+        fn_clickMarker(markerPoint, markertime);
 
         var circle = new google.maps.Circle({
                       map: map,
-                      radius: dop,
+                      radius: sigma,
                       fillColor: '#AA0000',
                       fillOpacity: 0.5,
                       strokeOpacity: 0.6,
                       strokeWeight: 1,
-                      strokeColor: "blue"});
+                      strokeColor: "red"});
         circle.bindTo('center', markerPoint, 'position');
         _markers.push(circle);
 
@@ -98,7 +75,7 @@
       }
 
       var infowindow = new google.maps.InfoWindow();
-      function fn_clickMarker(mPoint, map, tempDate) {
+      function fn_clickMarker(mPoint, tempDate) {
         google.maps.event.addListener(mPoint, "click", function() {
           var geocoder = new google.maps.Geocoder();
           //TODO: cache in title
@@ -144,11 +121,10 @@
                        position: _fixes[i],
                        title: "Point " + i,
                        map: map});
-               _markers.push(markerPoint);
-              fn_clickMarker(markerPoint, map, fixes[i][8]);
+              _markers.push(markerPoint);
+              fn_clickMarker(markerPoint, fixes[i][8]);
             }
             map.setCenter(_fixes[0]);
-            map.setZoom(12);
           }
           fn_drawLine();
         }, "json");
