@@ -187,6 +187,5 @@ $(function() {
     });
 
     adjust_sizes();
-    console.log("fire!!!");
     $("#locusConfirm").trigger("click");
 });
