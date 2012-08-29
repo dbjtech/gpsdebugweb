@@ -120,7 +120,7 @@ function adjust_sizes() {
 
     $("#map_canvas").height(wh - hh - dh - magic_delta);
     $("#result").fixedHeaderTable("destroy");
-    $("#result").fixedHeaderTable({height: 270});
+    $("#result").fixedHeaderTable({height: 220});
 }
 
 $(window).resize(adjust_sizes);
@@ -169,7 +169,7 @@ $(function() {
 
     fn_initSlider();
 
-    $("#result").fixedHeaderTable({height: 270});
+    $("#result").fixedHeaderTable({height: 220});
 
     var is_debugging = true;
     $("#debug_pane legend").click(function (event) {
@@ -178,7 +178,7 @@ $(function() {
             $(this).parent().parent().height(20);
             $(this).html("Debug Info &#x25B2;");
         } else {
-            $(this).parent().parent().height(300);
+            $(this).parent().parent().height(250);
             $("#helper").show();
             $(this).html("Debug Info &#x25BC;");
         }

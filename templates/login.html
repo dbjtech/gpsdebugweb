@@ -8,22 +8,20 @@
         font-size: 14pt;
       }
       table, input {
-        font-size: 100%;
+        font-size: 12pt;
       }
     </style>
   </head>
 
   <body>
-  <div style="width:500px; margin:100 auto;">
+  <div style="width:400px; margin:100 auto;">
     <form action="/login" method="post">
       <fieldset>
 	<legend>DBJ GPS Testbed</legend>
-	<table><tr><td title="Check out this value in your testing terminal. It's a hash of IMSI.">Mobile ID: <input type="text" name="mobile"></td>
-	<td title="Check it if your testing terminal is in
-	China."><input type="checkbox" name="ischina" value="y"
-	checked>in China?</td></tr>
+	<table align=center><tr><td title="Check out this value in your testing terminal. It's a hash of IMSI.">Mobile ID: <input type="text" name="mobile"></td></tr>
+	<tr><td title="Check it if your testing terminal is in China.">@China? <input type="checkbox" name="ischina" value="y"></td></tr>
 	  {% if is_public %}
-	<tr><td colspan="2">
+	<tr><td>
 <script type="text/javascript"
        src="http://www.google.com/recaptcha/api/challenge?k=6LebMNASAAAAAF_6TpT5ULZnBHV55syupSTL7y1U">
     </script>
@@ -37,7 +35,7 @@
     </noscript>
         </td></tr>
 	{% end %}
-	<tr><td style="text-align: right;" colspan="2"><input type="submit" /><input type="reset" /></td></tr>
+	<tr><td style="text-align: right;"><input type="submit" /><input type="reset" /></td></tr>
 	</table>
       </fieldset>
   </form>
