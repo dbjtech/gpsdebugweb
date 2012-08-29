@@ -142,7 +142,7 @@ class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         mobile = self.current_user
-        map_type = "map.html"
+        map_type = "gmap.html"
         if self.get_argument("t", None) == "b":
             map_type = "bmap.html"
         current = int(time.time())

@@ -165,16 +165,15 @@ $(function() {
     var is_debugging = true;
     $("#debug_pane legend").click(function (event) {
         if (is_debugging) {
-          $("#helper").hide();
+            $("#helper").hide();
             $(this).parent().parent().height(20);
-            adjust_sizes();
             $(this).html("Debug Info &#x25B2;");
         } else {
-          $(this).parent().parent().height(300);
+            $(this).parent().parent().height(300);
             $("#helper").show();
-            adjust_sizes();
             $(this).html("Debug Info &#x25BC;");
         }
+        adjust_sizes();
         is_debugging = !is_debugging;
     });
 
