@@ -59,34 +59,34 @@ function periodical_query() {
         dataType: "json",
         success: function(data) {
             $.each(data.res, function(index, entry) {
-		$s = $("<tr/>")
-		var segs =[[entry.timestamp],
-			   [entry.lon],
-			   [entry.lat],
-			   [entry.alt],
-			   [entry.std_lon, entry.std_lat, entry.std_alt],
-			   [entry.range_rms],
-			   [entry.satellites.replace(/,/g, ", ")],
-			   [entry.misc]];
-		for (i in segs) {
-		    $s.append($("<td/>").text(segs[i].join(", ")));
-		}
-		var ow = $("#result").width();
-		$s.appendTo("#result tbody");
-		if ($("#result").width() > ow) {
-		    adjust_sizes();
-		}
-		if ($("#scrollinfo").is(":checked")) {
-		    var last_row = $("#result tbody tr").last();
-		    $(".fht-tbody").animate({scrollTop:
-		      $(".fht-tbody").scrollTop() + last_row.position().top});
-		}
+                $s = $("<tr/>")
+                var segs =[[entry.timestamp],
+                           [entry.lon],
+                           [entry.lat],
+                           [entry.alt],
+                           [entry.std_lon, entry.std_lat, entry.std_alt],
+                           [entry.range_rms],
+                           [entry.satellites.replace(/,/g, ", ")],
+                           [entry.misc]];
+                for (i in segs) {
+                    $s.append($("<td/>").text(segs[i].join(", ")));
+                }
+                var ow = $("#result").width();
+                $s.appendTo("#result tbody");
+                if ($("#result").width() > ow) {
+                    adjust_sizes();
+                }
+                if ($("#scrollinfo").is(":checked")) {
+                    var last_row = $("#result tbody tr").last();
+                    $(".fht-tbody").animate({scrollTop:
+                      $(".fht-tbody").scrollTop() + last_row.position().top});
+                }
             });
         },
         complete: function(a, b) {
             if (is_collecting) {
-		// query more frequently than the terminal reports
-		setTimeout(periodical_query, parseInt($("#freq").val()) * 500);
+                // query more frequently than the terminal reports
+                setTimeout(periodical_query, parseInt($("#freq").val()) * 500);
             }
         }
     });
@@ -104,6 +104,9 @@ function switch_collect() {
       }
 }
 
+function adjust_log_size() {
+}
+
 function clean_log() {
     if (confirm("Clean all the logs?")) {
         $("#result tbody tr").not(":first").hide("slow", function (){
@@ -116,11 +119,20 @@ function adjust_sizes() {
     var hh = $("#header").height();
     var mh = $("#map_canvas").height();
     var dh = $("#debug_info").height();
-    var magic_delta = 34;
+    var $log = $("#log");
+    var $helper = $("#helper");
+    // TODO: I do not know why we need the magic, perhaps it comes
+    // from hidden paddings and margins.
+    var magic = 14;
 
-    $("#map_canvas").height(wh - hh - dh - magic_delta);
+    $helper.height(dh - 20); // TODO: magic
+    $log.width($helper.width() - $("#leftcontroller").width() -
+	       25); // TODO: magic, need revise
+    $log.height($helper.height() + Math.abs(parseInt($log.css('margin-top'))));
+
+    $("#map_canvas").height(wh - hh - dh - magic);
     $("#result").fixedHeaderTable("destroy");
-    $("#result").fixedHeaderTable({height: 220});
+    $("#result").fixedHeaderTable({height: $log.height()});
 }
 
 $(window).resize(adjust_sizes);
@@ -128,7 +140,7 @@ $(window).resize(adjust_sizes);
 var light = null;
 $("#result tbody tr").live("click", function(){
     if ($("#result tbody tr").index(this) == 0) {
-	return;
+        return;
     }
     if (light) {
         light.children().removeClass("selected");
@@ -156,36 +168,51 @@ $(function() {
     if (getParameterByName("t") == "b") {
         $("#mapswitcher").text("Switch to Google Map");
     } else {
-	$("#mapswitcher").text("Switch to Baidu Map");
+        $("#mapswitcher").text("Switch to Baidu Map");
     }
 
     $("button").button();
 
     $("#locusDate").datepicker({changeMonth: true,
-			        changeYear: true,
-			        dateFormat: "yy-mm-dd",
-			        showButtonPanel: true});
+                                changeYear: true,
+                                dateFormat: "yy-mm-dd",
+                                showButtonPanel: true});
     $("#locusDate").datepicker("setDate", new Date());
 
     fn_initSlider();
 
-    $("#result").fixedHeaderTable({height: 220});
+    $("#debug_info").resizable({handles: "n",
+                                ghost: true,
+                                minHeight: 180,
+                                resize: function (event, ui) {
+                                    var $map = $("#map_canvas");
+                                    $map.height($map.height() -
+                                     (ui.size.height - ui.originalSize.height));
+                                },
+                                stop: function (event, ui) {
+                                    adjust_sizes();
+                                }});
+
+    adjust_sizes();
 
     var is_debugging = true;
+    var debug_info_height = 0;
     $("#debug_pane legend").click(function (event) {
+        var $debug_info = $("#debug_info");
+        var $helper = $("#helper");
         if (is_debugging) {
-            $("#helper").hide();
-            $(this).parent().parent().height(20);
+            $helper.hide();
+            debug_info_height = $debug_info.height();
+            $debug_info.height(25);
             $(this).html("Debug Info &#x25B2;");
         } else {
-            $(this).parent().parent().height(250);
-            $("#helper").show();
+            $debug_info.height(debug_info_height);
+            $helper.show();
             $(this).html("Debug Info &#x25BC;");
         }
         adjust_sizes();
         is_debugging = !is_debugging;
     });
 
-    adjust_sizes();
     $("#locusConfirm").trigger("click");
 });
