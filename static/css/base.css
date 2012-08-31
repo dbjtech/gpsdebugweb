@@ -67,3 +67,9 @@ h2 {
 #result tbody tr td.selected {
     background-color: lightcoral;
 }
+.light-info {
+    color: darkgreen;
+}
+.dark-info {
+    color: #CD0A0A;
+}

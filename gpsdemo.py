@@ -59,7 +59,6 @@ class Application(tornado.web.Application):
 
     def __init__(self, debug=False):
         handlers = [
-            (r"/gps", GPSHandler),
             (r"/track/([0-9]*)/([0-9]*)", TrackHandler),
             (r"/gpsdebug", GPSDebugHandler),
             (r"/login", LoginHandler),
@@ -168,30 +167,6 @@ class TrackHandler(BaseHandler):
         self.write(fixes)
 
 
-class GPSHandler(BaseHandler):
-    def _work(self):
-        record = [self.get_argument("mobile", None),
-                  self.get_argument("lat", None),
-                  self.get_argument("lon", None),
-                  self.get_argument("timestamp", None)]
-        if not all(record):
-            raise tornado.web.HTTPError(400)
-
-        if (len(record[-1]) != 14):
-            raise tornado.web.HTTPError(400)
-        try:
-            record[-1] = _format_timestamp(record[-1])
-        except:
-            raise tornado.web.HTTPError(400)
-
-        self.db.execute("INSERT INTO gps VALUES(?,?,?,?)",
-                        record)
-        self.write("OK")
-
-    def post(self):
-        self._work()
-
-
 class GPSDebugHandler(BaseHandler):
     """Show debugging information from the terminal.
 
@@ -204,20 +179,26 @@ class GPSDebugHandler(BaseHandler):
 
         This function also updates `seq' and `freq'.
         """
-        res = []
+        # TODO: this is bad, should use comet.
+        fixes = []
+        start = None
         if self.current_user in self.mobile_info:
+            me = self.mobile_info[self.current_user]
             seq = int(self.get_argument("seq", START_SEQ))
             freq = int(self.get_argument("freq", DEFAULT_FREQ))
+            start = self.get_argument("start", None)
             # remove unmatched fixes
-            res = [t for t in self.mobile_info[self.current_user]["fixes"]
-                     if t["seq"] == seq]
+            fixes = [t for t in me["fixes"] if t["seq"] == seq]
 
-            self.mobile_info[self.current_user].update(seq=seq,
-                                                       freq=freq,
-                                                       last=int(time.time()),
-                                                       fixes=[])
-        # TODO: this is bad, should use comet.
-        self.write(json_encode(dict(res=res)))
+            me.update(seq=seq,
+                      freq=freq,
+                      start=start or me["start"],
+                      last=int(time.time()),
+                      fixes=[])
+        res = dict(fixes=fixes)
+        if start:
+            res.update(start=True)
+        self.write(json_encode(res))
 
     def post(self):
         """Collect data from the terminal.
@@ -264,9 +245,10 @@ class GPSDebugHandler(BaseHandler):
         if not me:
             # this is the first upload for a new terminal
             me = dict(seq=record["seq"],
-                     last=int(time.time()),
-                     freq=DEFAULT_FREQ,
-                     fixes=[new_fix])
+                      last=int(time.time()),
+                      freq=DEFAULT_FREQ,
+                      start=None,
+                      fixes=[new_fix])
             self.mobile_info[record["mobile"]] = me
         else:
             if me["seq"] == record["seq"]:
@@ -278,6 +260,10 @@ class GPSDebugHandler(BaseHandler):
 
         # response with the latest info
         update_info = dict(freq=me["freq"], seq=me["seq"])
+        if me["start"]:
+            update_info["start"] = me["start"]
+            me["start"] = None
+
         self.write(urlencode(update_info))
 
     def is_valid_fix(self, fix):

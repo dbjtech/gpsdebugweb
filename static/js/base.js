@@ -21,7 +21,7 @@ function fn_slideValToTimeVal(n_slideVal) {
     var n_minute = n_slideVal % 60;
     n_hour = n_hour < 10 ? "0"+ n_hour : n_hour;
     n_minute = n_minute < 10 ? "0"+ n_minute : n_minute;
-      return n_hour + ":" + n_minute;
+    return n_hour + ":" + n_minute;
 }
 
 function getParameterByName(name) {
@@ -35,30 +35,30 @@ function getParameterByName(name) {
         return decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
-function switch_map() {
-    if (!window.location.origin) {
-        window.location.origin = window.location.protocol + "//" + window.location.host;
-    }
-
-    if (getParameterByName("t") == "b") {
-        window.location.href = window.location.origin;
-    } else {
-        window.location.href = window.location.origin + "/?t=b";
-    }
-}
-
+var is_gps_type_changed = false;
 var is_collecting = false;
 var seq = 0;
 var handler = null;
 
 function periodical_query() {
+    var data = {seq: seq, freq: $("#freq").val()};
+
+    if (is_gps_type_changed) {
+	data["start"] = $("#gpstype").val();
+    }
+
     $.ajax({
         url: "/gpsdebug",
         type: "GET",
-        data: {seq: seq, freq: $("#freq").val()},
+        data: data,
         dataType: "json",
         success: function(data) {
-            $.each(data.res, function(index, entry) {
+	    if ((typeof data.start != "undefined") && (data.start)) {
+		is_gps_type_changed = false;
+		$("#gpsinfo").text($("#gpstype option:selected").text() + " Done").removeClass("dark-info");
+	    }
+
+            $.each(data.fixes, function(index, entry) {
                 $s = $("<tr/>")
                 var segs =[[entry.timestamp],
                            [entry.lon],
@@ -90,28 +90,6 @@ function periodical_query() {
             }
         }
     });
-}
-
-function switch_collect() {
-    is_collecting = !is_collecting
-
-      if (is_collecting) {
-          $("#startstop span").text("Stop!")
-          seq = seq + 1;
-          periodical_query();
-      } else {
-          $("#startstop span").text("Start!")
-      }
-}
-
-function adjust_log_size() {
-}
-
-function clean_log() {
-    if (confirm("Clean all the logs?")) {
-        $("#result tbody tr").not(":first").hide("slow", function (){
-            $(this).remove();});
-    }
 }
 
 function adjust_sizes() {
@@ -165,13 +143,29 @@ $("#result tbody tr").live("click", function(){
 $(function() {
     initMap();
 
+    $("button").button();
+
     if (getParameterByName("t") == "b") {
-        $("#mapswitcher").text("Switch to Google Map");
+        $("#mapswitcher span").text("Switch to Google Map");
     } else {
-        $("#mapswitcher").text("Switch to Baidu Map");
+        $("#mapswitcher span").text("Switch to Baidu Map");
     }
 
-    $("button").button();
+    $("#mapswitcher").click(function (event) {
+	if (!window.location.origin) {
+            window.location.origin = window.location.protocol + "//" + window.location.host;
+	}
+
+	if (getParameterByName("t") == "b") {
+            window.location.href = window.location.origin;
+	} else {
+            window.location.href = window.location.origin + "/?t=b";
+	}
+    });
+
+    $("#locusConfirm").click(function (event) {
+	fn_locusConfirm();
+    });
 
     $("#locusDate").datepicker({changeMonth: true,
                                 changeYear: true,
@@ -183,7 +177,7 @@ $(function() {
 
     $("#debug_info").resizable({handles: "n",
                                 ghost: true,
-                                minHeight: 180,
+                                minHeight: 200,
                                 resize: function (event, ui) {
                                     var $map = $("#map_canvas");
                                     $map.height($map.height() -
@@ -193,8 +187,6 @@ $(function() {
                                     adjust_sizes();
                                 }});
 
-    adjust_sizes();
-
     var is_debugging = true;
     var debug_info_height = 0;
     $("#debug_pane legend").click(function (event) {
@@ -203,7 +195,7 @@ $(function() {
         if (is_debugging) {
             $helper.hide();
             debug_info_height = $debug_info.height();
-            $debug_info.height(25);
+            $debug_info.height(26);
             $(this).html("Debug Info &#x25B2;");
         } else {
             $debug_info.height(debug_info_height);
@@ -214,5 +206,33 @@ $(function() {
         is_debugging = !is_debugging;
     });
 
+    $("#gpscontroller").click(function (event) {
+	is_gps_type_changed = true;
+	$("#gpsinfo").text($("#gpstype option:selected").text() + "ing...").addClass("dark-info");
+    });
+
+    $("#startstop").click(function (event) {
+	is_collecting = !is_collecting
+
+	if (is_collecting) {
+            $("#startstop span").text("Stop Log!");
+	    $("#loginfo").text("Logging...");
+            seq = seq + 1;
+            periodical_query();
+	} else {
+	    $("#loginfo").empty();
+	    $("#gpsinfo").empty();
+            $("#startstop span").text("Start Log!")
+	}
+    });
+
+    $("#cleanlog").click(function (event) {
+	if (confirm("Clean all the logs?")) {
+            $("#result tbody tr").not(":first").hide("slow", function (){
+		$(this).remove();});
+	}
+    });
+
+    adjust_sizes();
     $("#locusConfirm").trigger("click");
 });

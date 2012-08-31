@@ -18,7 +18,11 @@
 
   <body>
     <div id="header">
-      <h2>Current Mobile ID: {{mobile}} <a href="/logout" style="float: right;">Logout</a></h2>
+      <h2><span>Current Mobile ID: {{mobile}}</span>
+	<a href="/logout" style="float: right; text-decoration: none">
+	  <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>Logout
+	</a>
+      </h2>
       <hr>
       <div id="topcontroller">
 	<label for="locusDate">Date: </label><input type="text" id="locusDate" />
@@ -26,20 +30,20 @@
 	<label for="locusEndSlider">To: </label><input id="locusEndSlider" type="text" />
       </div>
       <div id="locusSlider" title="Slide to adjust the time slot."></div>
-      <button id="locusConfirm" onclick="fn_locusConfirm();">Query</button>
-      <button id="mapswitcher" onclick="switch_map();" title="Do use Baidu Map if ther mobile is in China."></button>
+      <button id="locusConfirm">Query</button>
+      <button id="mapswitcher" title="Do use Baidu Map if ther mobile is in China."><span></span></button>
       <div id="info">Points number: <span id="fixnum"> </span></div>
     <hr>
     </div>
     <div id="map_canvas"></div>
     <div id="debug_info">
       <fieldset id="debug_pane">
-	<legend title="Click to show or hide the debug window.">Debug Info &#x25BC;</legend>
+	<legend class="ui-widget-header ui-corner-all" title="Click to show or hide the debug window.">Debug Info &#x25BC;</legend>
 	<div id="helper">
 	  <div id="leftcontroller">
 	    <table class="controller">
 	      <tr>
-		<td><label for="freq">Upload Frequency(s) </label></td>
+		<td width="100pt"><label for="freq">Upload Frequency(s) </label></td>
 		<td>
 		  <select id="freq" title="Terminal reports GPS info in this frequency.">
 		    <option>5</option>
@@ -55,14 +59,21 @@
 		<td><input type="checkbox" title="Scroll the bar on new data." id="scrollinfo" checked></input></td>
 	      </tr>
 	      <tr>
-		<td></td><td><button id="startstop"
-				     onclick="switch_collect();"><span>Start!</span></button></td>
+		<td><select id="gpstype">
+		    <option value="hot">Hot Start</option>
+		    <option value="warm">Warm Start</option>
+		    <option value="cold">Cold Start</option>
+		    </select>
+		</td>
+		<td><button id="gpscontroller" title="Tell the tracker to do certain start."><span>Notify!</span></button>
+		</td>
 	      </tr>
 	      <tr>
-		<td></td><td><button id="cleanlog"
-				     onclick="clean_log();"><span>Clean log</span></button></td>
+		<td><span class="light-info" id="loginfo"></span></td><td><button id="startstop"><span>Start log</span></button></td>
 	      </tr>
-
+	      <tr>
+		<td><span class="light-info" id="gpsinfo"></span></td><td><button id="cleanlog"><span>Clean log</span></button></td>
+	      </tr>
 	    </table>
 	  </div>
 	  <div id="log">
