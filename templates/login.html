@@ -10,37 +10,62 @@
       table, input {
         font-size: 12pt;
       }
+
+      #captcha {
+        width: 80px;
+      }
+
+      #captchaimg {
+        height: 24px;
+        margin-bottom: -6px;
+      }
     </style>
   </head>
 
   <body>
-  <div style="width:400px; margin:100 auto;">
+  <div style="width:500px; margin:100 auto;">
     <form action="/login" method="post">
       <fieldset>
 	<legend>DBJ GPS Testbed</legend>
-	<table align=center><tr><td title="Check out this value in your testing terminal. It's a hash of IMSI.">Mobile ID: <input type="text" name="mobile"></td></tr>
-	<tr><td title="Check it if your testing terminal is in China.">@China? <input type="checkbox" name="ischina" value="y"></td></tr>
+	<table align=center>
+	  <tr>
+	    <td title="Check out this value in your testing terminal. It's a hash of IMSI.">Mobile ID:</td>
+	    <td><input type="text" name="mobile"></td></tr>
+	  <tr>
+	    <td title="Check it if your testing terminal is in China.">@China?</td>
+	    <td><input type="checkbox" name="ischina" value="y"></td></tr>
 	  {% if is_public %}
-	<tr><td>
-<script type="text/javascript"
-       src="http://www.google.com/recaptcha/api/challenge?k=6LebMNASAAAAAF_6TpT5ULZnBHV55syupSTL7y1U">
-    </script>
-    <noscript>
-       <iframe src="http://www.google.com/recaptcha/api/noscript?k=6LebMNASAAAAAF_6TpT5ULZnBHV55syupSTL7y1U"
-           height="300" width="500" frameborder="0"></iframe><br>
-       <textarea name="recaptcha_challenge_field" rows="3" cols="40">
-       </textarea>
-       <input type="hidden" name="recaptcha_response_field"
-           value="manual_challenge">
-    </noscript>
-        </td></tr>
-	{% end %}
-	<tr><td style="text-align: right;"><input type="submit" /><input type="reset" /></td></tr>
+	  <tr>
+	    <td>Prove yourself:</td>
+	    <td><input type="text" name="captcha" id="captcha" maxLength="6" />
+	        <img id="captchaimg" src="" title="Click to change one">
+	        <input type="hidden" name="captchahash" id="captchahash" value="" /></td>
+	  </tr>
+	  {% end %}
+	<tr>
+	  <td></td>
+	  <td style="text-align: right;"><input type="submit" /><input type="reset" /></td>
+	</tr>
 	</table>
       </fieldset>
   </form>
     &copy; DBJ (Zhuhai) Technologies Co. Ltd.
   </div>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script type="text/javascript" src="/static/js/jquery.cookie.js"></script>
+  <script type="text/javascript">
+    $(function() {
+      $("#captchaimg").click(function () {
+        get_captcha($(this));
+      });
+      get_captcha($("#captchaimg"));
 
+      function get_captcha($obj) {
+        $obj.attr("src", "/captcha?nocache=" + Math.random()).load(function () {
+          $("#captchahash").val($.cookie("captchahash"));
+        });
+      }
+    });
+  </script>
   </body>
 </html>

@@ -8,7 +8,6 @@ import sqlite3
 from urllib import urlencode
 from datetime import datetime
 
-from recaptcha.client import captcha
 from IPy import IP
 
 import tornado.httpserver
@@ -20,6 +19,12 @@ define('db', default="gps.db")
 define('port', type=int, default=10000)
 define('mode', default="deploy")
 
+import cStringIO
+import hashlib
+import os.path
+
+import captcha
+
 # how long the fixes buffered in the server should be cleaned.
 # 5 minutes now.
 DEBUG_FIXES_TIMEOUT = 60 * 5
@@ -28,15 +33,6 @@ DEFAULT_FREQ = 5
 START_SEQ = 1
 SECONDS_A_DAY = 60 * 60 * 24
 PRECISION = 1E-5
-
-_RECAPTCHA_PRIVATE_KEY = "6LebMNASAAAAAKyGlK0qhoRAOr8wo2I5-lJ3-fnZ"
-
-def _verify_recaptcha(challenge, response, remoteip):
-    response = captcha.submit(challenge,
-                              response,
-                              _RECAPTCHA_PRIVATE_KEY,
-                              remoteip)
-    return response.is_valid
 
 
 class DBConnection(object):
@@ -60,6 +56,7 @@ class Application(tornado.web.Application):
     def __init__(self, debug=False):
         handlers = [
             (r"/track/([0-9]*)/([0-9]*)", TrackHandler),
+            (r"/captcha", CaptchaHandler),
             (r"/gpsdebug", GPSDebugHandler),
             (r"/login", LoginHandler),
             (r"/logout", LogoutHandler),
@@ -104,6 +101,10 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         return self.get_secure_cookie("mobile")
 
+def _verify_captcha(captcha, captcha_hash):
+    m = hashlib.md5()
+    m.update(captcha.lower())
+    return captcha_hash == m.hexdigest()
 
 class LoginHandler(BaseHandler):
     def get(self):
@@ -115,12 +116,13 @@ class LoginHandler(BaseHandler):
         dest = "/"
         if mobile:
             is_public = IP(self.request.remote_ip).iptype() == "PUBLIC"
-            challenge = self.get_argument("recaptcha_challenge_field", None)
-            response = self.get_argument("recaptcha_response_field", None)
-            if is_public and not _verify_recaptcha(challenge, response,
-                                                   self.request.remote_ip):
-                self.redirect(dest)
-                return
+            captcha = self.get_argument("captcha", None)
+            captcha_hash  = self.get_cookie("captchahash")
+            if is_public:
+                if not (captcha and captcha_hash and
+                        _verify_captcha(captcha, captcha_hash)):
+                    self.redirect(dest)
+                    return
             self.set_secure_cookie("mobile", mobile)
 
         ischina = self.get_argument("ischina", "").upper() == "Y"
@@ -165,6 +167,26 @@ class TrackHandler(BaseHandler):
                         (mobile, start, end))
         fixes = json_encode({"fixes": self.db.fetchall()})
         self.write(fixes)
+
+
+class CaptchaHandler(BaseHandler):
+    FONT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "Arial.ttf")
+
+    def get(self):
+        cg = captcha.CaptchaGen(self.FONT_FILE, (100,80,60), (60,40,30),
+                                textsize=20, noiselines=False, squiggly=False)
+        word = captcha.createWord()
+        c = cg.generateCaptcha(word)
+        buf = cStringIO.StringIO()
+        c.writeImage(buf)
+
+        m = hashlib.md5()
+        m.update(word.lower())
+
+        self.set_cookie("captchahash", m.hexdigest())
+        self.set_header("Content-type", "image/jpeg")
+        self.write(buf.getvalue())
 
 
 class GPSDebugHandler(BaseHandler):

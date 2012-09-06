@@ -169,6 +169,7 @@ $(function() {
 
     $("#locusDate").datepicker({changeMonth: true,
                                 changeYear: true,
+                                yearRange: "2000:2100",
                                 dateFormat: "yy-mm-dd",
                                 showButtonPanel: true});
     $("#locusDate").datepicker("setDate", new Date());
