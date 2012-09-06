@@ -55,6 +55,7 @@ class Application(tornado.web.Application):
 
     def __init__(self, debug=False):
         handlers = [
+            (r"/peek", PeekHandler),
             (r"/track/([0-9]*)/([0-9]*)", TrackHandler),
             (r"/captcha", CaptchaHandler),
             (r"/gpsdebug", GPSDebugHandler),
@@ -155,6 +156,18 @@ def _format_timestamp(ts):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.strptime(ts, "%Y%m%d%H%M%S"))
 
 
+class PeekHandler(BaseHandler):
+    TOP_SECRET = "showmethemoney"
+
+    @tornado.web.authenticated
+    def get(self):
+        if self.get_argument("s", None) != self.TOP_SECRET:
+            self.render("peek.html", terms=None)
+        else:
+            self.db.execute("SELECT mobile, max(timestamp) as ts from gps"
+                            " GROUP BY mobile ORDER BY ts DESC")
+            self.render("peek.html", terms=self.db.fetchall())
+
 class TrackHandler(BaseHandler):
 
     @tornado.web.authenticated
@@ -174,8 +187,8 @@ class CaptchaHandler(BaseHandler):
                              "Arial.ttf")
 
     def get(self):
-        cg = captcha.CaptchaGen(self.FONT_FILE, (100,80,60), (60,40,30),
-                                textsize=20, noiselines=False, squiggly=False)
+        cg = captcha.CaptchaGen(self.FONT_FILE, (100, 50, 30), (60, 40, 30),
+                                textsize=24, noiselines=True, squiggly=False)
         word = captcha.createWord()
         c = cg.generateCaptcha(word)
         buf = cStringIO.StringIO()

@@ -24,41 +24,45 @@ Supplied as-is. No warranties.
 
 __version__ = "1.2"
 
-import Image,ImageDraw,ImageFont,ImageFilter,ImageColor
-import random,time
+import Image, ImageDraw, ImageFont, ImageFilter, ImageColor
+import random, time
 
-def createWord(length=6, allowed="23456789abcdefghjkmnpqrstvwxyzABCDEFGHJKMNPQRSTUVWXYZ"):
-    """create a random 'word' from a set of letters with high visual distinction, or any given set""" 
-    return "".join( [random.choice(allowed) for i in xrange(length)] )
+def createWord(length=4, allowed="23456789abcdefghkmnpqrstvwxyzABCDEFGHJKMNPRSTVWXYZ"):
+    """create a random 'word' from a set of letters with high visual distinction, or any given set"""
+    return "".join([random.choice(allowed) for i in xrange(length)])
 
 class Captcha(object):
     """A generated captcha image and some extra properties."""
+
     def __init__(self, word, image):
         self.timestamp = time.time()
         self.word = word
         self.image = image
+
     def writeImage(self, outputstream):
         self.image.save(outputstream, format="jpeg")
+
     def show(self):
         self.image.show()
+
     def age(self):
         """returns the 'age' of the generated captcha image in seconds"""
         return time.time()-self.timestamp
 
 class CaptchaGen(object):
     """Generator of Captcha Images in JPG format.
-    
+
     Can use any truetype font for the text, and can use a background picture or a self-generated background.
     This class is thread-safe."""
-    
+
     def __init__(self, fontname, textcol_bright, textcol_dark, textsize=24,
                  noiselines=False, bgpicture=None, squiggly=False):
         """create a captcha generator object.
-        
+
         fontname - path to a .ttf font file
         textcol_bright - bright text color; (r,g,b) tuple or a PIL-compatible color string
         textcol_dark - dark text color; (r,g,b) tuple or a PIL-compatible color string
-        textsize - font size 
+        textsize - font size
         noiselines - wether to draw noise lines all over the image
         bgpicture - background picture to load. If not specified, a background is generated.
         squiggly - wether to draw a squiggly line through the text
@@ -71,15 +75,17 @@ class CaptchaGen(object):
             textcol_dark = ImageColor.getrgb(textcol_dark)
         self.textcol_bright = textcol_bright
         self.textcol_dark = textcol_dark
-        ar,ag,ab = self.textcol_bright
-        self.textcol_avg = (ar+self.textcol_dark[0])/2, (ag+self.textcol_dark[1])/2, (ab+self.textcol_dark[2])/2
+        ar, ag, ab = self.textcol_bright
+        self.textcol_avg = ((ar + self.textcol_dark[0])/2,
+                            (ag + self.textcol_dark[1])/2,
+                            (ab + self.textcol_dark[2])/2)
         self.noiselines = noiselines
         self.squiggly = squiggly
         if bgpicture:
             self.bgpicture = Image.open(bgpicture)
         else:
             self.bgpicture = None
-            
+
     def generateCaptcha(self, text):
         """Generate a Captcha image with the given text drawn in it, in JPG format.
         Note that the text must be between 5 and 8 characters."""
@@ -90,29 +96,30 @@ class CaptchaGen(object):
         if self.bgpicture:
             # crop a random area from the configured background picture
             bg = self.bgpicture.copy()
-            cx = random.randint(0, bg.size[0]-captchaw)
-            cy = random.randint(0, bg.size[1]-captchah)
-            bg = bg.crop((cx, cy, cx+captchaw, cy+captchah))
+            cx = random.randint(0, bg.size[0] - captchaw)
+            cy = random.randint(0, bg.size[1] - captchah)
+            bg = bg.crop((cx, cy, cx + captchaw, cy + captchah))
         else:
             # generate a random background ourselves
             bg = self.createBackground((captchaw, captchah))
         if self.noiselines:
             self.drawNoiseLines(bg)
-        bg.paste(letters,(0+self.lettersize[0]/2,self.lettersize[1]/4),letters)
+        bg.paste(letters, (0 + self.lettersize[0]/2,
+                           self.lettersize[1]/4),
+                 letters)
         bg = bg.convert("RGB")
         return Captcha(text, bg)
 
     def _makeTextImage(self, text, angle):
         """create an image containing the given text tilted at the given angle"""
-        (width,height) = self.font.getsize(text)
+        width, height = self.font.getsize(text)
         width += 6
         height += 6
-        letters = Image.new("RGBA",(width,height))
+        letters = Image.new("RGBA",(width, height))
         draw = ImageDraw.Draw(letters)
-        draw.text((5,5),text, font = self.font, fill = self.textcol_bright)
-        # draw.text((7,7),text, font = self.font, fill = self.textcol_bright)
-        draw.text((6,6),text, font = self.font, fill = self.textcol_dark)
-        letters = letters.rotate(angle, resample = Image.BILINEAR, expand = 1)
+        draw.text((5,5), text, font=self.font, fill=self.textcol_bright)
+        draw.text((6,6), text, font=self.font, fill=self.textcol_dark)
+        letters = letters.rotate(angle, resample=Image.BILINEAR, expand=1)
         letters = letters.crop(letters.getbbox())
         return letters
 
@@ -121,71 +128,75 @@ class CaptchaGen(object):
         text1, text2 = self.splitText(text)
         letters1 = self._makeTextImage(text1, 10)
         letters2 = self._makeTextImage(text2, -10)
-        letters = Image.new("RGBA",(letters1.size[0]+letters2.size[0], max(letters1.size[1], letters2.size[1])))
-        letters.paste(letters1,(0,0),letters1)
-        letters.paste(letters2,(letters1.size[0],0),letters2)
+        letters = Image.new("RGBA", (letters1.size[0] + letters2.size[0],
+                                     max(letters1.size[1], letters2.size[1])))
+        letters.paste(letters1, (0, 0), letters1)
+        letters.paste(letters2, (letters1.size[0], 0), letters2)
         if squiggly:
             letters = self.drawSquiggly(letters)
         letters = letters.filter(ImageFilter.SMOOTH)
         return letters
-    
+
     def drawSquiggly(self, image):
-        target = Image.new("RGBA",(image.size[0]+self.lettersize[0],image.size[1]))
-        target.paste(image,(self.lettersize[0]/2,0))
+        target = Image.new("RGBA", (image.size[0] + self.lettersize[0],
+                                    image.size[1]))
+        target.paste(image, (self.lettersize[0]/2, 0))
         draw = ImageDraw.Draw(target)
         linecoords = []
         stepsize = 10
         y = target.size[1]/2
-        for i in xrange(0,target.size[0]+stepsize,stepsize):
-            linecoords.append((i,y+random.randint(-8,8)))
-        draw.line(linecoords, fill = self.textcol_dark, width = 2)
-        linecoords = [(x+1,y+1) for x,y in linecoords]
-        draw.line(linecoords, fill = self.textcol_dark)
+        for i in xrange(0, target.size[0] + stepsize, stepsize):
+            linecoords.append((i, y + random.randint(-8, 8)))
+        draw.line(linecoords, fill=self.textcol_dark, width=2)
+        linecoords = [(x+1, y+1) for x, y in linecoords]
+        draw.line(linecoords, fill=self.textcol_dark)
         return target
 
-    def drawNoiseLines(self, image, count = 10):
+    def drawNoiseLines(self, image, count=2):
         """add random noise lines to the image"""
         draw = ImageDraw.Draw(image)
-        iw,ih = image.size
+        iw, ih = image.size
         for i in xrange(count):
-            x,y = random.randint(0,iw-30),random.randint(0,ih-4)
-            w,h = random.randint(-40,40),random.randint(-40,40)
+            x, y = random.randint(0, iw-30), random.randint(0, ih-4)
+            w, h = random.randint(-40, 40),random.randint(-40, 40)
             if self.bgpicture:
-                draw.line( (x,y,x+w,y+h), fill = self.textcol_avg, width=2)
+                draw.line((x, y, x+w, y+h), fill= elf.textcol_avg, width=1)
             else:
-                r,g,b = image.getpixel((x,y))
-                draw.line((x,y,x+w,y+h), fill=(255-r,255-g,255-b), width=2)
+                r, g, b = image.getpixel((x, y))
+                draw.line((x, y, x+w, y+h), fill=(255-r, 255-g, 255-b), width=1)
 
     def createBackground(self, size):
         """if no background picture is used, a random background is created.
         The colors used are based on the negatives of the text colors."""
-        lr,lg,lb = self.textcol_bright
-        lr,lg,lb = 255-lr,255-lg,255-lb
-        dr,dg,db = self.textcol_dark
-        dr,dg,db = 255-dr,255-dg,255-db
-        bg = Image.new("RGB",size, color = (dr,dg,db))
+        lr, lg, lb = self.textcol_bright
+        lr, lg, lb = 255-lr, 255-lg, 255-lb
+        dr, dg, db = self.textcol_dark
+        dr, dg, db = 255-dr,255-dg,255-db
+        bg = Image.new("RGB", size, color=(dr, dg, db))
         draw = ImageDraw.Draw(bg)
-        def circles(minsize,maxsize):
+        def circles(minsize, maxsize):
             spread = 50
             for i in xrange(10):
-                f_r = lr+random.randint(-spread,spread)
-                f_g = lg+random.randint(-spread,spread)
-                f_b = lb+random.randint(-spread,spread)
-                o_r = dr+random.randint(-spread,spread)
-                o_g = dg+random.randint(-spread,spread)
-                o_b = db+random.randint(-spread,spread)
-                x,y = random.randint(-20,size[0]), random.randint(-20,size[1])
-                w,h = random.randint(minsize,maxsize), random.randint(minsize,maxsize)
-                draw.ellipse((x,y,x+w,y+h), fill = (f_r,f_g,f_b), outline = (o_r,o_g,o_b))
-        circles(20,80)
-        circles(3,16)
+                f_r = lr + random.randint(-spread, spread)
+                f_g = lg + random.randint(-spread, spread)
+                f_b = lb + random.randint(-spread, spread)
+                o_r = dr + random.randint(-spread, spread)
+                o_g = dg + random.randint(-spread, spread)
+                o_b = db + random.randint(-spread, spread)
+                x, y = random.randint(-20, size[0]), random.randint(-20, size[1])
+                w, h = random.randint(minsize, maxsize), random.randint(minsize, maxsize)
+                draw.ellipse((x, y, x+w, y+h),
+                             fill=(f_r, f_g, f_b),
+                             outline=(o_r, o_g, o_b))
+        circles(20, 80)
+        circles(3, 16)
         bg = bg.filter(ImageFilter.BLUR)
         bg = bg.filter(ImageFilter.SHARPEN)
         if self.noiselines:
-            self.drawNoiseLines(bg, count = 10)
+            self.drawNoiseLines(bg)
         bg = bg.filter(ImageFilter.SMOOTH)
         return bg
-        
+
     def splitText(self, text):
         """split the text in two pieces that will be drawn separately"""
         splitpos = random.randint(2, len(text)-2)
@@ -193,7 +204,12 @@ class CaptchaGen(object):
 
 
 if __name__ == "__main__":
-    cg = CaptchaGen("Arial.ttf", (100,80,60), (60,40,30), textsize=24, noiselines=False, squiggly=False)
+    cg = CaptchaGen("Arial.ttf",
+                    (100, 50, 30),
+                    (60, 40, 30),
+                    textsize=24,
+                    noiselines=False,
+                    squiggly=False)
     word = createWord(length=6)
     print word
     c = cg.generateCaptcha(word)
