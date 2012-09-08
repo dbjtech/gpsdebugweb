@@ -35,10 +35,33 @@ function getParameterByName(name) {
         return decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
+function gen_info(title, address, fix) {
+    var $s = $("<h4/>").text(title);
+    var $info = $("<ul/>");
+    if (address == null) {
+	address = "Geocode failed.";
+    }
+    $info.append($("<li/>").text("Address: " + address));
+    $info.append($("<li/>").text("Lon: " + fix[2]));
+    $info.append($("<li/>").text("Lat: " + fix[1]));
+    $info.append($("<li/>").text("Alt: " + fix[3]));
+    $info.append($("<li/>").html("&sigma; (lon, lat, alt): " +
+				 [fix[5], fix[4], fix[6]].join(", ")));
+    $info.append($("<li/>").text("RMS: " + fix[7]));
+    $info.append($("<li/>").text("Satellites: " + fix[9]));
+    $info.append($("<li/>").text("Misc: " + fix[10]));
+    $info.append($("<li/>").text("Time: " + fix[8]));
+
+    function gen_html ($obj) {
+	return $('<div>').append($obj).remove().html();
+    }
+
+    return gen_html($s) + gen_html($info);
+}
+
 var is_gps_type_changed = false;
 var is_collecting = false;
 var seq = 0;
-var handler = null;
 
 function periodical_query() {
     var data = {seq: seq, freq: $("#freq").val()};
@@ -129,14 +152,24 @@ $("#result tbody tr").live("click", function(){
     timestamp = $(this).find("td:nth-child(1)").text();
     lon = parseFloat($(this).find("td:nth-child(2)").text());
     lat = parseFloat($(this).find("td:nth-child(3)").text());
+    alt = parseFloat($(this).find("td:nth-child(4)").text());
     delta = $(this).find("td:nth-child(5)").text().split(",").map(parseFloat);
+    rms = $(this).find("td:nth-child(6)").text();
+    satellites = $(this).find("td:nth-child(7)").text();
+    misc = $(this).find("td:nth-child(8)").text();
 
     if (!((0 < Math.abs(lon) && Math.abs(lon) < 180) &&
           (0 < Math.abs(lat) && Math.abs(lat) <  90))) {
         alert("Bad or Non-fixed point. Will not update the map." +
               "\nLon: " + lon + "\nLat: " + lat);
     } else {
-        show_point(lat, lon, Math.max(delta[0], delta[1]), timestamp);
+        show_point([0, // NOTE: mobile is useless now
+		    lat, lon, alt,
+		    delta[0], delta[1], delta[2], // std_lat, lon, alt
+		    rms,
+		    timestamp,
+		    satellites,
+		    misc]);
     }
 });
 

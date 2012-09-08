@@ -25,30 +25,33 @@ function initMap() {
     mc = new MarkerClusterer(map, [], mcOptions);
 }
 
-function show_point(lat, lon, sigma, markertime) {
+function show_point(current_fix) {
     if (polyline) {
         polyline.setMap(null);
     }
+
+    mc.clearMarkers();
+
     for (i in markers) {
         markers[i].setMap(null);
     }
     markers.length = 0;
 
-    var fix = new google.maps.LatLng(lat, lon);
+    var fix = new google.maps.LatLng(current_fix[1], current_fix[2]);
     var marker = new google.maps.Marker({
         position: fix,
         title: "Current Fix",
         map: map});
 
     markers.push(marker);
-    fn_clickMarker(marker, markertime);
+    fn_clickMarker(marker, current_fix);
 
     var circle = new google.maps.Circle({
         map: map,
-        radius: sigma,
+        radius: Math.max(current_fix[4], current_fix[5]),
         fillColor: '#AA0000',
-        fillOpacity: 0.5,
-        strokeOpacity: 0.6,
+        fillOpacity: 0.3,
+        strokeOpacity: 0.5,
         strokeWeight: 1,
         strokeColor: "red"});
 
@@ -72,24 +75,21 @@ function fn_drawLine() {
 }
 
 var infowindow = new google.maps.InfoWindow();
-function fn_clickMarker(mPoint, tempDate) {
+function fn_clickMarker(mPoint, fix) {
     google.maps.event.addListener(mPoint, "click", function() {
         var geocoder = new google.maps.Geocoder();
         //TODO: cache in title
         geocoder.geocode({"latLng": mPoint.getPosition()}, function(results, status) {
-            if (status == google.maps.GeocoderStatus.OK) {
-                if (results[0]) {
-                    var str = mPoint.getTitle()
-                        +"<ul><li>Address: "+results[0].formatted_address+"</li>"
-                        +"<li>Lon: "+mPoint.getPosition().lng()+"</li>"
-                        +"<li>Lat: "+mPoint.getPosition().lat()+"</li>"
-                        +"<li>Time: "+tempDate+"</li></ul>";
-                    infowindow.setContent(str);
-                    infowindow.open(map, mPoint);
-                }
-            } else {
-                alert("Geocode error: " + status);
-            }
+	    var address = null;
+	    if (status == google.maps.GeocoderStatus.OK) {
+		if (results[0]) {
+		    address = results[0].formatted_address;
+		}
+	    }
+
+	    var info = gen_info(mPoint.getTitle(), address, fix);
+            infowindow.setContent(info);
+            infowindow.open(map, mPoint);
         });
     });
 }
@@ -119,7 +119,7 @@ function fn_locusConfirm() {
                     title: "Point " + i,
                     map: map});
                 markers.push(marker);
-                fn_clickMarker(marker, data.fixes[i][8]);
+                fn_clickMarker(marker, data.fixes[i]);
             }
             mc.addMarkers(markers);
             map.setCenter(fixes[0]);

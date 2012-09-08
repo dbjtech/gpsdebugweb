@@ -168,6 +168,7 @@ class PeekHandler(BaseHandler):
                             " GROUP BY mobile ORDER BY ts DESC")
             self.render("peek.html", terms=self.db.fetchall())
 
+
 class TrackHandler(BaseHandler):
 
     @tornado.web.authenticated

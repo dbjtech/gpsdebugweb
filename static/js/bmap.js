@@ -1,12 +1,13 @@
 var map = null;
 var polyline = null;
 var fixes = [];
-var ts = [];
+var my_fixes = [];
 var my_markers = [];
 var callback = null;
 var mc = null;
 var set_center = false;
 var count = 0;
+var total = 0;
 
 function initMap() {
     map = new BMap.Map("map_canvas");
@@ -36,20 +37,23 @@ function initMap() {
       minClusterSize: 4}); // Note: bad performance with default 2.
 }
 
-function show_point(lat, lon, dop, markertime) {
+function show_point(current_fix) {
     map.clearOverlays();
-    var point = new BMap.Point(lon, lat);
+    var point = new BMap.Point(current_fix[2], current_fix[1]);
     callback = sp_callback;
     BMap.Convertor.transMore([point], 0, callback);
 
     function sp_callback(res) {
         var point = new BMap.Point(res[0].x, res[0].y);
         var marker = new BMap.Marker(point, {title: "Current Fix"});
-        fn_clickMarker(marker, markertime);
-        var circle = new BMap.Circle(point, dop,
+        fn_clickMarker(marker, current_fix);
+        var circle = new BMap.Circle(point,
+                                     Math.max(current_fix[4], current_fix[5]),
                                      {fillColor: '#AA0000',
-                                      fillOpacity: 0.5,
-                                      strokeWeight: 1});
+                                      fillOpacity: 0.3,
+                                      strokeOpacity: 0.5,
+                                      strokeWeight: 1,
+                                      strokeColor: "red"});
         map.addOverlay(marker);
         map.addOverlay(circle);
         map.setCenter(point);
@@ -64,16 +68,17 @@ function fn_drawLine() {
     map.addOverlay(polyline);
 }
 
-var gc = new BMap.Geocoder();
-function fn_clickMarker(marker, tempDate) {
-    marker.addEventListener("click", function(e){
-        gc.getLocation(e.point, function(rs){
-            var s = marker.getTitle()
-                +"<ul><li>Address: "+rs.address+"</li>"
-                +"<li>Lon: "+rs.point.lng+"</li>"
-                +"<li>Lat: "+rs.point.lat+"</li>"
-                +"<li>Time: "+tempDate+"</li></ul>";
-            marker.openInfoWindow(new BMap.InfoWindow(s));
+function fn_clickMarker(marker, fix) {
+    marker.addEventListener("click", function(e) {
+        var gc = new BMap.Geocoder();
+        gc.getLocation(e.point, function(rs) {
+            var address = null;
+            if (rs != null) {
+                address = rs.address;
+            }
+
+            var info = gen_info(marker.getTitle(), address, fix);
+            marker.openInfoWindow(new BMap.InfoWindow(info, {width: 0}));
         });
     });
 }
@@ -86,7 +91,7 @@ function fn_locusConfirm() {
 
     $.get(str_locusDate, "", function(data) {
         var t_fixes = [];
-        ts = [];
+        my_points = [];
         mc.clearMarkers();
         map.clearOverlays();
 
@@ -94,13 +99,13 @@ function fn_locusConfirm() {
         if (data.fixes.length > 0) {
             for (var i in data.fixes) {
                 t_fixes[i] = new BMap.Point(data.fixes[i][2], data.fixes[i][1]);
-                ts[i] = data.fixes[i][8];
             }
 
             set_center = false;
             fixes = [];
             my_markers = [];
-            count = data.fixes.length;
+            total = count = data.fixes.length;
+            my_fixes = data.fixes.slice();
             callback = line_callback;
             BMap.Convertor.transMore(t_fixes, 0, callback);
         }
@@ -108,6 +113,12 @@ function fn_locusConfirm() {
 }
 
 function line_callback(res) {
+    /* TODO:
+       Why we need the count and total trick? transMore() processes
+       every 20 points. So, we can not rely the index in res to match
+       the result and the original info. This is very ugly, will
+       switch to BMap's libwrapper.
+     */
     for (var i in res) {
         count--;
         if (res[i].error != 0) {
@@ -119,7 +130,7 @@ function line_callback(res) {
         var marker = new BMap.Marker(point, {title: "Point " + i});
         // map.addOverlay(marker);
         my_markers.push(marker);
-        fn_clickMarker(marker, ts[i]);
+        fn_clickMarker(marker, my_fixes[total - count - 1]);
     }
     if (fixes.length > 0) {
         if (!set_center) {
