@@ -157,16 +157,31 @@ def _format_timestamp(ts):
 
 
 class PeekHandler(BaseHandler):
-    TOP_SECRET = "showmethemoney"
+    TOP_USER = "DBJ"
+    TOP_PSWD = "showmethemoney"
 
-    @tornado.web.authenticated
+    def get_current_user(self):
+        scheme, _, token = self.request.headers.get('Authorization', '').partition(' ')
+        if scheme.lower() == 'basic':
+            user, _, pwd = token.decode("base64").partition(':')
+            if user == self.TOP_USER and pwd == self.TOP_PSWD:
+                return True
+        return False
+
     def get(self):
-        if self.get_argument("s", None) != self.TOP_SECRET:
-            self.render("peek.html", terms=None)
+        if not self.current_user:
+            self.set_status(401)
+            self.set_header("WWW-Authenticate", "basic realm='DBJ GPS Test'")
+            self.render("peek.html", error=True)
+            return
         else:
-            self.db.execute("SELECT mobile, max(timestamp) as ts from gps"
-                            " GROUP BY mobile ORDER BY ts DESC")
-            self.render("peek.html", terms=self.db.fetchall())
+            self._work()
+
+    def _work(self):
+        self.db.execute("SELECT mobile, count(*),"
+                        " min(timestamp) as mints, max(timestamp) as maxts"
+                        " FROM gps GROUP BY mobile ORDER BY maxts DESC")
+        self.render("peek.html", error=False, terms=self.db.fetchall())
 
 
 class TrackHandler(BaseHandler):
