@@ -20,7 +20,7 @@ function initMap() {
 
     map = new google.maps.Map(document.getElementById("map_canvas"),
                               myOptions);
-    var mcOptions = {maxZoom: 20,
+    var mcOptions = {maxZoom: 19,
                      averageCenter: true};
     mc = new MarkerClusterer(map, [], mcOptions);
 }
