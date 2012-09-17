@@ -19,15 +19,15 @@
   <body>
     <div id="header">
       <h2><span>Current Mobile ID: {{mobile}}</span>
-	<a href="/logout" style="float: right; text-decoration: none">
-	  <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>Logout
-	</a>
+        <a href="/logout" style="float: right; text-decoration: none">
+          <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>Logout
+        </a>
       </h2>
       <hr>
       <div id="topcontroller">
-	<label for="locusDate">Date: </label><input type="text" id="locusDate" />
-	<label for="locusBeginSlider">From: </label><input id="locusBeginSlider" type="text" />
-	<label for="locusEndSlider">To: </label><input id="locusEndSlider" type="text" />
+        <label for="locusDate">Date: </label><input type="text" id="locusDate" />
+        <label for="locusBeginSlider">From: </label><input id="locusBeginSlider" type="text" />
+        <label for="locusEndSlider">To: </label><input id="locusEndSlider" type="text" />
       </div>
       <div id="locusSlider" title="Slide to adjust the time slot."></div>
       <button id="locusConfirm">Query</button>
@@ -38,66 +38,69 @@
     <div id="map_canvas"></div>
     <div id="debug_info">
       <fieldset id="debug_pane">
-	<legend class="ui-widget-header ui-corner-all" title="Click to show or hide the debug window.">Debug Info &#x25BC;</legend>
-	<div id="helper">
-	  <div id="leftcontroller">
-	    <table class="controller">
-	      <tr>
-		<td width="100pt"><label for="freq">Upload Frequency(s) </label></td>
-		<td>
-		  <select id="freq" title="Terminal reports GPS info in this frequency.">
-		    <option>5</option>
-		    <option>10</option>
-		    <option>20</option>
-		    <option>30</option>
-		    <option>60</option>
-		  </select>
-		</td>
-	      </tr>
-	      <tr>
-		<td><label for="scrollinfo">Scroll on new data?</label></td>
-		<td><input type="checkbox" title="Scroll the bar on new data." id="scrollinfo" checked></input></td>
-	      </tr>
-	      <tr>
-		<td><select id="gpstype">
-		    <option value="hot">Hot Start</option>
-		    <option value="warm">Warm Start</option>
-		    <option value="cold">Cold Start</option>
-		    <option value="agps">AGPS</option>
-		    </select>
-		</td>
-		<td><button id="gpscontroller" title="Tell the tracker to do certain start."><span>Restart!</span></button>
-		</td>
-	      </tr>
-	      <tr>
-		<td><span class="light-info" id="loginfo"></span></td><td><button id="startstop"><span>Start log</span></button></td>
-	      </tr>
-	      <tr>
-		<td><span class="light-info" id="gpsinfo"></span></td><td><button id="cleanlog"><span>Clean log</span></button></td>
-	      </tr>
-	    </table>
-	  </div>
-	  <div id="log">
-	    <table id="result" class="fancyTable" cellpadding="0" cellspacing="0">
-	      <thead>
-		<tr>
-		  <th>Timestamp</th>
-		  <th>Longitude</th>
-		  <th>Latitude</th>
-		  <th title="In most cases, this is useless.">Altitude</th>
-		  <th>&sigma; (lon, lat, alt)</th>
-		  <th title="RMS value of the standard deviation of the ranges.">Range RMS</th>
-		  <th title="Show the statellite's id versus it's snr.">Satellites (ID:SNR)</th>
-		  <th title="Put everything else here if not belong to
-		  the existing fields.">Misc</th>
-		</tr>
-	      </thead>
-	      <tbody>
-		<tr><td>Waiting...</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-	      </tbody>
-	    </table>
-	  </div>
-	  </div>
+        <legend class="ui-widget-header ui-corner-all" title="Click to show or hide the debug window.">Debug Info &#x25BC;</legend>
+        <div id="helper">
+          <div id="leftcontroller">
+            <table class="controller">
+              <tr>
+                <td width="100pt"><label for="freq">Upload Frequency(s) </label></td>
+                <td>
+                  <select id="freq" title="Terminal reports GPS info in this frequency.">
+                    <option>5</option>
+                    <option>10</option>
+                    <option>20</option>
+                    <option>30</option>
+                    <option>60</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td><label for="scrollinfo">Scroll on new data?</label></td>
+                <td><input type="checkbox" title="Scroll the bar on new data." id="scrollinfo" checked></input></td>
+              </tr>
+              <tr>
+                <td><select id="gpstype">
+                    <option value="hot">Hot Start</option>
+                    <option value="warm">Warm Start</option>
+                    <option value="cold">Cold Start</option>
+                    <option value="agps">AGPS</option>
+                    <option value="gps">GPS Only</option>
+                    <option value="bd">BD Only</option>
+                    <option value="bdgps">BD & GPS</option>
+                    </select>
+                </td>
+                <td><button id="gpscontroller" title="Tell the tracker to do certain start."><span>Restart!</span></button>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="light-info" id="loginfo"></span></td><td><button id="startstop"><span>Start log</span></button></td>
+              </tr>
+              <tr>
+                <td><span class="light-info" id="gpsinfo"></span></td><td><button id="cleanlog"><span>Clean log</span></button></td>
+              </tr>
+            </table>
+          </div>
+          <div id="log">
+            <table id="result" class="fancyTable" cellpadding="0" cellspacing="0">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Longitude</th>
+                  <th>Latitude</th>
+                  <th title="In most cases, this is useless.">Altitude</th>
+                  <th>&sigma; (lon, lat, alt)</th>
+                  <th title="RMS value of the standard deviation of the ranges.">Range RMS</th>
+                  <th title="Show the statellite's id versus it's snr.">Satellites (ID:SNR)</th>
+                  <th title="Put everything else here if not belong to
+                  the existing fields.">Misc</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Waiting...</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          </div>
       </fieldset>
     </div>
   </body>
