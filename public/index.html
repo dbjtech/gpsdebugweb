@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+    <!--<script type="text/javascript" src="http://getfirebug.com/releases/lite/1.2/firebug-lite-compressed.js"></script>-->
+    <link href="lib/jquery/jquery-ui.css" rel="stylesheet"/>
+    <link href="lib/angular-dtpicker.css" rel="stylesheet"/>
+    <link href="lib/leaftlet/leaflet.css" rel="stylesheet"/>
+    <link href="lib/bootstrap.min.css" rel="stylesheet"/>
+    <link href="lib/smart-table.css" rel="stylesheet"/>
+<!--[if lte IE 8]>
+    <link href="lib/leaftlet/leaflet.ie.css" rel="stylesheet"/>
+    <script type="text/javascript" src="lib/json3.min.js"></script>
+    <script>
+        (function(fn){
+            if (!fn.map) fn.map=function(f){var r=[];for(var i=0;i<this.length;i++)r.push(f(this[i]));return r}
+            if (!fn.filter) fn.filter=function(f){var r=[];for(var i=0;i<this.length;i++)if(f(this[i]))r.push(this[i]);return r}
+            if (!fn.indexOf) fn.indexOf = function(e){for(var i=0,j; j=this[i]; i++){if(j==e){return i;}}return -1;}
+        })(Array.prototype);
+        document.createElement('leaflet');
+    </script>
+<![endif]-->
+</head>
+
+<body id="ng-app" ng-app="demoapp">
+<div class="navbar" bs-navbar>
+  <div class="navbar-inner">
+    <a class="brand" href="#">Menu</a>
+    <ul class="nav">
+      <!-- You can use regular expressions -->
+      <li data-match-route="/register"><a href="#/register">register</a></li>
+      <li data-match-route="/login"><a href="#/login">login</a></li>
+      <li data-match-route="/trace"><a href="#/trace">trace</a></li>
+      <li data-match-route="/alert"><a href="#/alert">alert</a></li>
+      <li data-match-route="/logger"><a href="#/logger">logger</a></li>
+    </ul>
+  </div>
+</div>
+<div class="container">
+    <div ng-view></div>
+</div>
+
+
+<script type="text/javascript" src="lib/jquery/jquery-1.7.2.js"></script>
+<script type="text/javascript" src="lib/jquery/jquery-ui.js"></script>
+<script type="text/javascript" src="lib/angular.js"></script>
+<script type="text/javascript" src="lib/leaftlet/leaflet.js"></script>
+<script type="text/javascript" src="lib/angular-leaflet-directive.js"></script>
+<script type="text/javascript" src="lib/ui-bootstrap-0.4.0.min.js"></script>
+<script type="text/javascript" src="lib/angular-strap.js"></script>
+<script type="text/javascript" src="lib/angular-dtpicker.js"></script>
+<script type="text/javascript" src="lib/Smart-Table.js"></script>
+<script type="text/javascript">
+var app = angular.module("demoapp",
+    ['leaflet-directive','datetimepicker-directive', 'smartTable.table', '$strap.directives'],
+    function($routeProvider, $locationProvider) {
+        $routeProvider.
+            when('/register', {templateUrl:'register.html', controller:'registerController'}).
+            when('/login', {templateUrl:'login.html', controller:'loginController'}).
+            when('/trace', {templateUrl:'trace.html', controller: 'traceController'}).
+            when('/alert', {templateUrl:'alert.html', controller: 'alertController'}).
+            when('/logger', {templateUrl:'logger.html', controller: 'loggerController'}).
+            otherwise({redirectTo:'/login'})
+    }
+);
+
+app.controller("traceController", ["$scope","$http","$filter", function($scope,$http,$filter) {
+	$scope.query_trace = function(){
+        var url = 'trace/'+$scope.terminal_sn
+        var params = {}
+        params.timestamp_start = $scope.timestamp_start&&$scope.timestamp_start.getTime()||''
+        params.timestamp_end = $scope.timestamp_end&&$scope.timestamp_end.getTime()||''
+		$http.get(url,{params:params}).success(function(data) {
+			var paths = []
+            var markers = {}
+            var pvt
+            for(i=0; i<data.length; i++){
+                pvt = data[i]
+                paths.push(pvt.geo)
+                markers[i] = {}
+                markers[i].lat = pvt.geo.lat
+                markers[i].lng = pvt.geo.lng
+                markers[i].message =  '经度：'+pvt.geo.lat+'°，'
+                markers[i].message += '纬度：'+pvt.geo.lng+'°<br>'
+                markers[i].message += '海拔：'+pvt.altitude+' 米<br>'
+                markers[i].message += '速度：'+pvt.speed+' 千米/小时<br>'
+                markers[i].message += '电压：'+pvt.misc.voltage+' 毫伏<br>'
+                markers[i].message += '时间：'+$filter('date')(pvt.fix_timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
+            }
+            $scope.paths.p1.latlngs = paths
+            $scope.markers = markers
+			// if(paths.length>0){
+			//	 var ct = paths[paths.length-1]
+			//	 $scope.center.lat = ct.lat
+			//	 $scope.center.lng = ct.lng
+			//	 //$scope.center.zoom = 13
+			// }
+		});
+	}
+	$scope.terminal_sn = '2013012199'
+	$scope.timestamp_start = new Date(new Date().getTime()-24*3600*1000)
+	$scope.timestamp_end = new Date()
+	angular.extend($scope, {
+		center: {
+			lat: 22.3,
+			lng: 113.5,
+			zoom: 13
+		},
+		paths: {
+			p1: {
+				color: '#008000',
+				weight: 5,
+				latlngs: [],
+			},
+		},
+        markers:{
+            m1: {
+                lat: 23,
+                lng: 114,
+                focus: true,
+                message: "Hey, drag me if you want",
+                draggable: true
+            }
+        }
+	});
+}]);
+
+app.controller("loggerController", ["$scope","$http", function($scope,$http) {
+    $scope.terminal_sn = '2013012199'
+    $scope.timestamp_start = new Date(new Date().getTime()-24*3600*1000)
+    $scope.timestamp_end = new Date()
+    $scope.columns = [
+        {label:'timestamp', map:'timestamp',formatFunction:'date', formatParameter:'MMdd HH:mm:ss'},
+        {label:'ip', map:'peer', isSortable:false, formatFunction: function(v,p){return v.address}},
+        {label:'package', map:'raw', title:'parsed', isSortable:false}
+    ]
+    $scope.table_config={
+        itemsByPage:50,
+        maxSize:8,
+        isGlobalSearchActivated:true
+    }
+    $scope.query_logger = function(){
+        var url = 'logger/'+$scope.terminal_sn
+        var params = {}
+        params.timestamp_start = $scope.timestamp_start&&$scope.timestamp_start.getTime()||''
+        params.timestamp_end = $scope.timestamp_end&&$scope.timestamp_end.getTime()||''
+        //alert(url+' '+JSON.stringify(params))
+        $http.get(url,{params:params}).success(function(data){
+            $scope.records = data
+        })
+    }
+}]);
+
+app.controller("alertController", ["$scope","$http", function($scope,$http) {
+    $scope.terminal_sn = '2013012199'
+    $scope.timestamp_start = new Date(new Date().getTime()-24*3600*1000)
+    $scope.timestamp_end = new Date()
+    $scope.columns = [
+        {label:'timestamp', map:'timestamp',formatFunction:'date', formatParameter:'MMdd HH:mm:ss'},
+        {label:'type', map:'type'},
+        {label:'fix_quality', map:'fix_quality'},
+        {label:'geo', map:'geo', formatFunction: function(v,p){return JSON.stringify(v)}}
+    ]
+    $scope.table_config={
+        itemsByPage:50,
+        maxSize:8,
+        isGlobalSearchActivated:true
+    }
+    $scope.query_alert = function(){
+        var url = 'alert/'+$scope.terminal_sn
+        var params = {}
+        params.timestamp_start = $scope.timestamp_start&&$scope.timestamp_start.getTime()||''
+        params.timestamp_end = $scope.timestamp_end&&$scope.timestamp_end.getTime()||''
+        //alert(url)
+        $http.get(url,{params:params}).success(function(data){
+            $scope.records = data
+        })
+    }
+}]);
+
+app.controller("loginController", ["$scope","$http", function($scope,$http) {
+    $scope.login = function(){
+        //alert(url)
+        $http.post('login',{user_name:$scope.user_name,password:$scope.password}).success(function(data){
+            $scope.resp = data
+        })
+    }
+}]);
+
+
+app.controller("registerController", ["$scope","$http", function($scope,$http) {
+    $scope.register = function(){
+        if($scope.password!=$scope.password_confirm){
+            alert('password mismatch')
+            return
+        }
+        //alert(url)
+        $http.put('register',{user_name:$scope.user_name,password:$scope.password}).success(function(data){
+            $scope.resp = data
+            alert(data)
+        })
+    }
+}]);
+</script>
+
+</body>
+</html>

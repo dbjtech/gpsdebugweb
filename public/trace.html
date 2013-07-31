@@ -1,0 +1,11 @@
+<style>
+	.angular-leaflet-map {
+		width: 1024px;
+		height: 600px;
+	}
+</style>
+<label>Terminal SN:<input type="text" ng-model="terminal_sn" placeholder="Enter terminal SN"></input></label>
+<label>Start Date:<input type="text" datetimepicker dtp-model="timestamp_start"/></input></label>
+<label>End Date:<input type="text" datetimepicker dtp-model="timestamp_end"/></input></label>
+<button ng-click="query_trace()">query</button>
+<leaflet paths='paths' center='center' markers='markers' maxZoom='maxZoom' minZoom='minZoom'></leaflet>
