@@ -304,8 +304,8 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", function ($htt
                             var latlngs = convertToLeafletLatLngs(data.latlngs);
                             polyline.setLatLngs(latlngs);
                             var bounds = new L.LatLngBounds(latlngs)
-                            if(bounds.length!=0)
-                                setTimeout(function(){map.fitBounds(bounds)},500);//no trigger the $scope.$apply() of current turn
+                            if(bounds._northEast&&bounds._southWest)
+                                setTimeout(function(){map.fitBounds(bounds)},10);//no trigger the $scope.$apply() of current turn
                         }
 
                         if (data.weight !== undefined && data.weight !== oldData.weight) {
