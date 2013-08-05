@@ -14,56 +14,66 @@
 ///////////
 //angular//
 ///////////
+var my_global = {}
 var app = angular.module("meteorapp",
-	['meteor','leaflet-directive','datetimepicker-directive', 'smartTable.table', '$strap.directives'],
-	function($routeProvider, $locationProvider) {
-		$routeProvider.
-			when('/register', {templateUrl:'/register.html', controller:'registerController'}).
-			when('/login', {templateUrl:'/login.html', controller:'loginController'}).
-			when('/trace', {templateUrl:'/trace.html', controller: 'traceController'}).
-			when('/alert', {templateUrl:'/alert.html', controller: 'alertController'}).
-			when('/logger', {templateUrl:'/logger.html', controller: 'loggerController'}).
-			otherwise({redirectTo:'/login'})
-	}
-)
+['meteor','leaflet-directive','datetimepicker-directive', 'smartTable.table', '$strap.directives'],
+function($routeProvider, $locationProvider) {
+	$routeProvider.
+		when('/register', {templateUrl:'/register.html', controller:'registerController'}).
+		when('/login', {templateUrl:'/login.html', controller:'loginController'}).
+		when('/trace', {templateUrl:'/trace.html', controller: 'traceController'}).
+		when('/alert', {templateUrl:'/alert.html', controller: 'alertController'}).
+		when('/logger', {templateUrl:'/logger.html', controller: 'loggerController'}).
+		otherwise({redirectTo:'/login'})
+
+	var subscribe_name = 'trace'
+	var session_name = 'angular.$scope.'+subscribe_name
+	var session_callback_name = session_name+'_callback'
+	Session.set(session_name,{})
+	Deps.autorun(function(c){
+		var to
+		var handle
+		var f = function(){
+			//console.log(handle.ready())
+			if(handle.ready()){
+				var cb = my_global[session_callback_name]
+				if(cb)
+					cb()
+				else
+					console.log(session_callback_name,'=',cb)
+				if(to) clearTimeout(to)
+			}else
+				to = setTimeout(f,50)
+		}
+		handle = Meteor.subscribe(subscribe_name,Session.get(session_name),f)
+	})
+})
 
 function angular_subscribe($scope,subscribe_name,value_names,callback) {
-	var session_name = '$scope:'+value_names.join(',')
-	var session_value = Session.get(session_name) || {}
-	if(value_names && value_names.length!=0){
-		for(i=0; i<value_names.length; i++){
-			(function(){
-				var value_name = value_names[i]
-				session_value[value_name] = $scope[value_name]
-				//console.log('watch',value_name)
-				$scope.$watch(value_name, function (new_value,old_value) {
-					if(new_value==old_value) return
-					console.log(value_name,'changed to',new_value,'from',old_value,'session_name:',session_name)
-					session_value[value_name] = new_value
-					Session.set(session_name,session_value)
-				})
-			})()
-		}
-		Session.set(session_name,session_value)
-		Deps.autorun(function(){
-			var to
-			var handle
-			var f = function(){
-				//console.log(handle.ready())
-				if(handle.ready()){
-					callback()
-					if(to) clearTimeout(to)
-				}else
-					to = setTimeout(f,50)
-			}
-			handle = Meteor.subscribe(subscribe_name,Session.get(session_name),f)
-		})
-	}else{
-		console.dir('WARN no session_name specified')
-		Deps.autorun(function(){
-			Meteor.subscribe(subscribe_name)
-		})
+	var session_name = 'angular.$scope.'+subscribe_name
+	var session_callback_name = session_name+'_callback'
+	var session_value = Session.get(session_name)
+	if(!value_names && value_names.length==0)
+		throw new Error('value_names is empty')
+	if(!session_value)
+		throw new Error(session_name+' not specified')
+
+	for(i=0; i<value_names.length; i++){
+		session_value[value_names[i]] = $scope[value_names[i]];
+		(function(){
+			var value_name = value_names[i]
+			//console.log('watch',value_name)
+			$scope.$watch(value_name, function (new_value,old_value) {
+				if(new_value==old_value) return
+				//console.log(value_name,'changed to',new_value,'from',old_value,'session_name:',session_name)
+				session_value[value_name] = new_value
+				Session.set(session_name,session_value)
+			})
+		})()
 	}
+	//console.log('set',session_callback_name,'=',callback)
+	my_global[session_callback_name] = callback
+	Session.set(session_name,session_value)
 }
 
 app.controller("traceController", ["$scope","$meteor","$http","$filter", function($scope,$meteor,$http,$filter) {
@@ -95,7 +105,7 @@ app.controller("traceController", ["$scope","$meteor","$http","$filter", functio
 	$scope.timestamp_end = new Date()
 	angular_subscribe($scope,'trace',['terminal_sn','timestamp_start','timestamp_end'],function(){
 		var data = $meteor('trace').find({})
-		console.dir(data)
+		//console.dir(data)
 		var paths = []
 		var markers = {}
 		for(i=0; data&&i<data.length; i++){
@@ -131,6 +141,7 @@ app.controller("loggerController", ["$scope","$meteor","$http", function($scope,
 	}
 	angular_subscribe($scope,'trace',['terminal_sn','timestamp_start','timestamp_end'],function(){
 		$scope.records = $meteor('trace').find({})
+		//console.dir($scope.records)
 	})
 }]);
 
