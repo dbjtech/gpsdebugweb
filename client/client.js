@@ -14,7 +14,68 @@
 ///////////
 //angular//
 ///////////
-var my_global = {}
+var angular_subscribe = {
+	declare: function(subscribe_name){
+		var session_name = 'angular.$scope.'+subscribe_name
+		var session_callback_name = session_name+'_callback'
+		Session.set(session_name,{})
+		Deps.autorun(function(c){
+			var to
+			var handle
+			var f = function(){
+				//console.log(subscribe_name,handle.ready())
+				if(handle.ready()){
+					var cb = angular_subscribe[session_callback_name]
+					if(cb)
+						cb()
+					else
+						console.log(session_callback_name,'=',cb)
+					if(to) clearTimeout(to)
+				}else
+					to = setTimeout(f,50)
+			}
+			var session_value = Session.get(session_name)
+			if(!_.isEmpty(session_value))
+				handle = Meteor.subscribe(subscribe_name,session_value,f)
+		})
+	},
+	bind: function($scope,subscribe_name,value_names,callback) {
+		var session_name = 'angular.$scope.'+subscribe_name
+		var session_callback_name = session_name+'_callback'
+		var session_value = Session.get(session_name)
+		if(!value_names && value_names.length==0)
+			throw new Error('value_names is empty')
+		if(!session_value)
+			throw new Error(session_name+' not register')
+
+		for(i=0; i<value_names.length; i++){
+			session_value[value_names[i]] = $scope[value_names[i]]
+		}
+		angular_subscribe.multi_watch($scope,value_names,function(value_name,new_value,old_value){
+			session_value[value_name] = new_value
+			Session.set(session_name,session_value)
+		})
+		//console.log('set',session_callback_name,'=',callback)
+		angular_subscribe[session_callback_name] = callback
+		Session.set(session_name,session_value)
+	},
+	multi_watch: function($scope,value_names,callback){
+		if(!value_names && value_names.length==0)
+			throw new Error('value_names is empty')
+		for(i=0; i<value_names.length; i++){
+			(function(){
+				var value_name = value_names[i]
+				//console.log('watch',value_name)
+				$scope.$watch(value_name, function (new_value,old_value) {
+					if(new_value==old_value) return
+					console.log(value_name,'changed to',new_value,'from',old_value)
+					callback(value_name,new_value,old_value)
+				})
+			})()
+		}
+	}
+}
+
 var app = angular.module("meteorapp",
 ['meteor','leaflet-directive','datetimepicker-directive', 'smartTable.table', '$strap.directives'],
 function($routeProvider, $locationProvider) {
@@ -22,59 +83,12 @@ function($routeProvider, $locationProvider) {
 		when('/register', {templateUrl:'/register.html', controller:'registerController'}).
 		when('/login', {templateUrl:'/login.html', controller:'loginController'}).
 		when('/trace', {templateUrl:'/trace.html', controller: 'traceController'}).
-		when('/alert', {templateUrl:'/alert.html', controller: 'alertController'}).
+		when('/config', {templateUrl:'/config.html', controller: 'configController'}).
 		when('/logger', {templateUrl:'/logger.html', controller: 'loggerController'}).
 		otherwise({redirectTo:'/login'})
-
-	var subscribe_name = 'trace'
-	var session_name = 'angular.$scope.'+subscribe_name
-	var session_callback_name = session_name+'_callback'
-	Session.set(session_name,{})
-	Deps.autorun(function(c){
-		var to
-		var handle
-		var f = function(){
-			//console.log(handle.ready())
-			if(handle.ready()){
-				var cb = my_global[session_callback_name]
-				if(cb)
-					cb()
-				else
-					console.log(session_callback_name,'=',cb)
-				if(to) clearTimeout(to)
-			}else
-				to = setTimeout(f,50)
-		}
-		handle = Meteor.subscribe(subscribe_name,Session.get(session_name),f)
-	})
+	angular_subscribe.declare('trace')
+	angular_subscribe.declare('config')
 })
-
-function angular_subscribe($scope,subscribe_name,value_names,callback) {
-	var session_name = 'angular.$scope.'+subscribe_name
-	var session_callback_name = session_name+'_callback'
-	var session_value = Session.get(session_name)
-	if(!value_names && value_names.length==0)
-		throw new Error('value_names is empty')
-	if(!session_value)
-		throw new Error(session_name+' not specified')
-
-	for(i=0; i<value_names.length; i++){
-		session_value[value_names[i]] = $scope[value_names[i]];
-		(function(){
-			var value_name = value_names[i]
-			//console.log('watch',value_name)
-			$scope.$watch(value_name, function (new_value,old_value) {
-				if(new_value==old_value) return
-				//console.log(value_name,'changed to',new_value,'from',old_value,'session_name:',session_name)
-				session_value[value_name] = new_value
-				Session.set(session_name,session_value)
-			})
-		})()
-	}
-	//console.log('set',session_callback_name,'=',callback)
-	my_global[session_callback_name] = callback
-	Session.set(session_name,session_value)
-}
 
 app.controller("traceController", ["$scope","$meteor","$http","$filter", function($scope,$meteor,$http,$filter) {
 	angular.extend($scope, {
@@ -103,7 +117,7 @@ app.controller("traceController", ["$scope","$meteor","$http","$filter", functio
 	$scope.terminal_sn = '2013012199'
 	$scope.timestamp_start = new Date(new Date().getTime()-24*3600*1000)
 	$scope.timestamp_end = new Date()
-	angular_subscribe($scope,'trace',['terminal_sn','timestamp_start','timestamp_end'],function(){
+	angular_subscribe.bind($scope,'trace',['terminal_sn','timestamp_start','timestamp_end'],function(){
 		var data = $meteor('trace').find({})
 		//console.dir(data)
 		var paths = []
@@ -139,37 +153,56 @@ app.controller("loggerController", ["$scope","$meteor","$http", function($scope,
 		maxSize:8,
 		isGlobalSearchActivated:true
 	}
-	angular_subscribe($scope,'trace',['terminal_sn','timestamp_start','timestamp_end'],function(){
+	angular_subscribe.bind($scope,'trace',['terminal_sn','timestamp_start','timestamp_end'],function(){
 		$scope.records = $meteor('trace').find({})
 		//console.dir($scope.records)
 	})
 }]);
 
-app.controller("alertController", ["$scope","$http", function($scope,$http) {
+app.controller("configController", ["$scope","$meteor","$http", function($scope,$meteor,$http) {
 	$scope.terminal_sn = '2013012199'
-	$scope.timestamp_start = new Date(new Date().getTime()-24*3600*1000)
-	$scope.timestamp_end = new Date()
-	$scope.columns = [
-		{label:'timestamp', map:'timestamp',formatFunction:'date', formatParameter:'MMdd HH:mm:ss'},
-		{label:'type', map:'type'},
-		{label:'fix_quality', map:'fix_quality'},
-		{label:'geo', map:'geo', formatFunction: function(v,p){return JSON.stringify(v)}}
+	$scope.freq_opt = [5,10,20,30,60,300]
+	$scope.restart_opt = [
+		{text:'Hot Start', value:'hot'},
+		{text:'Warm Start', value:'warm'},
+		{text:'Cold Start', value:'cold'},
+		{text:'AGPS', value:'agps'}
 	]
-	$scope.table_config={
-		itemsByPage:50,
-		maxSize:8,
-		isGlobalSearchActivated:true
+	function update_form(){
+		var data = $meteor('config').find({})
+		if(data&&data.length==1){
+			data = data[0]
+			console.log('config download',data)
+			$scope.freq = data.freq
+			$scope.restart = data.restart
+			$scope.unsynced = data.unsynced
+		}else if(data.length==0){
+			$scope.freq = $scope.freq_opt[2]
+			$scope.restart = $scope.restart_opt[0].value
+			var setting = {}
+			setting.unsynced = true
+			setting.mobile = $scope.terminal_sn
+			setting.freq = $scope.freq
+			setting.restart = $scope.restart
+			console.log('config insert',setting)
+			$meteor('config').insert(setting)
+		}
 	}
-	$scope.query_alert = function(){
-		var url = 'alert/'+$scope.terminal_sn
-		var params = {}
-		params.timestamp_start = $scope.timestamp_start&&$scope.timestamp_start.getTime()||''
-		params.timestamp_end = $scope.timestamp_end&&$scope.timestamp_end.getTime()||''
-		//alert(url)
-		$http.get(url,{params:params}).success(function(data){
-			$scope.records = data
-		})
-	}
+	angular_subscribe.bind($scope,'config',['terminal_sn'],update_form)
+	angular_subscribe.multi_watch($scope,['freq','restart'],function(value_name,new_value,old_value){
+		var old_setting = $meteor('config').findOne({})
+		console.dir(old_setting)
+		if(!old_setting)
+			throw new Error('config not found')
+		var setting = _.omit(old_setting,'_id')
+		setting.unsynced = true
+		setting[value_name] = new_value
+		console.log('config upload',setting)
+		$meteor('config').update({_id:old_setting._id},setting)
+	})
+	//todo: should be push automatically
+	var update_timer = setInterval(update_form,5000)
+	$scope.$on('$destroy',function(){console.log('destory config and timer'); clearInterval(update_timer)})
 }]);
 
 app.controller("loginController", ["$scope","$http", function($scope,$http) {

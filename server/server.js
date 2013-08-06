@@ -1,5 +1,7 @@
+var querystring = Npm.require('querystring')
+
 var trace = new Meteor.Collection("trace")
-var logger = new Meteor.Collection("logger")
+var config = new Meteor.Collection("config")
 
 /*
 URL: ​http://gps.dbjtech.com/gpsdebug
@@ -28,7 +30,26 @@ Meteor.Router.add('/gpsdebug','POST',function() {
 	body.timestamp = new Date(e[1],e[2]-1,e[3],e[4],e[5],e[6])
 	console.log(JSON.stringify(body))
 	trace.insert(body)
-	return 200
+	//load or init setting
+	var setting = config.findOne({mobile:body.mobile},{_id:0})
+	console.log(JSON.stringify(setting))
+	if(!setting){
+		setting = {}
+		setting.mobile = body.mobile
+		setting.freq = 20
+		setting.restart = 'hot'
+		setting.unsynced = true
+		config.insert(setting)
+		console.log('init config',setting)
+	}
+	//build resp
+	var resp = ''
+	if(setting.unsynced){
+		delete setting.unsynced
+		resp = querystring.stringify(_.omit(setting,'_id','mobile','unsynced'))
+	}
+	config.update({_id:setting._id},setting)
+	return [200,resp]
 })
 
 Meteor.Router.add('/gpsdebug/:terminal_id','GET',function(terminal_id) {
@@ -43,6 +64,12 @@ Meteor.Router.add('*',[404,'not found'])
 
 
 Meteor.publish('trace', function(args) {
-	console.log('sub',args)
+	console.log('sub trace',args)
 	return trace.find({mobile:args.terminal_sn,timestamp:{$gt:args.timestamp_start,$lt:args.timestamp_end}})
+})
+
+var cnt = 0
+Meteor.publish('config', function(args) {
+	console.log('sub config',args)
+	return config.find({mobile:args.terminal_sn})
 })
