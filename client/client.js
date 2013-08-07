@@ -209,7 +209,8 @@ app.controller("configController", ["$scope",function($scope) {
 			added: set_config,
 			changed: set_config
 		})
-		if(cursor.length==0){
+		var data = cursor.fetch()
+		if(data.length==0){
 			$scope.freq = $scope.freq_opt[2]
 			$scope.restart = $scope.restart_opt[0].value
 			var setting = {}
@@ -268,4 +269,4 @@ app.controller("registerController", ["$scope","$http", function($scope,$http) {
 			alert(data)
 		})
 	}
-}]);
+}])

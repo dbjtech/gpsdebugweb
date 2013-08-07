@@ -24,8 +24,8 @@ __meteor_bootstrap__.app
 					console.log("Angularjs\n______\nCreate public/angular.html\n This is used as your main page, this should contain the contents of the body.");
 				}
 			}
-			
-			
+
+
 			code = new String(code);
 			//console.log((new String(angular)).join());
 			code = code.replace("<body>",new String(angular));
@@ -37,7 +37,7 @@ __meteor_bootstrap__.app
 					JSON.stringify(__meteor_runtime_config__) + ";");
 			}
 	
-			res.writeHead(200, {'Content-Type': 'text/html'});	
+			res.writeHead(200, {'Content-Type': 'text/html'});
 			res.write(code);
 			res.end();
 			return;
