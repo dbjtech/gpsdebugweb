@@ -1,29 +1,22 @@
-// var trace = new Meteor.Collection("trace")
-// Template.hello.greeting = function () {
-// 	return "Welcome to gps.dbjtech.com.";
-// }
-// Template.hello.events({
-// 	'click input' : function () {
-// 		// template data, if any, is available in 'this'
-// 		if (typeof console !== 'undefined')
-// 			console.log("You pressed the button");
-// 	}
-// })
+var db_trace = new Meteor.Collection('trace')
+var db_config = new Meteor.Collection('config')
 
 
 ///////////
 //angular//
 ///////////
 var angular_subscribe = {
+	get_session_name: function(subscribe_name){return 'angular.$scope.'+subscribe_name},
+	get_session_callback_name: function(subscribe_name){return angular_subscribe.get_session_name(subscribe_name)+'_callback'},
 	declare: function(subscribe_name){
-		var session_name = 'angular.$scope.'+subscribe_name
-		var session_callback_name = session_name+'_callback'
+		var session_name = angular_subscribe.get_session_name(subscribe_name)
+		var session_callback_name = angular_subscribe.get_session_callback_name(subscribe_name)
 		Session.set(session_name,{})
 		Deps.autorun(function(c){
 			var to
 			var handle
 			var f = function(){
-				//console.log(subscribe_name,handle.ready())
+				console.log(subscribe_name,handle.ready())
 				if(handle.ready()){
 					var cb = angular_subscribe[session_callback_name]
 					if(cb)
@@ -40,8 +33,8 @@ var angular_subscribe = {
 		})
 	},
 	bind: function($scope,subscribe_name,value_names,callback) {
-		var session_name = 'angular.$scope.'+subscribe_name
-		var session_callback_name = session_name+'_callback'
+		var session_name = angular_subscribe.get_session_name(subscribe_name)
+		var session_callback_name = angular_subscribe.get_session_callback_name(subscribe_name)
 		var session_value = Session.get(session_name)
 		if(!value_names && value_names.length==0)
 			throw new Error('value_names is empty')
@@ -58,6 +51,11 @@ var angular_subscribe = {
 		//console.log('set',session_callback_name,'=',callback)
 		angular_subscribe[session_callback_name] = callback
 		Session.set(session_name,session_value)
+	},
+	refresh: function(subscribe_name){
+		var session_callback_name = angular_subscribe.get_session_callback_name(subscribe_name)
+		var cb = angular_subscribe[session_callback_name]
+		if(cb) cb()
 	},
 	multi_watch: function($scope,value_names,callback){
 		if(!value_names && value_names.length==0)
@@ -76,8 +74,19 @@ var angular_subscribe = {
 	}
 }
 
+function safe_apply($scope){
+	$scope.__safe_apply__ = _.debounce(function() {
+		try {
+			$scope.$digest();
+		} catch(e) {
+			setTimeout($scope.__safe_apply__, 0);
+		}
+	}, 100)
+	$scope.__safe_apply__()
+}
+
 var app = angular.module("meteorapp",
-['meteor','leaflet-directive','datetimepicker-directive', 'smartTable.table', '$strap.directives'],
+['leaflet-directive','datetimepicker-directive', 'smartTable.table', '$strap.directives'],
 function($routeProvider, $locationProvider) {
 	$routeProvider.
 		when('/register', {templateUrl:'/register.html', controller:'registerController'}).
@@ -90,7 +99,7 @@ function($routeProvider, $locationProvider) {
 	angular_subscribe.declare('config')
 })
 
-app.controller("traceController", ["$scope","$meteor","$http","$filter", function($scope,$meteor,$http,$filter) {
+app.controller("traceController", ["$scope","$filter", function($scope,$filter) {
 	angular.extend($scope, {
 		center: {
 			lat: 22.3,
@@ -117,29 +126,46 @@ app.controller("traceController", ["$scope","$meteor","$http","$filter", functio
 	$scope.terminal_sn = '2013012199'
 	$scope.timestamp_start = new Date(new Date().getTime()-24*3600*1000)
 	$scope.timestamp_end = new Date()
+	function insert_pvt(pvt,do_not_apply){
+		var geo = {lat:pvt.lat,lng:pvt.lon}
+		var marker = {}
+		marker.lat = pvt.lat
+		marker.lng = pvt.lon
+		marker.message =  '经度：'+pvt.lat+'°，'
+		marker.message += '纬度：'+pvt.lon+'°<br>'
+		marker.message += '海拔：'+pvt.alt+' 米<br>'
+		marker.message += '时间：'+$filter('date')(pvt.timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
+		$scope.paths.p1.latlngs.push(geo)
+		$scope.markers[pvt._id] = marker
+		if(do_not_apply!==true)
+			safe_apply($scope)
+	}
+	var observer
 	angular_subscribe.bind($scope,'trace',['terminal_sn','timestamp_start','timestamp_end'],function(){
-		var data = $meteor('trace').find({})
+		var cursor = db_trace.find({})
+		observer = cursor.observe({
+			added: insert_pvt,
+		})
+		var data = cursor.fetch()
 		//console.dir(data)
 		var paths = []
 		var markers = {}
-		for(i=0; data&&i<data.length; i++){
-			var pvt = data[i]
-			var geo = {lat:pvt.lat,lng:pvt.lon}
-			paths.push(geo)
-			markers[i] = {}
-			markers[i].lat = pvt.lat
-			markers[i].lng = pvt.lon
-			markers[i].message =  '经度：'+pvt.lat+'°，'
-			markers[i].message += '纬度：'+pvt.lon+'°<br>'
-			markers[i].message += '海拔：'+pvt.alt+' 米<br>'
-			markers[i].message += '时间：'+$filter('date')(pvt.timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
-		}
 		$scope.paths.p1.latlngs = paths
 		$scope.markers = markers
+		for(i=0; data&&i<data.length; i++){
+			insert_pvt(data[i],true)
+		}
+		safe_apply($scope)
+	})
+	$scope.$on('$destroy',function(){
+		if(observer){
+			observer.stop()
+			console.log('destroy trace.observer')
+		}
 	})
 }]);
 
-app.controller("loggerController", ["$scope","$meteor","$http", function($scope,$meteor,$http) {
+app.controller("loggerController", ["$scope", function($scope) {
 	$scope.terminal_sn = '2013012199'
 	$scope.timestamp_start = new Date(new Date().getTime()-24*3600*1000)
 	$scope.timestamp_end = new Date()
@@ -154,12 +180,13 @@ app.controller("loggerController", ["$scope","$meteor","$http", function($scope,
 		isGlobalSearchActivated:true
 	}
 	angular_subscribe.bind($scope,'trace',['terminal_sn','timestamp_start','timestamp_end'],function(){
-		$scope.records = $meteor('trace').find({})
-		//console.dir($scope.records)
+		$scope.records = db_trace.find({}).fetch()
+		safe_apply($scope)
 	})
 }]);
 
-app.controller("configController", ["$scope","$meteor","$http", function($scope,$meteor,$http) {
+app.controller("configController", ["$scope",function($scope) {
+	console.log($scope)
 	$scope.terminal_sn = '2013012199'
 	$scope.freq_opt = [5,10,20,30,60,300]
 	$scope.restart_opt = [
@@ -168,15 +195,21 @@ app.controller("configController", ["$scope","$meteor","$http", function($scope,
 		{text:'Cold Start', value:'cold'},
 		{text:'AGPS', value:'agps'}
 	]
+	function set_config(data){
+		console.log('config download',data)
+		$scope.freq = data.freq
+		$scope.restart = data.restart
+		$scope.unsynced = data.unsynced
+		safe_apply($scope)
+	}
+	var observer
 	function update_form(){
-		var data = $meteor('config').find({})
-		if(data&&data.length==1){
-			data = data[0]
-			console.log('config download',data)
-			$scope.freq = data.freq
-			$scope.restart = data.restart
-			$scope.unsynced = data.unsynced
-		}else if(data.length==0){
+		var cursor = db_config.find({mobile:$scope.terminal_sn})
+		observer = cursor.observe({
+			added: set_config,
+			changed: set_config
+		})
+		if(cursor.length==0){
 			$scope.freq = $scope.freq_opt[2]
 			$scope.restart = $scope.restart_opt[0].value
 			var setting = {}
@@ -185,24 +218,32 @@ app.controller("configController", ["$scope","$meteor","$http", function($scope,
 			setting.freq = $scope.freq
 			setting.restart = $scope.restart
 			console.log('config insert',setting)
-			$meteor('config').insert(setting)
+			db_config.insert(setting)
 		}
 	}
 	angular_subscribe.bind($scope,'config',['terminal_sn'],update_form)
 	angular_subscribe.multi_watch($scope,['freq','restart'],function(value_name,new_value,old_value){
-		var old_setting = $meteor('config').findOne({})
+		var old_setting = db_config.findOne({mobile:$scope.terminal_sn})
 		console.dir(old_setting)
 		if(!old_setting)
 			throw new Error('config not found')
+		if(old_setting[value_name]==new_value){
+			console.log('config not change')
+			return
+		}
 		var setting = _.omit(old_setting,'_id')
-		setting.unsynced = true
 		setting[value_name] = new_value
+		setting.unsynced = true
 		console.log('config upload',setting)
-		$meteor('config').update({_id:old_setting._id},setting)
+		db_config.update({_id:old_setting._id},setting)
 	})
-	//todo: should be push automatically
-	var update_timer = setInterval(update_form,5000)
-	$scope.$on('$destroy',function(){console.log('destory config and timer'); clearInterval(update_timer)})
+	$scope.$on('$destroy',function(){
+		if(observer){
+			observer.stop()
+			console.log('destroy config.observer')
+		}
+	})
+	update_form()
 }]);
 
 app.controller("loginController", ["$scope","$http", function($scope,$http) {

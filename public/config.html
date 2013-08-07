@@ -2,6 +2,8 @@
 	<label>Terminal SN:<input type="text" ng-model="terminal_sn" placeholder="Enter terminal SN"></input></label>
 	<label>Upload Frequency(s):<select ng-model="freq" ng-options="v for v in freq_opt"></select></label>
 	<label>Restart:<select ng-model="restart" ng-options="v.value as v.text for v in restart_opt"></select></label>
+	{{freq}}
+	{{restart}}
 	<label ng-show='unsynced'>unsynced</label>
 	<label ng-show='!unsynced'>synced</label>
 </div>

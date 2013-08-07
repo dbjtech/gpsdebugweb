@@ -64,12 +64,21 @@ Meteor.Router.add('*',[404,'not found'])
 
 
 Meteor.publish('trace', function(args) {
+	if(!args){
+		console.log('unsub config')
+		this.stop()
+		return
+	}
 	console.log('sub trace',args)
 	return trace.find({mobile:args.terminal_sn,timestamp:{$gt:args.timestamp_start,$lt:args.timestamp_end}})
 })
 
-var cnt = 0
 Meteor.publish('config', function(args) {
+	if(!args){
+		console.log('unsub config')
+		this.stop()
+		return
+	}
 	console.log('sub config',args)
 	return config.find({mobile:args.terminal_sn})
 })
