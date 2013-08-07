@@ -1,0 +1,22 @@
+.containers{padding:0px 0px 0px 20px;width:100%;}
+.labels label{display: inline-block;margin-left: 10px;width:250px;}
+.labels label input{display: inline-block;}
+.main{
+	margin-top:10px;width:90%;padding: 0px 10px 0px 10px;
+}
+.main_left{
+	display:inline-block;width:5%;min-width:150px;float:left;
+}
+.main_right{
+	display:inline-block;width:95%;float:right;
+}
+.lists{
+	margin:0px;
+}
+.lists li{
+	padding:3px;list-style-type: none;
+}
+.lists li div.lists_div{display: inline-block;width: 250px;}
+.lists li div{
+	display: inline-block;width: 100px;
+}

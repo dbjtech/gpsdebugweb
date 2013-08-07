@@ -126,6 +126,7 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 	$scope.terminal_sn = '2013012199'
 	$scope.timestamp_start = new Date(new Date().getTime()-24*3600*1000)
 	$scope.timestamp_end = new Date()
+	$scope.thirdli=true
 	function insert_pvt(pvt,do_not_apply){
 		var geo = {lat:pvt.lat,lng:pvt.lon}
 		var marker = {}
@@ -147,6 +148,7 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 			added: insert_pvt,
 		})
 		var data = cursor.fetch()
+		$scope.datas = data
 		//console.dir(data)
 		var paths = []
 		var markers = {}
