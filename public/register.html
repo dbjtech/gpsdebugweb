@@ -1,5 +1,7 @@
-<label>User name<input type="text" ng-model="user_name"></input></label>
-<label>Password<input type="text" ng-model="password"></input></label>
-<label>Password confirm<input type="text" ng-model="password_confirm"></input></label>
-<button ng-click="register()">register</button>
-{{resp}}
+<label>Terminal SN<input type="text" ng-model="terminal_sn"></input></label>
+<button ng-click="add_terminal()">add</button>
+
+<div>Registered Terminals</div>
+<ul ng-repeat='terminal in user.profile.terminals'>
+	<li><a ng-click='delete_terminal(terminal)'>[X] </a> {{terminal}}</li>
+</ul>

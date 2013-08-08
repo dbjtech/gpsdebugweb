@@ -1,5 +1,8 @@
 <div class="labels">
-<label>Terminal SN:<input type="text" ng-model="terminal_sn" placeholder="Enter terminal SN"></input></label>
+<ul ng-repeat='terminal in user.profile.terminals'>
+	<li><input type="radio" ng-model="user.profile.tracking" value="{{terminal}}" ng-change="change_tracking()">{{terminal}}</input></li>
+</ul>
+<label>Tracking terminal:<input type="text" ng-model="user.profile.tracking" readonly=""></input></label>
 <label>Start Date:<input type="text" datetimepicker dtp-model="timestamp_start"></input></label>
 <label>End Date:<input type="text" datetimepicker dtp-model="timestamp_end"></input></label>
 </div>

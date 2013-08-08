@@ -1,6 +1,18 @@
 var db_trace = new Meteor.Collection('trace')
 var db_config = new Meteor.Collection('config')
+//var db_user = new Meteor.Collection('users')
 
+
+;(function move_front() {
+	var login_buttons_div = $('#login-buttons')
+	if(login_buttons_div.length==0){
+		console.log('login_buttons_div not init')
+		setTimeout(move_front,100)
+	}else{
+		console.log(login_buttons_div)
+		$('body').children().first().before(login_buttons_div)
+	}
+})()
 
 ///////////
 //angular//
@@ -42,7 +54,7 @@ var angular_subscribe = {
 			throw new Error(session_name+' not register')
 
 		for(i=0; i<value_names.length; i++){
-			session_value[value_names[i]] = $scope[value_names[i]]
+			session_value[value_names[i]] = $scope.$eval(value_names[i])
 		}
 		angular_subscribe.multi_watch($scope,value_names,function(value_name,new_value,old_value){
 			session_value[value_name] = new_value
@@ -71,6 +83,24 @@ var angular_subscribe = {
 				})
 			})()
 		}
+	},
+	bind_user: function($scope,value_name){
+		function set_user(user){
+			$scope[value_name] = user
+			safe_apply($scope)
+		}
+		var cursor = Meteor.users.find({})
+		var observer = cursor.observe({
+			added: set_user,
+			changed: set_user,
+			removed: set_user
+		})
+		$scope.$on('$destroy',function(){
+			if(observer){
+				observer.stop()
+				console.log('destroy register.observer')
+			}
+		})
 	}
 }
 
@@ -94,12 +124,13 @@ function($routeProvider, $locationProvider) {
 		when('/trace', {templateUrl:'/trace.html', controller: 'traceController'}).
 		when('/config', {templateUrl:'/config.html', controller: 'configController'}).
 		when('/logger', {templateUrl:'/logger.html', controller: 'loggerController'}).
-		otherwise({redirectTo:'/login'})
+		otherwise({redirectTo:'/trace'})
 	angular_subscribe.declare('trace')
 	angular_subscribe.declare('config')
 })
 
 app.controller("traceController", ["$scope","$filter", function($scope,$filter) {
+	angular_subscribe.bind_user($scope,'user')
 	angular.extend($scope, {
 		center: {
 			lat: 22.3,
@@ -123,10 +154,14 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 			}
 		}
 	})
-	$scope.terminal_sn = '2013012199'
-	$scope.timestamp_start = new Date(new Date().getTime()-24*3600*1000)
-	$scope.timestamp_end = new Date()
-	$scope.thirdli=true;
+	$scope.timestamp_start = new Date()
+	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
+	$scope.thirdli=true
+	$scope.change_tracking = function(){
+		console.log('select',$scope.user.profile.tracking)
+		Meteor.users.update({_id:Meteor.user()._id}, {$set:{'profile.tracking':$scope.user.profile.tracking}})
+	}
+
 	function insert_pvt(pvt,do_not_apply){
 		var geo = {lat:pvt.lat,lng:pvt.lon}
 		var marker = {}
@@ -135,14 +170,15 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 		marker.message =  '经度：'+pvt.lat+'°，'
 		marker.message += '纬度：'+pvt.lon+'°<br>'
 		marker.message += '海拔：'+pvt.alt+' 米<br>'
-		marker.message += '时间：'+$filter('date')(pvt.timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
+		marker.message += 'GPS时间：'+$filter('date')(pvt.timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
+		marker.message += '上报时间：'+$filter('date')(pvt.package_timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
 		$scope.paths.p1.latlngs.push(geo)
 		$scope.markers[pvt._id] = marker
 		if(do_not_apply!==true)
 			safe_apply($scope)
 	}
 	var observer
-	angular_subscribe.bind($scope,'trace',['terminal_sn','timestamp_start','timestamp_end'],function(){
+	angular_subscribe.bind($scope,'trace',['user.profile.tracking','timestamp_start','timestamp_end'],function(){
 		var cursor = db_trace.find({})
 		observer = cursor.observe({
 			added: insert_pvt,
@@ -169,9 +205,10 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 
 app.controller("loggerController", ["$scope", function($scope) {
 	$scope.terminal_sn = '2013012199'
-	$scope.timestamp_start = new Date(new Date().getTime()-24*3600*1000)
-	$scope.timestamp_end = new Date()
+	$scope.timestamp_start = new Date()
+	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
 	$scope.columns = [
+		{label:'package_timestamp', map:'package_timestamp'},
 		{label:'timestamp', map:'timestamp'},
 		{label:'lon', map:'lon'},
 		{label:'lat', map:'lat'}
@@ -188,8 +225,7 @@ app.controller("loggerController", ["$scope", function($scope) {
 }]);
 
 app.controller("configController", ["$scope",function($scope) {
-	console.log($scope)
-	$scope.terminal_sn = '2013012199'
+	angular_subscribe.bind_user($scope,'user')
 	$scope.freq_opt = [5,10,20,30,60,300]
 	$scope.restart_opt = [
 		{text:'Hot Start', value:'hot'},
@@ -206,27 +242,19 @@ app.controller("configController", ["$scope",function($scope) {
 	}
 	var observer
 	function update_form(){
-		var cursor = db_config.find({mobile:$scope.terminal_sn})
+		var cursor = db_config.find({mobile:$scope.user.profile.tracking})
 		observer = cursor.observe({
 			added: set_config,
 			changed: set_config
 		})
 		var data = cursor.fetch()
-		if(data.length==0){
-			$scope.freq = $scope.freq_opt[2]
-			$scope.restart = $scope.restart_opt[0].value
-			var setting = {}
-			setting.unsynced = true
-			setting.mobile = $scope.terminal_sn
-			setting.freq = $scope.freq
-			setting.restart = $scope.restart
-			console.log('config insert',setting)
-			db_config.insert(setting)
-		}
+		console.log(data)
+		$scope.not_found = data.length==0
+		safe_apply($scope)
 	}
-	angular_subscribe.bind($scope,'config',['terminal_sn'],update_form)
+	angular_subscribe.bind($scope,'config',['user.profile.tracking'],update_form)
 	angular_subscribe.multi_watch($scope,['freq','restart'],function(value_name,new_value,old_value){
-		var old_setting = db_config.findOne({mobile:$scope.terminal_sn})
+		var old_setting = db_config.findOne({mobile:$scope.user.profile.tracking})
 		console.dir(old_setting)
 		if(!old_setting)
 			throw new Error('config not found')
@@ -260,15 +288,12 @@ app.controller("loginController", ["$scope","$http", function($scope,$http) {
 
 
 app.controller("registerController", ["$scope","$http", function($scope,$http) {
-	$scope.register = function(){
-		if($scope.password!=$scope.password_confirm){
-			alert('password mismatch')
-			return
-		}
-		//alert(url)
-		$http.put('register',{user_name:$scope.user_name,password:$scope.password}).success(function(data){
-			$scope.resp = data
-			alert(data)
-		})
+	angular_subscribe.bind_user($scope,'user')
+	$scope.delete_terminal = function(sn){
+		console.log('remove',sn)
+		Meteor.users.update({_id:Meteor.user()._id}, {$pull:{'profile.terminals':sn}})
+	}
+	$scope.add_terminal = function(){
+		Meteor.users.update({_id:Meteor.user()._id}, {$addToSet:{'profile.terminals':$scope.terminal_sn}})
 	}
 }])

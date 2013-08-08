@@ -28,6 +28,7 @@ Meteor.Router.add('/gpsdebug','POST',function() {
 	var body = this.request.body
 	var e = /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/.exec(body.timestamp)
 	body.timestamp = new Date(e[1],e[2]-1,e[3],e[4],e[5],e[6])
+	body.package_timestamp = new Date()
 	console.log(JSON.stringify(body))
 	trace.insert(body)
 	//load or init setting
@@ -70,7 +71,12 @@ Meteor.publish('trace', function(args) {
 		return
 	}
 	console.log('sub trace',args)
-	return trace.find({mobile:args.terminal_sn,timestamp:{$gt:args.timestamp_start,$lt:args.timestamp_end}})
+	var tracking = args['user.profile.tracking']
+	var cur = Meteor.users.find({_id:this.userId,'profile.terminals':tracking}).fetch()
+	if(cur.length==1)
+		return trace.find({mobile:tracking,package_timestamp:{$gt:args.timestamp_start,$lt:args.timestamp_end}})
+	else
+		console.log('not alow')
 })
 
 Meteor.publish('config', function(args) {
@@ -80,5 +86,10 @@ Meteor.publish('config', function(args) {
 		return
 	}
 	console.log('sub config',args)
-	return config.find({mobile:args.terminal_sn})
+	var tracking = args['user.profile.tracking']
+	return config.find({mobile:tracking})
+})
+
+Meteor.publish("userData", function () {
+	return Meteor.users.find({_id: this.userId})
 })
