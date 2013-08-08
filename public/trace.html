@@ -1,18 +1,13 @@
-<style>
-	.angular-leaflet-map {
-		width: 90%;
-		height: 600px;
-	}
-</style>
 <div class="labels">
 <label>Terminal SN:<input type="text" ng-model="terminal_sn" placeholder="Enter terminal SN"></input></label>
 <label>Start Date:<input type="text" datetimepicker dtp-model="timestamp_start"></input></label>
 <label>End Date:<input type="text" datetimepicker dtp-model="timestamp_end"></input></label>
 </div>
-<leaflet paths='paths' center='center' markers='markers' maxZoom='maxZoom' minZoom='minZoom'></leaflet>
+<div class="leaflet"><leaflet paths='paths' center='center' markers='markers' maxZoom='maxZoom' minZoom='minZoom'></leaflet></div>
 <div class="main">
 	<div class="main_left"><input type="button" ng-click="thirdli=!thirdli" value="Debug Info"></div>
 	<div class="main_right">
+		<div>
 		<ul class="lists">
 			<li>
 				<div class="lists_div">Timestamp</div>
@@ -34,16 +29,19 @@
 				<div class="lists_div"></div>
 				<div></div>
 			</li>
-			<li ng-repeat="data in datas" ng-show="thirdli">
-				<div class="lists_div">{{data.timestamp}}</div>
-				<div>{{data.lon}}</div>
-				<div>{{data.lat}}</div>
-				<div>{{data.alt}}</div>
-				<div class="lists_div">{{data.std_lon}}{{data.std_lat}}{{data.std_alt}}</div>
-				<div>{{data.range_rms}}</div>
-				<div class="lists_div">{{data.satellites}}</div>
-				<div>{{data.msic}}</div>
-			</li>
 		</ul>
+		</div>
+		<div class="bottom">
+			<div class="main_bottom" ng-repeat="data in datas" ng-show="thirdli">
+					<div class="lists_div">{{data.timestamp}}</div>
+					<div>{{data.lon}}</div>
+					<div>{{data.lat}}</div>
+					<div>{{data.alt}}</div>
+					<div class="lists_div">{{data.std_lon}}{{data.std_lat}}{{data.std_alt}}</div>
+					<div>{{data.range_rms}}</div>
+					<div class="lists_div">{{data.satellites}}</div>
+					<div>{{data.msic}}</div>
+			</div>
+		</div>
 	</div>
 </div>
