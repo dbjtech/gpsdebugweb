@@ -100,6 +100,7 @@ var angular_subscribe = {
 				observer.stop()
 				console.log('destroy register.observer')
 			}
+			delete observer
 		})
 	}
 }
@@ -157,6 +158,7 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 	$scope.timestamp_start = new Date()
 	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
 	$scope.thirdli=true
+	$scope.datas = []
 	$scope.change_tracking = function(){
 		console.log('select',$scope.user.profile.tracking)
 		Meteor.users.update({_id:Meteor.user()._id}, {$set:{'profile.tracking':$scope.user.profile.tracking}})
@@ -174,17 +176,16 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 		marker.message += '上报时间：'+$filter('date')(pvt.package_timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
 		$scope.paths.p1.latlngs.push(geo)
 		$scope.markers[pvt._id] = marker
+		$scope.datas.push(pvt)
 		if(do_not_apply!==true)
 			safe_apply($scope)
 	}
-	var observer
 	angular_subscribe.bind($scope,'trace',['user.profile.tracking','timestamp_start','timestamp_end'],function(){
 		var cursor = db_trace.find({})
-		observer = cursor.observe({
+		var observer = cursor.observe({
 			added: insert_pvt,
 		})
 		var data = cursor.fetch()
-		$scope.datas = data
 		//console.dir(data)
 		var paths = []
 		var markers = {}
@@ -194,17 +195,18 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 			insert_pvt(data[i],true)
 		}
 		safe_apply($scope)
-	})
-	$scope.$on('$destroy',function(){
-		if(observer){
-			observer.stop()
-			console.log('destroy trace.observer')
-		}
+		$scope.$on('$destroy',function(){
+			if(observer){
+				observer.stop()
+				console.log('destroy trace.observer')
+			}
+			delete observer
+		})
 	})
 }]);
 
 app.controller("loggerController", ["$scope", function($scope) {
-	$scope.terminal_sn = '2013012199'
+	angular_subscribe.bind_user($scope,'user')
 	$scope.timestamp_start = new Date()
 	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
 	$scope.columns = [
@@ -218,9 +220,21 @@ app.controller("loggerController", ["$scope", function($scope) {
 		maxSize:8,
 		isGlobalSearchActivated:true
 	}
-	angular_subscribe.bind($scope,'trace',['terminal_sn','timestamp_start','timestamp_end'],function(){
-		$scope.records = db_trace.find({}).fetch()
+
+	angular_subscribe.bind($scope,'trace',['user.profile.tracking','timestamp_start','timestamp_end'],function(){
+		var cursor = db_trace.find({})
+		var observer = cursor.observe({
+			added: function(doc){$scope.records.push(doc);safe_apply($scope)},
+		})
+		$scope.records = cursor.fetch()
 		safe_apply($scope)
+		$scope.$on('$destroy',function(){
+			if(observer){
+				observer.stop()
+				console.log('destroy trace.observer')
+			}
+			delete observer
+		})
 	})
 }]);
 
