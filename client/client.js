@@ -196,7 +196,26 @@ function($routeProvider, $locationProvider) {
 app.controller("traceController", ["$scope","$filter", function($scope,$filter) {
 	$scope.timestamp_start = new Date()
 	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
-	$scope.thirdli=true
+	$scope.show_main = true
+	$scope.columns = [
+		{label:'package_timestamp', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
+		{label:'gps_timestamp', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
+		{label:'lon', map:'lon'},
+		{label:'lat', map:'lat'},
+		{label:'alt', map:'alt'},
+		{label:'std_lon', map:'std_lon'},
+		{label:'std_lat', map:'std_lat'},
+		{label:'std_alt', map:'std_alt'},
+		{label:'range_rms', map:'range_rms'},
+		{label:'satellites', map:'satellites'},
+		{label:'misc', map:'misc'}
+	]
+	$scope.table_config={
+		itemsByPage:50,
+		maxSize:8,
+		isGlobalSearchActivated:true
+	}
+
 	$scope.change_tracking = function(){
 		console.log('select',$scope.user.profile.tracking)
 		Meteor.users.update({_id:Meteor.user()._id}, {$set:{'profile.tracking':$scope.user.profile.tracking}})
@@ -212,7 +231,7 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 		marker.message += '海拔：'+pvt.alt+' 米<br>'
 		marker.message += 'GPS时间：'+$filter('date')(pvt.timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
 		marker.message += '上报时间：'+$filter('date')(pvt.package_timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
-		if(	util.check_and_push($scope.datas,pvt) &&
+		if(	util.check_and_push($scope.records,pvt) &&
 			pvt.lat>0.001 && pvt.lon>0.001
 		){
 			$scope.paths.p1.latlngs.push(geo)
@@ -223,7 +242,7 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 	function on_reset_scope(){
 		console.log('clear trace')
 		$scope.center = {}
-		$scope.datas = []
+		$scope.records = []
 		$scope.paths = {p1: {color:'#008000', weight:5, latlngs:[]}}
 		$scope.markers = {}
 	}
@@ -239,17 +258,23 @@ app.controller("loggerController", ["$scope", function($scope) {
 	$scope.timestamp_start = new Date()
 	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
 	$scope.columns = [
-		{label:'package_timestamp', map:'package_timestamp'},
-		{label:'timestamp', map:'timestamp'},
+		{label:'package_timestamp', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
+		{label:'gps_timestamp', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
 		{label:'lon', map:'lon'},
-		{label:'lat', map:'lat'}
+		{label:'lat', map:'lat'},
+		{label:'alt', map:'alt'},
+		{label:'std_lon', map:'std_lon'},
+		{label:'std_lat', map:'std_lat'},
+		{label:'std_alt', map:'std_alt'},
+		{label:'range_rms', map:'range_rms'},
+		{label:'satellites', map:'satellites'},
+		{label:'misc', map:'misc'}
 	]
 	$scope.table_config={
 		itemsByPage:50,
 		maxSize:8,
 		isGlobalSearchActivated:true
 	}
-	$scope.records = []
 	var meteor = new meteor_helper($scope,'trace')
 	meteor.bind_user('user')
 	meteor.on_doc_add(function(doc,util){

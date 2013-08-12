@@ -8,43 +8,8 @@
 </div>
 <div class="leaflet"><leaflet paths='paths' center='center' markers='markers' maxZoom='maxZoom' minZoom='minZoom'></leaflet></div>
 <div class="main">
-	<div class="main_left"><input type="button" ng-click="thirdli=!thirdli" value="Debug Info"></div>
-	<div class="main_right">
-		<div>
-		<ul class="lists">
-			<li>
-				<div class="lists_div">Timestamp</div>
-				<div>Longitude</div>
-				<div>Latitude</div>
-				<div>Alttitude</div>
-				<div class="lists_div">pDOP,hDOP,vDOP</div>
-				<div>Range RMS</div>
-				<div class="lists_div">Satellites(ID:SNR)</div>
-				<div>Misc</div>
-			</li>
-			<li ng-show="$scope.datas.length==0">
-				<div class="lists_div">Wait...</div>
-				<div></div>
-				<div></div>
-				<div></div>
-				<div class="lists_div"></div>
-				<div></div>
-				<div class="lists_div"></div>
-				<div></div>
-			</li>
-		</ul>
-		</div>
-		<div class="bottom">
-			<div class="main_bottom" ng-repeat="data in datas" ng-show="thirdli">
-					<div class="lists_div">{{data.timestamp}}</div>
-					<div>{{data.lon}}</div>
-					<div>{{data.lat}}</div>
-					<div>{{data.alt}}</div>
-					<div class="lists_div">{{data.std_lon}}{{data.std_lat}}{{data.std_alt}}</div>
-					<div>{{data.range_rms}}</div>
-					<div class="lists_div">{{data.satellites}}</div>
-					<div>{{data.msic}}</div>
-			</div>
-		</div>
+	<input type="button" ng-click="show_main=!show_main" value="Debug Info"></div>
+	<div class="table" ng-show="show_main">
+		<smart-table config="table_config" rows="records" columns="columns"></smart-table>
 	</div>
 </div>
