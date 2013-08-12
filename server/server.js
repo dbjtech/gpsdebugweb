@@ -87,7 +87,11 @@ Meteor.publish('config', function(args) {
 	}
 	console.log('sub config',args)
 	var tracking = args['user.profile.tracking']
-	return config.find({mobile:tracking})
+	var cur = Meteor.users.find({_id:this.userId,'profile.terminals':tracking}).fetch()
+	if(cur.length==1)
+		return config.find({mobile:tracking})
+	else
+		console.log('not alow')
 })
 
 Meteor.publish("userData", function () {

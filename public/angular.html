@@ -5,8 +5,8 @@
             if (!fn.map) fn.map=function(f){var r=[];for(var i=0;i<this.length;i++)r.push(f(this[i]));return r}
             if (!fn.filter) fn.filter=function(f){var r=[];for(var i=0;i<this.length;i++)if(f(this[i]))r.push(this[i]);return r}
             if (!fn.indexOf) fn.indexOf = function(e){for(var i=0,j; j=this[i]; i++){if(j==e){return i;}}return -1;}
-            if (!console) console={log:function(){}}
-            if (console&&console.log&&!console.dir) console.dir=function(obj){console.log(JSON.stringify(obj))}
+            if (typeof(console)=='undifined') console={log:function(){}}
+            if (console.log&&!console.dir) console.dir=function(obj){console.log(JSON.stringify(obj))}
         })(Array.prototype);
         document.createElement('leaflet');
     </script>

@@ -1,12 +1,12 @@
 <div>
 	<label>Terminal SN:<input type="text" ng-model="user.profile.tracking" readonly=""></input></label>
-	<div ng-show='!not_found'>
-		<label>Upload Frequency(s):<select ng-model="freq" ng-options="v for v in freq_opt"></select></label>
-		<label>Restart:<select ng-model="restart" ng-options="v.value as v.text for v in restart_opt"></select></label>
-		{{freq}}
-		{{restart}}
-		<label ng-show='unsynced'>unsynced</label>
-		<label ng-show='!unsynced'>synced</label>
+	<div ng-show='config!=undefined'>
+		<label>Upload Frequency(s):<select ng-model="config.freq" ng-options="v for v in freq_opt"></select></label>
+		<label>Restart:<select ng-model="config.restart" ng-options="v.value as v.text for v in restart_opt"></select></label>
+		{{config.freq}}
+		{{config.restart}}
+		<label ng-show='config.unsynced'>unsynced</label>
+		<label ng-show='!config.unsynced'>synced</label>
 	</div>
-	<div ng-show='not_found'>terminal has never connected</div>
+	<div ng-show='config==undefined'>terminal has never connected</div>
 </div>
