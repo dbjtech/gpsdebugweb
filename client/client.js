@@ -34,7 +34,7 @@ meteor_helper = function(scope,sub_name){
 	var get_query
 
 	function on_get_query(cb){get_query=cb}
-	function on_reset_scope(cb){reset_scope=cb}
+	function on_reset_scope(cb){reset_scope=cb;cb()}
 	function on_doc_add(cb){doc_add=cb}
 	function on_doc_change(cb){doc_change=cb}
 	function on_doc_remove(cb){doc_remove=cb}
@@ -203,7 +203,7 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 	}
 
 	function insert_pvt(pvt,util){
-		var geo = {lat:pvt.lat,lng:pvt.lon,_id:pvt._id}
+		var geo = {lat:pvt.lat,lng:pvt.lon}
 		var marker = {}
 		marker.lat = pvt.lat
 		marker.lng = pvt.lon
@@ -212,14 +212,17 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 		marker.message += '海拔：'+pvt.alt+' 米<br>'
 		marker.message += 'GPS时间：'+$filter('date')(pvt.timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
 		marker.message += '上报时间：'+$filter('date')(pvt.package_timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
-		if(util.check_and_push($scope.paths.p1.latlngs,geo)){
+		if(	util.check_and_push($scope.datas,pvt) &&
+			pvt.lat>0.001 && pvt.lon>0.001
+		){
+			$scope.paths.p1.latlngs.push(geo)
 			$scope.markers[pvt._id] = marker
-			$scope.datas.push(pvt)
 		}
 	}
 
 	function on_reset_scope(){
 		console.log('clear trace')
+		$scope.center = {}
 		$scope.datas = []
 		$scope.paths = {p1: {color:'#008000', weight:5, latlngs:[]}}
 		$scope.markers = {}
