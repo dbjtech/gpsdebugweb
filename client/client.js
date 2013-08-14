@@ -114,7 +114,7 @@ meteor_helper = function(scope,sub_name){
 	}
 
 	function multi_watch(value_names,callback){
-		for(i=0; i<value_names.length; i++){
+		for(var i=0; i<value_names.length; i++){
 			(function(){
 				var value_name = value_names[i]
 				//console.log('watch',value_name)
@@ -131,7 +131,7 @@ meteor_helper = function(scope,sub_name){
 		var session_value = {}
 		watch_list = []
 		//console.log(arguments)
-		for(i=0;i<arguments.length;i++){
+		for(var i=0;i<arguments.length;i++){
 			var value_name = arguments[i]
 			watch_list[i] = value_name
 			session_value[value_name] = $scope.$eval(value_name)
