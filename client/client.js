@@ -203,10 +203,10 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 		{label:'lon', map:'lon'},
 		{label:'lat', map:'lat'},
 		{label:'alt', map:'alt'},
-		{label:'std_lon', map:'std_lon'},
-		{label:'std_lat', map:'std_lat'},
-		{label:'std_alt', map:'std_alt'},
-		{label:'range_rms', map:'range_rms'},
+		//{label:'std_lon', map:'std_lon'},
+		//{label:'std_lat', map:'std_lat'},
+		//{label:'std_alt', map:'std_alt'},
+		//{label:'range_rms', map:'range_rms'},
 		{label:'satellites', map:'satellites'},
 		{label:'misc', map:'misc'}
 	]
@@ -232,7 +232,7 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 		marker.message += 'GPS时间：'+$filter('date')(pvt.timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
 		marker.message += '上报时间：'+$filter('date')(pvt.package_timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
 		if(	util.check_and_push($scope.records,pvt) &&
-			pvt.lat>0.001 && pvt.lon>0.001
+			Math.abs(pvt.lat)>0.001 && Math.abs(pvt.lon)>0.001
 		){
 			$scope.paths.p1.latlngs.push(geo)
 			$scope.markers[pvt._id] = marker
@@ -263,10 +263,10 @@ app.controller("loggerController", ["$scope", function($scope) {
 		{label:'lon', map:'lon'},
 		{label:'lat', map:'lat'},
 		{label:'alt', map:'alt'},
-		{label:'std_lon', map:'std_lon'},
-		{label:'std_lat', map:'std_lat'},
-		{label:'std_alt', map:'std_alt'},
-		{label:'range_rms', map:'range_rms'},
+		//{label:'std_lon', map:'std_lon'},
+		//{label:'std_lat', map:'std_lat'},
+		//{label:'std_alt', map:'std_alt'},
+		//{label:'range_rms', map:'range_rms'},
 		{label:'satellites', map:'satellites'},
 		{label:'misc', map:'misc'}
 	]

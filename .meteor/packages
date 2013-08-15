@@ -9,3 +9,7 @@ jquery
 underscore
 accounts-ui
 accounts-password
+standard-app-packages
+page-js-ie-support
+http
+router

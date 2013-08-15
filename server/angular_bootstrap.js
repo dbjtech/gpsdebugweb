@@ -1,4 +1,4 @@
-var connect = Npm.require("connect");
+// var connect = Npm.require("connect");
 var fs = Npm.require("fs");
 var path = Npm.require("path");
 var Fiber = Npm.require("fibers");
@@ -14,6 +14,11 @@ var runtime_config = function (app_html) {
     "__meteor_runtime_config__ = " +
       JSON.stringify(__meteor_runtime_config__) + ";");
 
+	app_html = app_html.replace(
+		/##ROOT_URL_PATH_PREFIX##/g,
+		__meteor_runtime_config__['ROOT_URL_PATH_PREFIX']
+	)
+
   return app_html;
 };
 
@@ -28,28 +33,27 @@ var htmlAttributes = function (app_html, request) {
 };
 
 
-__meteor_bootstrap__.app
-	.use(connect.query())
-	.use(connect.logger())
+WebApp.connectHandlers
+	// .use(connect.query())
+	// .use(connect.logger())
 	.use('/html',function (req, res, next) {
 		// Need to create a Fiber since we're using synchronous http calls
 		Fiber(function() {
 			try{
 				var code = fs.readFileSync(path.resolve('bundle/app.html'));
 			}catch(e){
-				var code = fs.readFileSync(path.resolve('.meteor/local/build/app.html'));
+				var code = fs.readFileSync(path.resolve('../client/app.html'));
 			}
 			var angular = "";
 			try{ 
 				angular = fs.readFileSync(path.resolve('bundle/static/angular.html'));
 			}catch(e){
-				if(fs.existsSync("public/angular.html")){
-					angular = fs.readFileSync(path.resolve('public/angular.html'));
+				if(fs.existsSync("../client/app/angular.html")){
+					angular = fs.readFileSync(path.resolve('../client/app/angular.html'));
 				}else{
 					console.log("Angularjs\n______\nCreate public/angular.html\n This is used as your main page, this should contain the contents of the body.");
 				}
 			}
-
 
 			code = new String(code);
 			//console.log((new String(angular)));
