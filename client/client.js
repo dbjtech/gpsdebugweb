@@ -190,6 +190,7 @@ function($routeProvider, $locationProvider) {
 		when('/trace', {templateUrl:'/trace.html', controller: 'traceController'}).
 		when('/config', {templateUrl:'/config.html', controller: 'configController'}).
 		when('/logger', {templateUrl:'/logger.html', controller: 'loggerController'}).
+		when('/webapi', {templateUrl:'/webapi.html', controller: 'webapiController'}).
 		otherwise({redirectTo:'/trace'})
 })
 
@@ -349,5 +350,29 @@ app.controller("registerController", ["$scope", function($scope) {
 	}
 	$scope.add_terminal = function(){
 		Meteor.users.update({_id:Meteor.user()._id}, {$addToSet:{'profile.terminals':$scope.terminal_sn}})
+	}
+}])
+
+app.controller("webapiController",["$scope","$http",function($scope,$http){
+		$scope.cids = 28655
+		$scope.lacs = 17695
+		$scope.mncs = 0
+		$scope.mccs = 0
+		$scope.strengths = null
+		//var a = $scope.cids+$scope.lacs+$scope.mncs+$scope.mccs+$scope.strengths
+		$scope.fetch = function(){
+		//$scope.returns={"cells":[{"cid":28655,"lac":17695,"mnc":0,"mcc":1}]}
+		if(angular.isNumber($scope.mccs) == false){
+		$scope.cid = parseInt($scope.cids)
+		$scope.lac = parseInt($scope.lacs)
+		$scope.mnc = parseInt($scope.mncs)
+		$scope.mcc = parseInt($scope.mccs)
+		}
+		$scope.da = {"cells":[{"cid":$scope.cid,"lac":$scope.lac,"mnc":$scope.mnc,"mcc":$scope.mcc,"strength":$scope.strengths}]}
+		$http.post('/geo',{"cells":[{"cid":28655,"lac":17695,"mnc":0,"mcc":0}]}).success(function(data){
+			$scope.returns=data
+		}).error(function(e){
+			$scope.returns=e
+		})
 	}
 }])

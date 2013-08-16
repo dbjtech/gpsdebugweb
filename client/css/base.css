@@ -45,3 +45,30 @@
 		min-height: 450px;
 		max-height: 600px;
 }
+/* CSS declarations go here */
+.mains{width:98%;margin: 0px;}
+.main-top{background-color: #2c2c2c;width: 100%;height: 30px;}
+.main-center{min-height: 600px;}
+.main-center-one{width:100%;}.center-one{margin:10px;heigt:66px;}
+.main-center-two{width:100%;padding:0px 3px 10px 3px;}
+.center-two{border:2px solid #00b7ee;display: inline-block;width:100%;border-radius: 5px 0px 5px 0px;}
+.center-two-left{width:30%;background-color:red;display: inline-block;float:left;}
+.center-two-rigth{width:70%;background-color:#777777;display: inline-block;float:right;}
+.two-left-top{height:30px;background-color: #2aabe4;font-size: 14px;color: white;}
+.two-left-top div{padding:5px;}
+.two-left-center{heigth:500px;background-color: #f7f7f7;padding: 20px 15px 20px 15px;}
+.two-left-center ul{margin:0px;list-style: none;}
+.two-left-center ul li{padding: 10px 0px 0px 0px;}
+.two-left-center ul li div{padding-left: 10px;display:inline-block;}
+.two-left-center ul li div select{position: relative;;left:-2px;top:2px;font-size: 12px;border:solid 1px #b0aeae;line-height: 14px;color:#000000;border-radius: 3px;}
+.two-left-center ul li div label{padding-left: 15px;display:inline-block;}
+.two-left-center ul li ul{padding-left:10px;margin:auto 0px;background-color: #ffffff;border-radius:5px;list-style: none;}
+.two-left-center ul li ul li{padding:10px 0px 0px 0px;}
+.two-left-center ul li ul li div{width:80px;float:left;padding-top:3px;padding-left:20px;}
+.two-left-center ul li ul li input{width:50%;}
+.two-left-center ul li ul li label input{width:100px;margin:10px 0px 10px 150px;height: 30px;color:white;width: 70px;background-color:#2aabe4; }
+.two-right-top{margin:30px 0px 0px 0px;display: inline-block;width:60%;}
+.two-right-top ul{list-style: none;margin-left:15px;width:100%;}
+.two-right-top ul li{margin:0px;padding:0px;}
+.two-right-top ul li div{height:160px;width:100%;border:1px solid #999999;margin:10px 0px 10px 0px;padding:10px;overflow-y: auto;overflow-x:hidden; }
+.two-right-top ul li div ul li{padding: 10px;}
