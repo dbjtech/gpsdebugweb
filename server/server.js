@@ -28,6 +28,7 @@ function Util(){
 
 	this.is_format_like = function(format,obj){
 		//console.log(format,'vs',obj)
+		if(format==null) return true
 		if(format==undefined) return obj==undefined
 		var ftype = typeof(format)
 		var otype = typeof(obj)
@@ -55,6 +56,7 @@ var querystring = Npm.require('querystring')
 
 var trace = new Meteor.Collection("trace")
 var config = new Meteor.Collection("config")
+var google_geo_db = new Meteor.Collection("google_geo")
 
 /*
 URL: ​http://gps.dbjtech.com/gpsdebug
@@ -165,27 +167,56 @@ function Request_handler(){
 	this.fails_times = 0
 	this.protocol = http
 }
-
-var google_cell = new Request_handler()
-google_cell.protocol = https
-google_cell.options = {
-	hostname: 'www.googleapis.com',
-	path: '/geolocation/v1/geolocate?key=AIzaSyDAZ8Qr-2uoHU8jVsTZ6eInxtI9OPtMlRM',
-	method: 'POST',
-	headers: {}
-}
-google_cell.on_request = function(req,data){
-	var req_body = {cellTowers:[]}
-	for(var i=0; i<data.cells.length; i++){
-		var e = util.extract_fields({},data.cells[i],{cid:'cellId',mcc:'mobileCountryCode',mnc:'mobileNetworkCode',strength:'signalStrength'})
-		req_body.cellTowers.push(e)
-	}
-	data = JSON.stringify(req_body)
+Request_handler.prototype.set_options = function(opt) {this.options=opt}
+//return false if not support or convert failed
+Request_handler.prototype.on_request_data_convert = function(get_body,post_body,raw) {return true}
+Request_handler.prototype.on_request = function(req,post_body) {
+	var data
+	var content_type = this.options.headers && this.options.headers['Content-Type'] || null
+	if(content_type=='application/json')
+		data = JSON.stringify(post_body)
+	else
+		data = querystring.stringify(post_body)
+	//console.log(content_type,'post=',data,data.length)
 	req.setHeader('Content-Length', data.length)
-	req.write(data)
+	if(data.length!=0)
+		req.write(data)
 	req.end()
 }
 //return [http_code,{result:XXX}]
+Request_handler.prototype.on_response = function(post_body) {return [501,{result:'not implement'}]}
+
+var google_cell = new Request_handler()
+google_cell.protocol = https
+google_cell.set_options({
+	hostname: 'www.googleapis.com',
+	path: '/geolocation/v1/geolocate',
+	method: 'POST',
+	headers: {'Content-Type':'application/json'}
+})
+google_cell.on_request_data_convert = function(get_body,post_body,raw){
+	var format4cell = {cells:[{cid:Number,lac:Number,mnc:Number,mcc:Number,strength:null}]}
+	var format4wifi = {wifis:[{mac:String,strength:null}]}
+	var good_format = false
+	if(util.is_format_like(format4wifi,raw)){
+		good_format = true
+		post_body.wifiAccessPoints = []
+		for(var i=0; i<raw.wifis.length; i++){
+			var e = util.extract_fields({},raw.wifis[i],{mac:'macAddress',strength:'signalStrength'})
+			post_body.wifiAccessPoints.push(e)
+		}
+	}
+	if(util.is_format_like(format4cell,raw)){
+		good_format = true
+		post_body.cellTowers = []
+		for(var i=0; i<raw.cells.length; i++){
+			var e = util.extract_fields({},raw.cells[i],{cid:'cellId',mcc:'mobileCountryCode',mnc:'mobileNetworkCode',lac:'locationAreaCode',strength:'signalStrength'})
+			post_body.cellTowers.push(e)
+		}
+	}
+	get_body.key = 'AIzaSyDAZ8Qr-2uoHU8jVsTZ6eInxtI9OPtMlRM'
+	return good_format
+}
 google_cell.on_response = function(data){
 	if(data.error)
 		return [502,{result:data.error}]
@@ -196,46 +227,26 @@ google_cell.on_response = function(data){
 	body.result.geo = data.location
 	return [200,body]
 }
-var google_wifi = _.clone(google_cell)
-google_wifi.on_request = function(req,data){
-	var req_body = {wifiAccessPoints:[]}
-	for(var i=0; i<data.wifis.length; i++){
-		var e = util.extract_fields({},data.wifis[i],{mac:'macAddress',strength:'signalStrength'})
-		req_body.wifiAccessPoints.push(e)
-	}
-	data = JSON.stringify(req_body)
-	//console.log('request',req_body)
-	req.setHeader('Content-Length', data.length)
-	req.write(data)
-	req.end()
-}
 
 var juhe_cell = new Request_handler()
-juhe_cell.options = {
+juhe_cell.set_options({
 	hostname: 'v.juhe.cn',
 	port: 80,
 	path: '/cell/get',
 	method: 'POST',
 	headers: {'Content-Type':'application/x-www-form-urlencoded'}
-}
-//return [http_code,{result:XXX}] if not support
-juhe_cell.is_support = function(data){
-	var info = data.cells[0]
-	if(info.mcc!=460){
+})
+juhe_cell.on_request_data_convert = function(get_body,post_body,raw){
+	var format4cell = {cells:[{cid:Number,lac:Number,mnc:Number,mcc:Number,strength:null}]}
+	if(!util.is_format_like(format4cell,raw))
 		return false
-	}
+	var info = raw.cells[0]
+	if(info.mcc!=460)
+		return false
+	_.extend(post_body,_.pick(info,'mnc','lac'))
+	post_body.cell = info.cid
+	post_body.key = 'e40e4ac4b12317914437bd3f742343f4'
 	return true
-}
-juhe_cell.on_request = function(req,data){
-	var info = data.cells[0]
-	var req_body = _.pick(info,'mnc','lac')
-	req_body.cell = info.cid
-	req_body.key = 'e40e4ac4b12317914437bd3f742343f4'
-	data = querystring.stringify(req_body)
-	//console.log('request',req_body)
-	req.setHeader('Content-Length', data.length)
-	req.write(data)
-	req.end()
 }
 juhe_cell.on_response = function(data){
 	if(data.resultcode!='200')
@@ -248,11 +259,75 @@ juhe_cell.on_response = function(data){
 	return [200,body]
 }
 
-function handle_geo_request(handler,body_data){
+var baidu_geo_convert = new Request_handler()
+baidu_geo_convert.set_options({
+	//api.map.baidu.com/ag/coord/convert?from=0&to=4&x=longitude&y=latitude
+	hostname: 'api.map.baidu.com',
+	port: 80,
+	path: '/ag/coord/convert',
+	method: 'GET',
+})
+baidu_geo_convert.on_request_data_convert = function(get_body,post_body,raw){
+	var format4point = {geo:{lng:Number,lat:Number},to:String}
+	if(raw.to!='baidu')
+		return false
+	if(!util.is_format_like(format4point,raw))
+		return false
+	_.extend(get_body,{from:0,to:4})
+	util.extract_fields(get_body,raw.geo,{lat:'y',lng:'x'})
+	//console.log('request',get_body)
+	return true
+}
+baidu_geo_convert.on_response = function(data){
+	console.log('response',data)
+	if(data.error!=0)
+		return [502,{result:data.error}]
+	var geo = {}
+	geo.lng = new Buffer(data.x, 'base64').toString('ascii')
+	geo.lat = new Buffer(data.y, 'base64').toString('ascii')
+	geo.lng = parseFloat(geo.lng)
+	geo.lat = parseFloat(geo.lat)
+	return [200,{geo:geo}]
+}
+
+var google_geo_convert = new Request_handler()
+google_geo_convert.set_options({hostname:'db.google_geo'})
+google_geo_convert.on_request_data_convert = function(get_body,post_body,raw){
+	var format4point = {geo:{lng:Number,lat:Number},to:String}
+	//var format4points = {geos:[{lng:Number,lat:Number}],to:String}
+	if(raw.to!='google')
+		return false
+	if(util.is_format_like(format4point,raw)){
+		get_body.geo = raw.geo
+	}
+	return !_.isEmpty(get_body)
+}
+google_geo_convert.on_locally_handle = function(data){
+	var result = {}
+	var resp
+	if(data.geo){
+		result.geo = {}
+		var lng = Math.round(data.geo.lng*100)/100
+		var lat = Math.round(data.geo.lat*100)/100
+		var doc = google_geo_db.findOne({lng:lng,lat:lat})
+		if(doc){
+			result.geo.lng = data.geo.lng + doc.lng_offset
+			result.geo.lat = data.geo.lat + doc.lat_offset
+			resp = [200,{result:result}]
+		}else{
+			resp = [501,{result:'geo out of range'}]
+		}
+	}
+	return resp
+}
+
+function remote_web_api_request(handler,get_body,post_body){
 	var resp
 	var future = new Future()
-	var timestamp_start = new Date()
-	var req = handler.protocol.request(handler.options, function(res) {
+	var options = _.clone(handler.options)
+	options.path += '?' + querystring.stringify(get_body)
+	console.log('get=',options.path,'post=',post_body)
+	var req = handler.protocol.request(options, function(res) {
 		var api_resp = ''
 		// console.log('STATUS: ' + res.statusCode)
 		// console.log('HEADERS: ' + JSON.stringify(res.headers))
@@ -282,14 +357,39 @@ function handle_geo_request(handler,body_data){
 		future.return()
 	})
 
-	handler.on_request(req,body_data)
+	handler.on_request(req,post_body)
 	future.wait()
-	resp = resp || [200,{}]
-	handler.request_times++
-	if(resp[0]!=200)
-		handler.fails_times++
-	handler.last_request_time_used = new Date()-timestamp_start
-	resp[1].source = handler.options.hostname
+	return resp
+}
+
+function try_handlers(handlers,raw){
+	var resp
+	//make random order
+	handlers.sort(function(a,b){return 0.5-Math.random()})
+	while(handlers.length!=0){
+		var handler = handlers.pop()
+		var get_body = {}
+		var post_body = {}
+		if(!handler.on_request_data_convert(get_body,post_body,raw)){
+			resp = [400,{result:'bad param'}]
+			continue
+		}
+
+		handler.last_request_timestamp = new Date()
+		//this call will block
+		resp = handler.on_locally_handle ?
+			handler.on_locally_handle(get_body,post_body) :
+			remote_web_api_request(handler,get_body,post_body)
+		resp = resp || [500,{result:'internal server error'}]
+		handler.request_times++
+		if(resp[0]!=200)
+			handler.fails_times++
+		handler.last_request_time_used = new Date()-handler.last_request_timestamp
+		resp[1].source = handler.options.hostname
+		console.log('request finish',_.pick(handler,'last_request_timestamp','last_request_time_used','request_times','fails_times'))
+		if(resp[0]!=504)
+			break
+	}
 	resp[1] = JSON.stringify(resp[1])
 	console.log(resp)
 	return resp
@@ -303,37 +403,17 @@ Meteor.Router.add('/geo','POST',function() {
 	var body_data = this.request.body
 	console.log(body_data)
 
-	var resp
-	var format4cell = {cells:[{cid:Number,lac:Number,mnc:Number,mcc:Number,strength:null}]}
-	var format4wifi = {wifis:[{mac:String,strength:null}]}
-	var cell_handlers = [google_cell,juhe_cell]
-	var wifi_handlers = [google_wifi]
-	var handlers
-	if(util.is_format_like(format4wifi,body_data)){
-		handlers = wifi_handlers
-	}else if(util.is_format_like(format4cell,body_data)){
-		handlers = cell_handlers
-	}else{
-		return 400
-	}
-	//make random order
-	handlers.sort(function(a,b){return 0.5-Math.random()})
-	while(handlers.length!=0){
-		var handler = handlers.pop()
-		if(handler.is_support && !handler.is_support(body_data)){
-			continue
-		}
-
-		handler.last_request_timestamp = new Date()
-		//this call will block
-		resp = handle_geo_request(handler,body_data)
-		console.log('request finish',_.pick(handler,'last_request_timestamp','last_request_time_used','request_times','fails_times'))
-		if(resp[0]!=504)
-			break
-	}
-	return resp || 501
+	return try_handlers([google_cell,juhe_cell],body_data)
 })
 
+//[input]	{geo:{lng:Number,lat:Number},to:String} //'to' can only set to 'baidu' right now
+//[output]	{geo:{"lng":0,"lat":0},"source":"api.map.baidu.com"}
+Meteor.Router.add('/convert','POST',function(){
+	var body_data = this.request.body
+	console.log(body_data)
 
+	return try_handlers([baidu_geo_convert,google_geo_convert],body_data)
+})
 
+Meteor.Router.add('/',[200,'<html><meta HTTP-EQUIV="REFRESH" content="0; url=/html"></html>'])
 Meteor.Router.add('*',[404,'not found'])

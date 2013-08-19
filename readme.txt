@@ -13,7 +13,10 @@ prepare
 	curl https://install.meteor.com|sudo sh
 6. install meteorite
 	sudo npm install meteorite -g
-
-run
-1. git clone XXX
-2. mrt
+7. run
+	git clone XXX
+	mrt
+8. import google geo convert db
+	sudo npm install mongoskin -g
+	cd .tools
+	node load_google_geo.js

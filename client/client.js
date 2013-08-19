@@ -16,6 +16,9 @@ var my_global = {}
 	}else{
 		//console.log(login_buttons_div)
 		$('body').children().first().before(login_buttons_div)
+		login_buttons_div.css('position','absolute')
+		login_buttons_div.css('right','160px')
+		login_buttons_div.css('top','11px')
 	}
 })()
 
