@@ -8,20 +8,6 @@ var db = {
 
 var my_global = {}
 
-;(function move_front() {
-	var login_buttons_div = $('#login-buttons')
-	if(login_buttons_div.length==0){
-		//console.log('login_buttons_div not init')
-		setTimeout(move_front,100)
-	}else{
-		//console.log(login_buttons_div)
-		$('body').children().first().before(login_buttons_div)
-		login_buttons_div.css('position','absolute')
-		login_buttons_div.css('right','160px')
-		login_buttons_div.css('top','11px')
-	}
-})()
-
 ///////////
 //angular//
 ///////////

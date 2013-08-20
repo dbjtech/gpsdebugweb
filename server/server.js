@@ -415,5 +415,5 @@ Meteor.Router.add('/convert','POST',function(){
 	return try_handlers([baidu_geo_convert,google_geo_convert],body_data)
 })
 
-Meteor.Router.add('/',[200,'<html><meta HTTP-EQUIV="REFRESH" content="0; url=/html"></html>'])
+Meteor.Router.add('/',[200,{'Content-Type':'text/html'},'<html><meta HTTP-EQUIV="REFRESH" content="0; url=/html"></html>'])
 Meteor.Router.add('*',[404,'not found'])
