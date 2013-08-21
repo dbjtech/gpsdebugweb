@@ -225,6 +225,8 @@ google_cell.on_response = function(data){
 	var body = {result:{}}
 	body.result.accuracy = data.accuracy
 	body.result.geo = data.location
+	body.result.geo.lat = parseFloat(body.result.geo.lat)
+	body.result.geo.lng = parseFloat(body.result.geo.lng)
 	return [200,body]
 }
 
@@ -253,9 +255,9 @@ juhe_cell.on_response = function(data){
 		return [502,{result:data.reason}]
 	var raw = data.result.data[0]
 	var body = {result:{geo:{}}}
-	body.result.accuracy = raw.PRECISION
-	body.result.geo.lat = raw.LAT
-	body.result.geo.lng = raw.LNG
+	body.result.accuracy = parseFloat(raw.PRECISION)
+	body.result.geo.lat = parseFloat(raw.LAT)
+	body.result.geo.lng = parseFloat(raw.LNG)
 	return [200,body]
 }
 
@@ -287,7 +289,7 @@ baidu_geo_convert.on_response = function(data){
 	geo.lat = new Buffer(data.y, 'base64').toString('ascii')
 	geo.lng = parseFloat(geo.lng)
 	geo.lat = parseFloat(geo.lat)
-	return [200,{geo:geo}]
+	return [200,{result:{geo:geo}}]
 }
 
 var google_geo_convert = new Request_handler()
@@ -313,10 +315,12 @@ google_geo_convert.on_locally_handle = function(data){
 		if(doc){
 			result.geo.lng = data.geo.lng + doc.lng_offset
 			result.geo.lat = data.geo.lat + doc.lat_offset
-			resp = [200,{result:result}]
 		}else{
-			resp = [501,{result:'geo out of range'}]
+			result.geo = data.geo
+			console.warn('google_geo not found',data.geo)
+			//resp = [501,{result:'geo out of range'}]
 		}
+		resp = [200,{result:result}]
 	}
 	return resp
 }
@@ -371,7 +375,7 @@ function try_handlers(handlers,raw){
 		var get_body = {}
 		var post_body = {}
 		if(!handler.on_request_data_convert(get_body,post_body,raw)){
-			resp = [400,{result:'bad param'}]
+			resp = resp || [400,{result:'bad param'}]
 			continue
 		}
 
@@ -390,29 +394,45 @@ function try_handlers(handlers,raw){
 		if(resp[0]!=504)
 			break
 	}
-	resp[1] = JSON.stringify(resp[1])
-	console.log(resp)
 	return resp
 }
 
-//[input]	{cells:[{cid:Number,lac:Number,mnc:Number,mcc:Number,strength:null}]} //cells[0] treats as the current cell, other as neighbor cells
-//[input]	{wifis:[{mac:String,strength:Number},{mac:String,strength:Number}]} //for wifi, at least 2 wifi addrs
+//[input]	{cells:[{cid:Number,lac:Number,mnc:Number,mcc:Number,strength:Number&&null}],to:String&&null} //cells[0] treats as the current cell, other as neighbor cells
+//[input]	{wifis:[{mac:String,strength:Number},{mac:String,strength:Number&&null}],to:String&&null} //for wifi, at least 2 wifi addrs
 //[output]	{result:{geo:{lat:0,lng:0},accuracy:0},source:'www.googleapis.com'}
 //[test]	curl localhost:3000/geo -H "Content-Type: application/json" -d '{"cells":[{"cid":28655,"lac":17695,"mnc":0}]}'
 Meteor.Router.add('/geo','POST',function() {
 	var body_data = this.request.body
 	console.log(body_data)
 
-	return try_handlers([google_cell,juhe_cell],body_data)
+	var geolocate_resp = try_handlers([google_cell,juhe_cell],body_data)
+	if(geolocate_resp[0]==200&&body_data.to){
+		var convert_input = {geo:geolocate_resp[1].result.geo,to:body_data.to}
+		console.log(convert_input)
+		var convert_resp = try_handlers([baidu_geo_convert,google_geo_convert],convert_input)
+		console.log(convert_resp)
+		if(convert_resp[0]==200){
+			geolocate_resp[1].result.raw = geolocate_resp[1].result.geo
+			geolocate_resp[1].result.geo = convert_resp[1].result.geo
+			geolocate_resp[1].source = [geolocate_resp[1].source]
+			geolocate_resp[1].source.push(convert_resp[1].source)
+		}
+	}
+	geolocate_resp[1] = JSON.stringify(geolocate_resp[1])
+	console.log(geolocate_resp)
+	return geolocate_resp
 })
 
-//[input]	{geo:{lng:Number,lat:Number},to:String} //'to' can only set to 'baidu' right now
-//[output]	{geo:{"lng":0,"lat":0},"source":"api.map.baidu.com"}
+//[input]	{geo:{lng:Number,lat:Number},to:String} //'to' can only set to 'baidu'/'google' right now
+//[output]	{result:{geo:{"lng":0,"lat":0}},"source":"api.map.baidu.com"}
 Meteor.Router.add('/convert','POST',function(){
 	var body_data = this.request.body
 	console.log(body_data)
 
-	return try_handlers([baidu_geo_convert,google_geo_convert],body_data)
+	var resp = try_handlers([baidu_geo_convert,google_geo_convert],body_data)
+	resp[1] = JSON.stringify(resp[1])
+	console.log(resp)
+	return resp
 })
 
 Meteor.Router.add('/',[200,{'Content-Type':'text/html'},'<html><meta HTTP-EQUIV="REFRESH" content="0; url=/html"></html>'])
