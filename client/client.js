@@ -201,9 +201,11 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 		{label:'misc', map:'misc'}
 	]
 	$scope.table_config={
+		selectionMode: 'multiple',
+		//displaySelectionCheckbox: true,
 		itemsByPage:50,
 		maxSize:8,
-		isGlobalSearchActivated:true
+		//isGlobalSearchActivated:true,
 	}
 
 	$scope.change_tracking = function(){

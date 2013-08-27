@@ -49,6 +49,13 @@ function Util(){
 		}
 		return true
 	}
+
+	this.convert_field = function(dest,src,fields,convertor){
+		for(var i=0; i<fields.length; i++){
+			var k = fields[i]
+			dest[k] = convertor(src[k])
+		}
+	}
 }
 
 
@@ -84,6 +91,7 @@ Meteor.Router.add('/gpsdebug','POST',function() {
 	var e = /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/.exec(body.timestamp)
 	body.timestamp = new Date(e[1],e[2]-1,e[3],e[4],e[5],e[6])
 	body.package_timestamp = new Date()
+	util.convert_field(body,body,['lat','lon','alt','std_lat','std_lon','std_alt'],parseFloat)
 	console.log(JSON.stringify(body))
 	trace.insert(body)
 	//load or init setting

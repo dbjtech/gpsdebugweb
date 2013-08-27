@@ -1,6 +1,10 @@
-<label>Terminal SN<input type="text" ng-model="terminal_sn"></input></label>
-<button ng-click="add_terminal()">add</button>
-
+<div class="labels">
+<label>
+	Terminal SN
+	<input type="text" ng-model="terminal_sn"></input>
+	<button ng-click="add_terminal()" ng-disabled="!terminal_sn">add</button>
+</label>
+</div>
 <div>Registered Terminals</div>
 <ul ng-repeat='terminal in user.profile.terminals'>
 	<li><a ng-click='delete_terminal(terminal)'>[X] </a> {{terminal}}</li>
