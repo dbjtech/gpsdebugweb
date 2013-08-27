@@ -350,6 +350,7 @@ app.controller("webapiController",["$scope","$http",function($scope,$http){
 		$scope.mncs = 0
 		$scope.mccs = 0
 		$scope.strengths = null
+		$scope.linkway = 1
 		//var a = $scope.cids+$scope.lacs+$scope.mncs+$scope.mccs+$scope.strengths
 		$scope.fetch = function(){
 		//$scope.returns={"cells":[{"cid":28655,"lac":17695,"mnc":0,"mcc":1}]}

@@ -1,8 +1,28 @@
 .mainone{overflow:hidden;}
-.containers{padding:0px 0px 0px 20px;width:100%;height:90%;}
+.main-one{padding-left: 7px;}
+.containers{padding:0px 0px 0px 0px;width:100%;height:90%;}
+.labels{padding-left: 7px;}
 .labels label{display: inline-block;margin:0px 50px 0px 0px;}
-.labels label input{display: inline-block;}
-.labels label button{display: inline-block;margin-bottom: 10px;}
+.labels label label{display: inline-block;margin:0px 10px 0px 0px;}
+.labels label input{display: inline-block;height:16px;width:120px;position:relative;left:-2px;top:3px;font-size:14px;border: solid 1px #b0aeae;line-height:14px;bo
+rder:0px;color:#000000;border-radius:3px;}
+.labels label select{display: inline-block;height:25px;width:100px;position:relative;left:-2px;top:2px;font-size:14px;border: solid 1px #b0aeae;line-height:14px;bo
+rder:0px;color:#000000;border-radius:3px;}
+.labels label button{display: inline-block;height:26px;width:38px;margin-bottom: 4px;}
+.table.ng-scope{margin-top: 5px;max-height: 150px;overflow-y: auto;overflow-x:hidden;}
+.smart-table-global-search.ng-isolate-scope.ng-scope {width: 100%;padding-left:24px;}
+.smart-table-global-search.ng-isolate-scope.ng-scope label{width:60px;display: inline-block;}
+.smart-table-global-search.ng-isolate-scope.ng-scope input{display: inline-block;height:16px;width:120px;position:relative;left:-2px;top:3px;font-size:14px;border: solid 1px #b0aeae;line-height:14px;bo
+rder:0px;color:#000000;border-radius:3px;}
+.ng-scope ul{margin-top: 5px;}
+.ng-scope ul li a{cursor: pointer;}
+/*smart-table*/
+.table{	margin-left:5px;}
+.smart-table-one{max-height: 150px;overflow-y: auto;overflow-x:hidden;}
+.smart-table-two{max-height: 600px;overflow-y: auto;overflow-x:hidden;}
+.pagination{float: right;}
+.pagination ul{float: right;margin-right: 30px;}
+/*smart-table*/
 .navbar{
 	height:10%;
 }
@@ -37,7 +57,7 @@
 	height: 250px;
 }
 .leaflet{
-	width: 90%;
+	width: 100%;
 	height:70%;
 }
 .angular-leaflet-map {
@@ -73,3 +93,21 @@
 .two-right-top ul li{margin:0px;padding:0px;}
 .two-right-top ul li div{height:160px;width:100%;border:1px solid #999999;margin:10px 0px 10px 0px;padding:10px;overflow-y: auto;overflow-x:hidden; }
 .two-right-top ul li div ul li{padding: 10px;}
+/*button*/
+.orange {
+	color: #000000;
+	border: solid 1px #b0aeae;
+	background: -webkit-gradient(linear, left top, left bottom, from(#fefefe), to(#f1f1f1));
+	background: -moz-linear-gradient(top,  #fefefe,  #f1f1f1);
+	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#fefefe', endColorstr='#f1f1f1');
+	border-radius:3px;
+	height:24px;
+}
+.orange:hover {
+	border: solid 1px #767676;
+	background: -webkit-gradient(linear, left top, left bottom, from(#fefefe), to(#dad8d8));
+	background: -moz-linear-gradient(top,  #fefefe,  #dad8d8);
+	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#fefefe', endColorstr='#dad8d8');
+}
+
+/*button*/
