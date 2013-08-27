@@ -183,7 +183,18 @@ function($routeProvider, $locationProvider) {
 		otherwise({redirectTo:'/trace'})
 })
 
-app.controller("traceController", ["$scope","$filter", function($scope,$filter) {
+app.controller("markerController", ["$scope","$http", function($scope,$http) {
+	$scope.geocoding = function(geo){
+		//console.log('geocoding',geo)
+		$http.get('http://nominatim.openstreetmap.org/reverse?format=json&lat='+geo.lat+'&lon='+geo.lon+'&zoom=18&addressdetails=1')
+		.success(function(data){
+			//console.log(data)
+			$scope.address = data.display_name
+		})
+	}
+}])
+
+app.controller("traceController", ["$scope","$compile","$filter", function($scope,$compile,$filter) {
 	$scope.timestamp_start = new Date()
 	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
 	$scope.show_main = true
@@ -201,11 +212,12 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 		{label:'misc', map:'misc'}
 	]
 	$scope.table_config={
-		selectionMode: 'multiple',
+		selectionMode: 'single',
 		//displaySelectionCheckbox: true,
 		itemsByPage:50,
 		maxSize:8,
 		//isGlobalSearchActivated:true,
+		default_sort_column:0
 	}
 
 	$scope.change_tracking = function(){
@@ -218,11 +230,17 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 		var marker = {}
 		marker.lat = pvt.lat
 		marker.lng = pvt.lon
-		marker.message =  '经度：'+pvt.lat+'°，'
-		marker.message += '纬度：'+pvt.lon+'°<br>'
-		marker.message += '海拔：'+pvt.alt+' 米<br>'
-		marker.message += 'GPS时间：'+$filter('date')(pvt.timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
-		marker.message += '上报时间：'+$filter('date')(pvt.package_timestamp, 'yyyy-MM-dd HH:mm:ss')+'<br>'
+		marker.ng_html  = '<div ng-controller="markerController">'
+		marker.ng_html += '经度：'+pvt.lat+'°，'
+		marker.ng_html += '纬度：'+pvt.lon+'°<br>'
+		marker.ng_html += '海拔：'+pvt.alt+' 米<br>'
+		marker.ng_html += '卫星：'+pvt.satellites+'<br>'
+		marker.ng_html += '其他：'+pvt.misc+'<br>'
+		marker.ng_html += 'GPS时间：{{'+pvt.timestamp.valueOf()+'|date:"yyyy-MM-dd HH:mm:ss"}}<br>'
+		marker.ng_html += '上报时间：{{'+pvt.package_timestamp.valueOf()+'|date:"yyyy-MM-dd HH:mm:ss"}}<br>'
+		marker.ng_html += '地址：<a ng-show="!address" ng-click="geocoding({lat:'+pvt.lat+',lon:'+pvt.lon+'})">获取</a>'
+		marker.ng_html += '<span ng-show="address">{{address}}</span>'
+		marker.ng_html += '</div>'
 		if(	util.check_and_push($scope.records,pvt) &&
 			Math.abs(pvt.lat)>0.001 && Math.abs(pvt.lon)>0.001
 		){
@@ -230,6 +248,15 @@ app.controller("traceController", ["$scope","$filter", function($scope,$filter) 
 			$scope.markers[pvt._id] = marker
 		}
 	}
+	$scope.$watch('records',function(n,o){
+		for(var i=0; i<n.length; i++){
+			var row = n[i]
+			var marker = $scope.markers[row._id]
+			if(!marker) continue
+			//console.log(row,marker)
+			marker.focus = row.isSelected
+		}
+	},true)
 
 	function on_reset_scope(){
 		console.log('clear trace')

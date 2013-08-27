@@ -1,6 +1,6 @@
 var leafletDirective = angular.module("leaflet-directive", []);
 
-leafletDirective.directive("leaflet", ["$http", "$log", "$parse", function ($http, $log, $parse) {
+leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",function ($http, $log, $parse, $compile) {
 
     var defaults = {
         maxZoom: 20,
@@ -221,8 +221,13 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", function ($htt
                             draggable: data.draggable ? true : false
                         }
                 );
-                if (data.message) {
-                    marker.bindPopup(data.message);
+                if (data.ng_html){
+                    var jqo = $compile(data.ng_html)($scope)
+                    if(jqo.length!=1) return
+                    console.log(jqo.get(0))
+                    marker.bindPopup(jqo.get(0))
+                } else if (data.message) {
+                    marker.bindPopup(data.message)
                 }
                 return marker;
             }

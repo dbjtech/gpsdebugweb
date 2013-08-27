@@ -426,6 +426,8 @@
              * @param column
              */
             this.sortBy = function (column) {
+                if(!column)
+                    column = scope.columns[scope.default_sort_column]
                 var index = scope.columns.indexOf(column);
                 if (index !== -1) {
                     if (column.isSortable === true) {
