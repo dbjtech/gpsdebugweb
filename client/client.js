@@ -199,22 +199,22 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
 	$scope.show_main = true
 	$scope.columns = [
-		{label:'package_timestamp', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
-		{label:'gps_timestamp', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
-		{label:'lon', map:'lon'},
-		{label:'lat', map:'lat'},
-		{label:'alt', map:'alt'},
+		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
+		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
+		{label:'Longitude', map:'lon'},
+		{label:'Latitude', map:'lat'},
+		{label:'Altitude', map:'alt'},
 		//{label:'std_lon', map:'std_lon'},
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
 		//{label:'range_rms', map:'range_rms'},
-		{label:'satellites', map:'satellites'},
-		{label:'misc', map:'misc'}
+		{label:'Satellites', map:'satellites'},
+		{label:'Misc', map:'misc'}
 	]
 	$scope.table_config={
 		selectionMode: 'single',
 		//displaySelectionCheckbox: true,
-		itemsByPage:50,
+		itemsByPage:6,
 		maxSize:8,
 		//isGlobalSearchActivated:true,
 		default_sort_column:0
@@ -277,20 +277,20 @@ app.controller("loggerController", ["$scope", function($scope) {
 	$scope.timestamp_start = new Date()
 	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
 	$scope.columns = [
-		{label:'package_timestamp', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
-		{label:'gps_timestamp', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
-		{label:'lon', map:'lon'},
-		{label:'lat', map:'lat'},
-		{label:'alt', map:'alt'},
+		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
+		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
+		{label:'Longitude', map:'lon'},
+		{label:'Latitude', map:'lat'},
+		{label:'Altitude', map:'alt'},
 		//{label:'std_lon', map:'std_lon'},
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
 		//{label:'range_rms', map:'range_rms'},
-		{label:'satellites', map:'satellites'},
-		{label:'misc', map:'misc'}
+		{label:'Satellites', map:'satellites'},
+		{label:'Misc', map:'misc'}
 	]
 	$scope.table_config={
-		itemsByPage:50,
+		itemsByPage:25,
 		maxSize:8,
 		isGlobalSearchActivated:true
 	}

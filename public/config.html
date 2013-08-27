@@ -1,8 +1,8 @@
 <div class="labels">
-	<label><label>Terminal SN:</label><input type="text" ng-model="user.profile.tracking" readonly=""></input></label>
+	<label>Terminal SN: <input type="text" ng-model="user.profile.tracking" readonly=""></input></label>
 	<div ng-show='config!=undefined'>
-		<label>Upload Frequency(s):<select ng-model="config.freq" ng-options="v for v in freq_opt"></select></label>
-		<label>Restart:<select ng-model="config.restart" ng-options="v.value as v.text for v in restart_opt"></select></label>
+		<label>Upload Frequency(s): <select ng-model="config.freq" ng-options="v for v in freq_opt"></select></label>
+		<label>Restart: <select ng-model="config.restart" ng-options="v.value as v.text for v in restart_opt"></select></label>
 		{{config.freq}}
 		{{config.restart}}
 		<label ng-show='config.unsynced'>unsynced</label>
