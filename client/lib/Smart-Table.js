@@ -112,7 +112,7 @@
                     //if item are added or removed into the data model from outside the grid
                     scope.$watch('dataCollection.length', function (oldValue, newValue) {
                         if (oldValue !== newValue) {
-                            ctrl.sortBy();//it will trigger the refresh... some hack ?
+                            ctrl.update();//it will trigger the refresh... some hack ?
                         }
                     });
 
@@ -276,7 +276,7 @@
                         //update model if valid
                         if (scope.myForm.$valid === true) {
                             ctrl.updateDataRow(scope.row,scope.column.map,scope.value);
-                            ctrl.sortBy();//it will trigger the refresh...  (ie it will sort, filter, etc with the new value)
+                            ctrl.update();//it will trigger the refresh...  (ie it will sort, filter, etc with the new value)
                         }
                         scope.isEditMode = false;
                     };
@@ -420,6 +420,18 @@
                 }
             };
 
+            this.update = function(){
+                var column = scope.columns[scope.default_sort_column]
+                if(!column) return
+                column.sortPredicate = column.sortPredicate || column.map;
+                // reset the last column used
+                if (lastColumnSort && lastColumnSort !== column) {
+                    lastColumnSort.reverse = 'none';
+                }
+                column.sortPredicate = column.sortPredicate || column.map;
+                lastColumnSort = column;
+                scope.displayedCollection = this.pipe(scope.dataCollection);
+            }
             /**
              * set column as the column used to sort the data (if it is already the case, it will change the reverse value)
              * @method sortBy

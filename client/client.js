@@ -199,11 +199,11 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
 	$scope.show_main = true
 	$scope.columns = [
-		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
-		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
-		{label:'Longitude', map:'lon'},
-		{label:'Latitude', map:'lat'},
-		{label:'Altitude', map:'alt'},
+		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
+		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
+		{label:'Longitude', map:'lon',headerClass:'sm-fix-header-plus'},
+		{label:'Latitude', map:'lat',headerClass:'sm-fix-header-plus'},
+		{label:'Altitude', map:'alt',headerClass:'sm-fix-header-plus'},
 		//{label:'std_lon', map:'std_lon'},
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},

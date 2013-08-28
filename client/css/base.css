@@ -109,5 +109,13 @@ rder:0px;color:#000000;border-radius:3px;}
 	background: -moz-linear-gradient(top,  #fefefe,  #dad8d8);
 	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#fefefe', endColorstr='#dad8d8');
 }
-
+.sm-fix-header {
+	width: 6% !important;
+}
+.sm-fix-header-plus {
+	width: 2% !important;
+}
+.smart-table-data-row.selected{
+	background-color: #e8e8e8;
+}
 /*button*/
