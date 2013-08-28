@@ -223,8 +223,8 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
                 );
                 if (data.ng_html){
                     var jqo = $compile(data.ng_html)($scope)
-                    if(jqo.length!=1) return
-                    console.log(jqo.get(0))
+                    if(jqo.length!=1) return marker
+                    //console.log(jqo.get(0))
                     marker.bindPopup(jqo.get(0))
                 } else if (data.message) {
                     marker.bindPopup(data.message)

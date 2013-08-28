@@ -50,14 +50,14 @@ meteor_helper = function(scope,sub_name){
 					console.log('skip',doc)
 					return false
 				}
-				console.log('insert',doc)
+				//console.log('insert',doc)
 				container.push(doc)
 				container.cache[doc._id] = true
 				return true
 			},
-			added: function(doc){doc_add(doc,this);scope_safe_apply()},
-			changed: function(ndoc,odoc){doc_change(ndoc,odoc,this);scope_safe_apply()},
-			removed: function(doc){doc_remove(doc,this);scope_safe_apply()},
+			added: function(doc){if(!doc_add)return;doc_add(doc,this);scope_safe_apply()},
+			changed: function(ndoc,odoc){if(!doc_change)return;doc_change(ndoc,odoc,this);scope_safe_apply()},
+			removed: function(doc){if(!doc_remove)return;doc_remove(doc,this);scope_safe_apply()},
 		})
 		cursor.fetch()
 		this.observer = observer
@@ -184,12 +184,19 @@ function($routeProvider, $locationProvider) {
 })
 
 app.controller("markerController", ["$scope","$http", function($scope,$http) {
+	$scope.geocoding_parse = 'none'
 	$scope.geocoding = function(geo){
 		//console.log('geocoding',geo)
+		$scope.geocoding_parse = 'getting'
 		$http.get('http://nominatim.openstreetmap.org/reverse?format=json&lat='+geo.lat+'&lon='+geo.lon+'&zoom=18&addressdetails=1')
 		.success(function(data){
 			//console.log(data)
 			$scope.address = data.display_name
+			$scope.geocoding_parse = 'done'
+		})
+		.error(function(e){
+			console.log(e)
+			$scope.geocoding_parse = 'none'
 		})
 	}
 }])
@@ -208,8 +215,8 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
 		//{label:'range_rms', map:'range_rms'},
-		{label:'Satellites', map:'satellites'},
-		{label:'Misc', map:'misc'}
+		{label:'Satellites', map:'satellites_desc', title:'satellites'},
+		{label:'Misc', map:'misc_desc', title:'misc'}
 	]
 	$scope.table_config={
 		selectionMode: 'single',
@@ -226,37 +233,70 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 	}
 
 	function insert_pvt(pvt,util){
-		var geo = {lat:pvt.lat,lng:pvt.lon}
-		var marker = {}
-		marker.lat = pvt.lat
-		marker.lng = pvt.lon
-		marker.ng_html  = '<div ng-controller="markerController">'
-		marker.ng_html += '经度：'+pvt.lat+'°，'
-		marker.ng_html += '纬度：'+pvt.lon+'°<br>'
-		marker.ng_html += '海拔：'+pvt.alt+' 米<br>'
-		marker.ng_html += '卫星：'+pvt.satellites+'<br>'
-		marker.ng_html += '其他：'+pvt.misc+'<br>'
-		marker.ng_html += 'GPS时间：{{'+pvt.timestamp.valueOf()+'|date:"yyyy-MM-dd HH:mm:ss"}}<br>'
-		marker.ng_html += '上报时间：{{'+pvt.package_timestamp.valueOf()+'|date:"yyyy-MM-dd HH:mm:ss"}}<br>'
-		marker.ng_html += '地址：<a ng-show="!address" ng-click="geocoding({lat:'+pvt.lat+',lon:'+pvt.lon+'})">获取</a>'
-		marker.ng_html += '<span ng-show="address">{{address}}</span>'
-		marker.ng_html += '</div>'
-		if(	util.check_and_push($scope.records,pvt) &&
-			Math.abs(pvt.lat)>0.001 && Math.abs(pvt.lon)>0.001
-		){
-			$scope.paths.p1.latlngs.push(geo)
+		//shorten satellites, misc
+		pvt.satellites_desc = pvt.satellites.length>40 ? pvt.satellites.substring(0,40)+'...' : pvt.satellites
+		pvt.misc_desc = pvt.misc.length>40 ? pvt.misc.substring(0,40)+'...' : pvt.misc
+		if(!(util.check_and_push($scope.records,pvt)&&Math.abs(pvt.lat)>0.001 && Math.abs(pvt.lon)>0.001))
+			return
+		var ng_html
+		ng_html  = '<div ng-controller="markerController">'
+		ng_html += '经度：'+pvt.lat+'°，'
+		ng_html += '纬度：'+pvt.lon+'°<br>'
+		ng_html += '海拔：'+pvt.alt+' 米<br>'
+		ng_html += '卫星：'+pvt.satellites+'<br>'
+		ng_html += '其他：'+pvt.misc+'<br>'
+		ng_html += 'GPS时间：{{'+pvt.timestamp.valueOf()+'|date:"yyyy-MM-dd HH:mm:ss"}}<br>'
+		ng_html += '上报时间：{{'+pvt.package_timestamp.valueOf()+'|date:"yyyy-MM-dd HH:mm:ss"}}<br>'
+		ng_html += '地址：<a ng-show="geocoding_parse==\'none\'" ng-click="geocoding({lat:'+pvt.lat+',lon:'+pvt.lon+'})">获取</a>'
+		ng_html += '<span ng-show="geocoding_parse==\'getting\'">正在获取...</span>'
+		ng_html += '<span ng-show="geocoding_parse==\'done\'">{{address}}</span>'
+		ng_html += '</div>'
+
+		var geo = {lat:pvt.lat,lng:pvt.lon,package_timestamp:pvt.package_timestamp}
+		var marker = _.clone(geo)
+		//$scope.paths.p1.latlngs.push(geo)
+		var v = $scope.paths.p1.latlngs
+		//insert sort
+		var i,delta
+		for(i=v.length; i>0; i--){
+			var g = v[i-1]
+			if(g.package_timestamp<=geo.package_timestamp){
+				delta = Math.abs(g.lat-geo.lat) + Math.abs(g.lng-geo.lng)
+				delta *= 1000
+				//console.log(delta)
+				break
+			}
+		}
+		v.splice(i,0,geo)
+		//console.log(v)
+		//
+		marker.ng_html = ng_html
+		$scope.markers2[pvt._id] = marker
+		if(!delta||delta>8)
 			$scope.markers[pvt._id] = marker
-		}
 	}
-	$scope.$watch('records',function(n,o){
-		for(var i=0; i<n.length; i++){
-			var row = n[i]
-			var marker = $scope.markers[row._id]
-			if(!marker) continue
-			//console.log(row,marker)
-			marker.focus = row.isSelected
+	$scope.$watch(
+	function(scope){
+		var result = null
+		for(var i=0; scope.records&&i<scope.records.length; i++){
+			var row = scope.records[i]
+			if(row.isSelected) result = row
 		}
-	},true)
+		//console.log('watching',result)
+		return result
+	},
+	function(n,o){
+		var nmarker = n && $scope.markers2[n._id] || null
+		var omarker = o && $scope.markers2[o._id] || null
+		//console.log(nmarker,omarker)
+		if(nmarker){
+			nmarker.focus = true
+			$scope.markers[n._id] = nmarker
+		}
+		if(omarker){
+			omarker.focus = false
+		}
+	})
 
 	function on_reset_scope(){
 		console.log('clear trace')
@@ -264,6 +304,7 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 		$scope.records = []
 		$scope.paths = {p1: {color:'#008000', weight:5, latlngs:[]}}
 		$scope.markers = {}
+		$scope.markers2 = {}
 	}
 
 	var meteor = new meteor_helper($scope,'trace')
@@ -277,11 +318,11 @@ app.controller("loggerController", ["$scope", function($scope) {
 	$scope.timestamp_start = new Date()
 	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
 	$scope.columns = [
-		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
-		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss'},
-		{label:'Longitude', map:'lon'},
-		{label:'Latitude', map:'lat'},
-		{label:'Altitude', map:'alt'},
+		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
+		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
+		{label:'Longitude', map:'lon',headerClass:'sm-fix-header-plus'},
+		{label:'Latitude', map:'lat',headerClass:'sm-fix-header-plus'},
+		{label:'Altitude', map:'alt',headerClass:'sm-fix-header-plus'},
 		//{label:'std_lon', map:'std_lon'},
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
@@ -292,11 +333,13 @@ app.controller("loggerController", ["$scope", function($scope) {
 	$scope.table_config={
 		itemsByPage:25,
 		maxSize:8,
-		isGlobalSearchActivated:true
+		isGlobalSearchActivated:true,
+		default_sort_column:0
 	}
 	var meteor = new meteor_helper($scope,'trace')
 	meteor.bind_user('user')
 	meteor.on_doc_add(function(doc,util){
+		//console.log('add',doc)
 		util.check_and_push($scope.records,doc)
 	})
 	meteor.on_reset_scope(function(){
