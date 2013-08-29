@@ -6,7 +6,12 @@ var db = {
 	config: db_config
 }
 
-var my_global = {}
+var my_global = {
+	timestamp: {
+		start: new Date(),
+		end: new Date(new Date().getTime()+24*3600*1000)
+	}
+}
 
 function invalidate_map(){
 	$('.angular-leaflet-map').height($(window).height()-83)
@@ -207,8 +212,8 @@ app.controller("markerController", ["$scope","$http", function($scope,$http) {
 }])
 
 app.controller("traceController", ["$scope","$compile","$filter", function($scope,$compile,$filter) {
-	$scope.timestamp_start = new Date()
-	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
+	console.log(my_global.timestamp)
+	$scope.timestamp = my_global.timestamp
 	$scope.show_main = true
 	$scope.columns = [
 		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
@@ -257,27 +262,22 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 		ng_html += '<span ng-show="geocoding_parse==\'done\'">{{address}}</span>'
 		ng_html += '</div>'
 
-		var geo = {lat:pvt.lat,lng:pvt.lon,package_timestamp:pvt.package_timestamp}
+		var geo = {lat:pvt.lat,lng:pvt.lon}
+		$scope.paths.p1.latlngs.push(geo)
+
 		var marker = _.clone(geo)
-		//$scope.paths.p1.latlngs.push(geo)
-		var v = $scope.paths.p1.latlngs
-		//insert sort
-		var i,delta
-		for(i=v.length; i>0; i--){
-			var g = v[i-1]
-			if(g.package_timestamp<=geo.package_timestamp){
-				delta = Math.abs(g.lat-geo.lat) + Math.abs(g.lng-geo.lng)
-				delta *= 1000
-				//console.log(delta)
-				break
-			}
-		}
-		v.splice(i,0,geo)
-		//console.log(v)
-		//
 		marker.ng_html = ng_html
-		$scope.markers2[pvt._id] = marker
-		if(!delta||delta>8)
+
+		var delta
+		var last_maker = $scope.marker_all[$scope.marker_all.length-1]
+		if(last_maker){
+			delta = Math.abs(last_maker.lat-geo.lat) + Math.abs(last_maker.lng-geo.lng)
+			delta *= 1000
+			//console.log($scope.marker_all.length,delta)
+		}
+		$scope.marker_all[pvt._id] = marker
+		$scope.marker_all[$scope.marker_all.length++] = marker
+		if(!delta||delta>5)
 			$scope.markers[pvt._id] = marker
 	}
 	$scope.$watch(
@@ -291,8 +291,8 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 		return result
 	},
 	function(n,o){
-		var nmarker = n && $scope.markers2[n._id] || null
-		var omarker = o && $scope.markers2[o._id] || null
+		var nmarker = n && $scope.marker_all[n._id] || null
+		var omarker = o && $scope.marker_all[o._id] || null
 		//console.log(nmarker,omarker)
 		if(nmarker){
 			nmarker.focus = true
@@ -309,19 +309,19 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 		$scope.records = []
 		$scope.paths = {p1: {color:'#008000', weight:5, latlngs:[]}}
 		$scope.markers = {}
-		$scope.markers2 = {}
+		$scope.marker_all = {length:0}
 	}
 
 	var meteor = new meteor_helper($scope,'trace')
 	meteor.bind_user('user')
 	meteor.on_doc_add(insert_pvt)
 	meteor.on_reset_scope(on_reset_scope)
-	meteor.resubscribe_if_change('user.profile.tracking','timestamp_start','timestamp_end')
+	meteor.resubscribe_if_change('user.profile.tracking','timestamp.start','timestamp.end')
 }]);
 
 app.controller("loggerController", ["$scope", function($scope) {
-	$scope.timestamp_start = new Date()
-	$scope.timestamp_end = new Date(new Date().getTime()+24*3600*1000)
+	console.log(my_global.timestamp)
+	$scope.timestamp = my_global.timestamp
 	$scope.columns = [
 		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
 		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
@@ -351,7 +351,7 @@ app.controller("loggerController", ["$scope", function($scope) {
 		console.log('clear records')
 		$scope.records = []
 	})
-	meteor.resubscribe_if_change('user.profile.tracking','timestamp_start','timestamp_end')
+	meteor.resubscribe_if_change('user.profile.tracking','timestamp.start','timestamp.end')
 }]);
 
 

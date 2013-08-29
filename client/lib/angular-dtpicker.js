@@ -468,7 +468,7 @@ angular.module('datetimepicker-directive',[]).directive('datetimepicker', functi
 		//for angular directive
 		$picker.data("angular", opt.angular);
 		var ng = opt.angular
-		opt.current = ng.scope[ng.ng_model_name]
+		opt.current = ng.scope.$eval(ng.ng_model_name)
 		ng.scope.$watch(ng.ng_model_name,function(new_value){
 		 	draw_date($picker,opt,new_value)
 		 	outputToInputObject($picker,true)

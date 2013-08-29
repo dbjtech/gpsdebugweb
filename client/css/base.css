@@ -19,7 +19,7 @@ rder:0px;color:#000000;border-radius:3px;}
 /*smart-table*/
 .table{bottom: 5px;margin:0px 0px 5px;}
 .smart-table-one{max-height: 315px;overflow-y: hidden;overflow-x:hidden;}
-.smart-table-two{max-height: 600px;overflow-y: auto;overflow-x:hidden;}
+.smart-table-two{/*max-height: 600px;*/overflow-y: auto;overflow-x:hidden;}
 .pagination{float: right;}
 .pagination ul{float: right;margin-right: 30px;}
 /*smart-table*/
@@ -59,10 +59,10 @@ rder:0px;color:#000000;border-radius:3px;}
 	max-height: 20%;
 	height: 250px;
 }
-.leaflet{
+/*.leaflet{
 	width: 100%;
-	height:70%;
-}
+	height:100%;
+}*/
 .angular-leaflet-map {
 	width: 100%;
 	height:100%;
