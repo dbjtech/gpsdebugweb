@@ -8,6 +8,11 @@ var db = {
 
 var my_global = {}
 
+function invalidate_map(){
+	$('.angular-leaflet-map').height($(window).height()-83)
+}
+$(document).ready(setTimeout(invalidate_map,1000))
+$(window).resize(invalidate_map)
 ///////////
 //angular//
 ///////////
@@ -171,7 +176,7 @@ meteor_helper = function(scope,sub_name){
 }
 
 var app = angular.module("meteorapp",
-['leaflet-directive','datetimepicker-directive', 'smartTable.table', '$strap.directives'],
+['leaflet-directive','datetimepicker-directive', 'smartTable.table', '$strap.directives', 'ui.bootstrap'],
 function($routeProvider, $locationProvider) {
 	$routeProvider.
 		when('/register', {templateUrl:'/register.html', controller:'registerController'}).
@@ -221,7 +226,7 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 	$scope.table_config={
 		selectionMode: 'single',
 		//displaySelectionCheckbox: true,
-		itemsByPage:6,
+		itemsByPage:12,
 		maxSize:8,
 		//isGlobalSearchActivated:true,
 		default_sort_column:0

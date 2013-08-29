@@ -1,8 +1,9 @@
 <div class="labels">
-	<label><label>Terminal SN:</label><input type="text" ng-model="user.profile.tracking" readonly=""></input></label>
-	<label><label>Start Date:</label><input type="text" datetimepicker dtp-model="timestamp_start"></input></label>
-	<label><label>End Date:</label><input type="text" datetimepicker dtp-model="timestamp_end"></input></label>
-	<label><label>Records: {{records.length||0}}</label></label>
+	<label>Terminal SN : <input type="text" ng-model="user.profile.tracking" readonly=""/></label>
+	<label>Start Date : <input type="text" datetimepicker dtp-model="timestamp_start"/></label>
+	<label>End Date : <input type="text" datetimepicker dtp-model="timestamp_end"/></label>
+	<label>Records : <input type="text" ng-model="records.length" readonly=""/></label>
+	<button class="btn btn-primary" title="Config" bs-popover="'config.html'" data-placement="bottom" ng-controller="configController">Config</button>
 </div>
 <div class="smart-table-two">
 <div class="table">

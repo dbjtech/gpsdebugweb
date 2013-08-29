@@ -330,12 +330,12 @@
 
 (function (angular) {
     "use strict";
-    angular.module('smartTable.table', ['smartTable.column', 'smartTable.utilities', 'smartTable.directives', 'smartTable.filters', 'ui.bootstrap.pagination'])
+    angular.module('smartTable.table', ['smartTable.column', 'smartTable.utilities', 'smartTable.directives', 'smartTable.filters', 'ui.bootstrap.smpagination'])
         .constant('DefaultTableConfiguration', {
             selectionMode: 'none',
             isGlobalSearchActivated: false,
             displaySelectionCheckbox: false,
-            isPaginationEnabled: true,
+            issmpaginationEnabled: true,
             itemsByPage: 10,
             maxSize: 5,
 
@@ -347,7 +347,7 @@
 
             scope.columns = [];
             scope.dataCollection = scope.dataCollection || [];
-            scope.displayedCollection = []; //init empty array so that if pagination is enabled, it does not spoil performances
+            scope.displayedCollection = []; //init empty array so that if smpagination is enabled, it does not spoil performances
             scope.numberOfPages = calculateNumberOfPages(scope.dataCollection);
             scope.currentPage = 1;
 
@@ -493,7 +493,7 @@
                 //filter and sort are commutative
                 output = sortDataRow(arrayUtility.filter(array, filterAlgo, predicate), lastColumnSort);
                 scope.numberOfPages = calculateNumberOfPages(output);
-                return scope.isPaginationEnabled ? arrayUtility.fromTo(output, (scope.currentPage - 1) * scope.itemsByPage, scope.itemsByPage) : output;
+                return scope.issmpaginationEnabled ? arrayUtility.fromTo(output, (scope.currentPage - 1) * scope.itemsByPage, scope.itemsByPage) : output;
             };
 
             /*////////////
@@ -604,7 +604,7 @@
 
 
 
-angular.module('smartTable.templates', ['partials/defaultCell.html', 'partials/defaultHeader.html', 'partials/editableCell.html', 'partials/globalSearchCell.html', 'partials/pagination.html', 'partials/selectAllCheckbox.html', 'partials/selectionCheckbox.html', 'partials/smartTable.html']);
+angular.module('smartTable.templates', ['partials/defaultCell.html', 'partials/defaultHeader.html', 'partials/editableCell.html', 'partials/globalSearchCell.html', 'partials/smpagination.html', 'partials/selectAllCheckbox.html', 'partials/selectionCheckbox.html', 'partials/smartTable.html']);
 
 angular.module("partials/defaultCell.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("partials/defaultCell.html",
@@ -633,9 +633,9 @@ angular.module("partials/globalSearchCell.html", []).run(["$templateCache", func
     "<input type=\"text\" ng-model=\"searchValue\"/>");
 }]);
 
-angular.module("partials/pagination.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("partials/pagination.html",
-    "<div class=\"pagination\">\n" +
+angular.module("partials/smpagination.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("partials/smpagination.html",
+    "<div class=\"smpagination\">\n" +
     "    <ul>\n" +
     "        <li ng-repeat=\"page in pages\" ng-class=\"{active: page.active, disabled: page.disabled}\"><a\n" +
     "                ng-click=\"selectPage(page.number)\">{{page.text}}</a></li>\n" +
@@ -674,10 +674,10 @@ angular.module("partials/smartTable.html", []).run(["$templateCache", function($
     "            <td ng-repeat=\"column in columns\" class=\"smart-table-data-cell {{column.cellClass}}\" title=\"{{dataRow[column.title]||''}}\"></td>\n" +
     "        </tr>\n" +
     "        </tbody>\n" +
-    "        <tfoot ng-show=\"isPaginationEnabled\">\n" +
+    "        <tfoot ng-show=\"issmpaginationEnabled\">\n" +
     "        <tr class=\"smart-table-footer-row\">\n" +
     "            <td colspan=\"{{columns.length}}\">\n" +
-    "                <div pagination=\"\" num-pages=\"numberOfPages\" max-size=\"maxSize\" current-page=\"currentPage\"></div>\n" +
+    "                <div class=\"pagination\" smpagination=\"\" num-pages=\"numberOfPages\" max-size=\"maxSize\" current-page=\"currentPage\"></div>\n" +
     "            </td>\n" +
     "        </tr>\n" +
     "        </tfoot>\n" +
@@ -696,7 +696,7 @@ angular.module("partials/smartTable.html", []).run(["$templateCache", function($
             selectionCheckbox: 'partials/selectionCheckbox.html',
             selectAllCheckbox: 'partials/selectAllCheckbox.html',
             defaultHeader: 'partials/defaultHeader.html',
-            pagination: 'partials/pagination.html'
+            smpagination: 'partials/smpagination.html'
         });
 })(angular);
 
@@ -823,9 +823,9 @@ angular.module("partials/smartTable.html", []).run(["$templateCache", function($
 
 
 (function (angular) {
-    angular.module('ui.bootstrap.pagination', ['smartTable.templateUrlList'])
+    angular.module('ui.bootstrap.smpagination', ['smartTable.templateUrlList'])
 
-        .constant('paginationConfig', {
+        .constant('smpaginationConfig', {
             boundaryLinks: false,
             directionLinks: true,
             firstText: 'First',
@@ -834,7 +834,7 @@ angular.module("partials/smartTable.html", []).run(["$templateCache", function($
             lastText: 'Last'
         })
 
-        .directive('pagination', ['paginationConfig', 'templateUrlList', function (paginationConfig, templateUrlList) {
+        .directive('smpagination', ['smpaginationConfig', 'templateUrlList', function (smpaginationConfig, templateUrlList) {
             return {
                 restrict: 'EA',
                 require: '^smartTable',
@@ -843,17 +843,17 @@ angular.module("partials/smartTable.html", []).run(["$templateCache", function($
                     currentPage: '=',
                     maxSize: '='
                 },
-                templateUrl: templateUrlList.pagination,
+                templateUrl: templateUrlList.smpagination,
                 replace: true,
                 link: function (scope, element, attrs, ctrl) {
 
                     // Setup configuration parameters
-                    var boundaryLinks = angular.isDefined(attrs.boundaryLinks) ? scope.$eval(attrs.boundaryLinks) : paginationConfig.boundaryLinks;
-                    var directionLinks = angular.isDefined(attrs.directionLinks) ? scope.$eval(attrs.directionLinks) : paginationConfig.directionLinks;
-                    var firstText = angular.isDefined(attrs.firstText) ? attrs.firstText : paginationConfig.firstText;
-                    var previousText = angular.isDefined(attrs.previousText) ? attrs.previousText : paginationConfig.previousText;
-                    var nextText = angular.isDefined(attrs.nextText) ? attrs.nextText : paginationConfig.nextText;
-                    var lastText = angular.isDefined(attrs.lastText) ? attrs.lastText : paginationConfig.lastText;
+                    var boundaryLinks = angular.isDefined(attrs.boundaryLinks) ? scope.$eval(attrs.boundaryLinks) : smpaginationConfig.boundaryLinks;
+                    var directionLinks = angular.isDefined(attrs.directionLinks) ? scope.$eval(attrs.directionLinks) : smpaginationConfig.directionLinks;
+                    var firstText = angular.isDefined(attrs.firstText) ? attrs.firstText : smpaginationConfig.firstText;
+                    var previousText = angular.isDefined(attrs.previousText) ? attrs.previousText : smpaginationConfig.previousText;
+                    var nextText = angular.isDefined(attrs.nextText) ? attrs.nextText : smpaginationConfig.nextText;
+                    var lastText = angular.isDefined(attrs.lastText) ? attrs.lastText : smpaginationConfig.lastText;
 
                     // Create page object used in template
                     function makePage(number, text, isActive, isDisabled) {
