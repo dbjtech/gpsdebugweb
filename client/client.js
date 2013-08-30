@@ -268,17 +268,7 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 		var marker = _.clone(geo)
 		marker.ng_html = ng_html
 
-		var delta
-		var last_maker = $scope.marker_all[$scope.marker_all.length-1]
-		if(last_maker){
-			delta = Math.abs(last_maker.lat-geo.lat) + Math.abs(last_maker.lng-geo.lng)
-			delta *= 1000
-			//console.log($scope.marker_all.length,delta)
-		}
 		$scope.marker_all[pvt._id] = marker
-		$scope.marker_all[$scope.marker_all.length++] = marker
-		if(!delta||delta>5)
-			$scope.markers[pvt._id] = marker
 	}
 	$scope.$watch(
 	function(scope){
@@ -293,15 +283,18 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 	function(n,o){
 		var nmarker = n && $scope.marker_all[n._id] || null
 		var omarker = o && $scope.marker_all[o._id] || null
-		//console.log(nmarker,omarker)
-		if(nmarker){
-			nmarker.focus = true
-			$scope.markers[n._id] = nmarker
-		}
-		if(omarker){
-			omarker.focus = false
-		}
+		record_select(nmarker,n)
+		record_select(omarker,o)
 	})
+	function record_select(marker,record){
+		// console.log(marker,record)
+		if(!marker||!record) return
+		marker.focus = record.isSelected
+		if(record.isSelected)
+			$scope.markers[record._id] = marker
+		else
+			delete $scope.markers[record._id]
+	}
 
 	function on_reset_scope(){
 		console.log('clear trace')
@@ -309,7 +302,7 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 		$scope.records = []
 		$scope.paths = {p1: {color:'#008000', weight:5, latlngs:[]}}
 		$scope.markers = {}
-		$scope.marker_all = {length:0}
+		$scope.marker_all = {}
 	}
 
 	var meteor = new meteor_helper($scope,'trace')

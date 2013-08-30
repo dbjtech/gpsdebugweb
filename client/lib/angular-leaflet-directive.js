@@ -35,6 +35,7 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
             center: '=center',
             maxBounds: '=maxbounds',
             markers: '=markers',
+            cluster: '=cluster',
             defaults: '=defaults',
             paths: '=paths'
         },
@@ -46,6 +47,8 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
             var map = new L.Map(element[0], {
                 maxZoom: $scope.leaflet.maxZoom});
             map.setView([0, 0], 1);
+            var markergroup = new L.MarkerClusterGroup();
+            map.addLayer(markergroup)
 
             $scope.leaflet.tileLayer = !!(attrs.defaults && $scope.defaults && $scope.defaults.tileLayer) ? $scope.defaults.tileLayer : defaults.tileLayer;
             $scope.leaflet.map = !!attrs.testing ? map : 'Add testing="testing" to <leaflet> tag to inspect this object';
@@ -64,8 +67,9 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
 
             setupCenter();
             setupMaxBounds();
-            setupMarkers();
             setupPaths();
+            setupMarkers(map,'markers');//markers on the map
+            setupMarkers(markergroup,'cluster');//markers on the cluster
             
             function setupMaxBounds() {
                 if (!$scope.maxBounds) {
@@ -132,22 +136,24 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
                 });
             }
 
-            function setupMarkers() {
+            function setupMarkers(layer,model_name) {
                 var markers = {};
-                $scope.leaflet.markers = !!attrs.testing ? markers : 'Add testing="testing" to <leaflet> tag to inspect this object';
+                var model = $scope.$eval(model_name)
+                $scope.leaflet[model_name] = !!attrs.testing ? markers : 'Add testing="testing" to <leaflet> tag to inspect this object';
 
-                if (!$scope.markers) {
+                if (!model) {
                     return;
                 }
 
-                for (var name in $scope.markers) {
-                    markers[name] = createMarker(name, $scope.markers[name], map);
+                for (var name in model) {
+                    markers[name] = createMarker(name, model, model_name, layer);
                 }
 
-                $scope.$watch("markers", function (newMarkers /*, oldMarkers*/) {
+                $scope.$watch(model_name, function (newMarkers /*, oldMarkers*/) {
+                    var l = layer
                     for (var new_name in newMarkers) {
                         if (markers[new_name] === undefined) {
-                            markers[new_name] = createMarker(new_name, newMarkers[new_name], map);
+                            markers[new_name] = createMarker(new_name, newMarkers, model_name, l);
                         }
                     }
 
@@ -161,8 +167,10 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
                 }, true);
             }
 
-            function createMarker(name, scopeMarker, map) {
-                var marker = buildMarker(name, scopeMarker);
+            function createMarker(name, model, model_name, map) {
+                // console.log('createMarker',name,model,model_name,map)
+                var scopeMarker = model[name]
+                var marker = buildMarker(scopeMarker);
                 map.addLayer(marker);
 
                 if (scopeMarker.focus === true) {
@@ -179,7 +187,7 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
                     }
                 });
 
-                $scope.$watch('markers.' + name, function (data, oldData) {
+                $scope.$watch(model_name+'.'+name, function (data, oldData) {
                     if (!data) {
                         map.removeLayer(marker);
                         return;
@@ -214,8 +222,8 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
                 return marker;
             }
 
-            function buildMarker(name, data) {
-                var marker = new L.marker($scope.markers[name],
+            function buildMarker(data) {
+                var marker = new L.marker(data,
                         {
                             icon: buildIcon(),
                             draggable: data.draggable ? true : false
