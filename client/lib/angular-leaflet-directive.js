@@ -1,6 +1,7 @@
 var leafletDirective = angular.module("leaflet-directive", []);
 
-leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",function ($http, $log, $parse, $compile) {
+leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile", "$http", "$templateCache",
+function ($http, $log, $parse, $compile, $http, $templateCache) {
 
     var defaults = {
         maxZoom: 20,
@@ -35,6 +36,7 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
             center: '=center',
             maxBounds: '=maxbounds',
             markers: '=markers',
+            marker_template: '=markerTemplate',
             cluster: '=cluster',
             defaults: '=defaults',
             paths: '=paths'
@@ -68,8 +70,25 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
             setupCenter();
             setupMaxBounds();
             setupPaths();
-            setupMarkers(map,'markers');//markers on the map
-            setupMarkers(markergroup,'cluster');//markers on the cluster
+            var compiled_template
+            //console.log('$scope.marker_template=',$scope.marker_template)
+            if($scope.marker_template){
+                $http.get($scope.marker_template,{cache:$templateCache}).success(function(template){
+                    compiled_template = template ? $compile(template)($scope).get(0) : undefined
+                    //console.log('tmpl',compiled_template)
+                    setupMarkers(map,'markers');//markers on the map
+                    setupMarkers(markergroup,'cluster');//markers on the cluster
+                    map.on('popupopen',function(e){
+                        //console.log(e.popup)
+                        //$scope.current_marker = e.popup.current_marker
+                        $scope.$broadcast('popup',e.popup.current_marker)
+                        if(!$scope.$$phase&&!$scope.$root.$$phase)
+                            $scope.$apply()
+                    })
+                })
+            }else{
+                console.log(e,'specified marker-template if you need to format markers')
+            }
             
             function setupMaxBounds() {
                 if (!$scope.maxBounds) {
@@ -211,7 +230,7 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
                         }
 
                         if (data.message !== undefined && data.message !== oldData.message) {
-                            marker.bindPopup(data);
+                            marker.bindPopup(data.message);
                         }
 
                         if (data.lat !== oldData.lat || data.lng !== oldData.lng) {
@@ -229,11 +248,11 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile",fun
                             draggable: data.draggable ? true : false
                         }
                 );
-                if (data.ng_html){
-                    var jqo = $compile(data.ng_html)($scope)
-                    if(jqo.length!=1) return marker
-                    //console.log(jqo.get(0))
-                    marker.bindPopup(jqo.get(0))
+                if (compiled_template) {
+                    var pp = L.popup()
+                    pp.setContent(compiled_template)
+                    pp.current_marker = data
+                    marker.bindPopup(pp)
                 } else if (data.message) {
                     marker.bindPopup(data.message)
                 }

@@ -1,14 +1,12 @@
-.mainone{overflow:hidden;}
 .main-one{padding-left: 7px;}
 .containers{padding:0px 0px 0px 0px;width:100%;height:90%;}
+.inline-labels label{display: inline-block;margin: 5px 50px 5px 5px;}
+.inline-labels label input{width: 120px;margin-bottom: 0px;}
+.inline-labels label select{width: 134px;margin-bottom: 0px;}
+.inline-labels label .text-in-label{margin-left: 10px;width: 124px;display: inline-block;text-align: left;}
+
 .labels{padding-left: 7px;}
 .labels label{display: inline-block;margin:0px 50px 0px 0px;}
-.labels label label{display: inline-block;margin:0px 10px 0px 0px;}
-.labels label input{display: inline-block;height:16px;width:120px;position:relative;left:-2px;top:3px;font-size:14px;border: solid 1px #b0aeae;line-height:14px;bo
-rder:0px;color:#000000;border-radius:3px;}
-.labels label select{display: inline-block;height:25px;width:134px;position:relative;left:-2px;top:2px;font-size:14px;border: solid 1px #b0aeae;line-height:14px;bo
-rder:0px;color:#000000;border-radius:3px;}
-.labels label button{display: inline-block;height:26px;width:38px;margin-bottom: 4px;}
 .table.ng-scope{margin-top: 5px;max-height: 150px;overflow-y: auto;overflow-x:hidden;}
 .smart-table-global-search.ng-isolate-scope.ng-scope {width: 100%;padding-left:24px;}
 .smart-table-global-search.ng-isolate-scope.ng-scope label{width:60px;display: inline-block;}
@@ -24,7 +22,7 @@ rder:0px;color:#000000;border-radius:3px;}
 .pagination ul{float: right;margin-right: 30px;}
 /*smart-table*/
 .navbar{
-	margin-bottom: 5px;
+	margin-bottom: 0px;
 }
 .main{
 	margin-top:0px;width:100%;padding: 0px;
@@ -68,6 +66,9 @@ rder:0px;color:#000000;border-radius:3px;}
 	height:100%;
 	min-height: 600px;
 	/*max-height: 600px;*/
+}
+.leaflet-popup-content{
+	min-width: 300px;
 }
 /* CSS declarations go here */
 .mains{width:98%;margin: 0px;}

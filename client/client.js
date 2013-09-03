@@ -8,16 +8,25 @@ var db = {
 
 var my_global = {
 	timestamp: {
+		date_options: {
+			'month-format': '"yyyy-MM"',
+			'day-title-format': '"yyyy-MM"'
+		},
 		start: new Date(),
-		end: new Date(new Date().getTime()+24*3600*1000)
+		end: new Date(new Date().getTime()+24*3600*1000),
+		start_open: false,
+		end_open: false
 	}
 }
 
 function invalidate_map(){
 	$('.angular-leaflet-map').height($(window).height()-83)
 }
-$(document).ready(setTimeout(invalidate_map,1000))
-$(window).resize(invalidate_map)
+$(document).ready(function(){
+	$('.navbar, .containers').click(function(){Accounts._loginButtonsSession.closeDropdown()})
+	$(window).resize(invalidate_map)
+})
+
 ///////////
 //angular//
 ///////////
@@ -85,7 +94,7 @@ meteor_helper = function(scope,sub_name){
 		if(!first_time) return
 		Deps.autorun(function(c){
 			var obj = my_global[subscribe_name]
-			console.log(obj)
+			//console.log(obj)
 			var to
 			var handle
 			var f = function(){
@@ -97,7 +106,7 @@ meteor_helper = function(scope,sub_name){
 					to = setTimeout(f,50)
 			}
 			var session_value = Session.get(session_name)
-			console.log('Session.get(session_name)=',session_value)
+			//console.log('Session.get(session_name)=',session_value)
 			if(!_.isEmpty(session_value)){
 				if(obj.observer){
 					obj.observer.stop()
@@ -181,11 +190,10 @@ meteor_helper = function(scope,sub_name){
 }
 
 var app = angular.module("meteorapp",
-['leaflet-directive','datetimepicker-directive', 'smartTable.table', '$strap.directives', 'ui.bootstrap'],
+['leaflet-directive', 'smartTable.table', '$strap.directives', 'ui.bootstrap'],
 function($routeProvider, $locationProvider) {
 	$routeProvider.
 		when('/register', {templateUrl:'/register.html', controller:'registerController'}).
-		when('/login', {templateUrl:'/login.html', controller:'loginController'}).
 		when('/trace', {templateUrl:'/trace.html', controller: 'traceController'}).
 		when('/config', {templateUrl:'/config.html', controller: 'configController'}).
 		when('/logger', {templateUrl:'/logger.html', controller: 'loggerController'}).
@@ -194,30 +202,46 @@ function($routeProvider, $locationProvider) {
 })
 
 app.controller("markerController", ["$scope","$http", function($scope,$http) {
-	$scope.geocoding_parse = 'none'
+	$scope.address_cache = {}
+	$scope.$on('popup',function(e,o){
+		//console.log('popup',o,$scope.address_cache)
+		$scope.current_marker = o
+	})
 	$scope.geocoding = function(geo){
 		//console.log('geocoding',geo)
-		$scope.geocoding_parse = 'getting'
+		var id = $scope.current_marker.data._id
+		$scope.address_cache[id] = 10
+		;(function counting(){
+			if(typeof($scope.address_cache[id])!='number')
+				return
+			$scope.address_cache[id]--
+			//console.log($scope.address_cache[id])
+			if($scope.address_cache[id]==0)
+				delete $scope.address_cache[id]
+			else
+				setTimeout(counting,1000)
+			if(!$scope.$$phase&&!$scope.$root.$$phase)
+				$scope.$apply()
+		})()
 		$http.get('http://nominatim.openstreetmap.org/reverse?format=json&lat='+geo.lat+'&lon='+geo.lon+'&zoom=18&addressdetails=1')
 		.success(function(data){
 			//console.log(data)
-			$scope.address = data.display_name
-			$scope.geocoding_parse = 'done'
+			$scope.address_cache[id] = data.display_name
 		})
 		.error(function(e){
 			console.log(e)
-			$scope.geocoding_parse = 'none'
+			delete $scope.address_cache[id]
 		})
 	}
 }])
 
-app.controller("traceController", ["$scope","$compile","$filter", function($scope,$compile,$filter) {
-	console.log(my_global.timestamp)
+app.controller("traceController", ["$scope", function($scope) {
+	//console.log(my_global.timestamp)
 	$scope.timestamp = my_global.timestamp
 	$scope.show_main = true
 	$scope.columns = [
-		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
-		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
+		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
+		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
 		{label:'Longitude', map:'lon',headerClass:'sm-fix-header-plus'},
 		{label:'Latitude', map:'lat',headerClass:'sm-fix-header-plus'},
 		{label:'Altitude', map:'alt',headerClass:'sm-fix-header-plus'},
@@ -232,7 +256,7 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 		selectionMode: 'single',
 		//displaySelectionCheckbox: true,
 		itemsByPage:12,
-		maxSize:8,
+		maxSize:10,
 		//isGlobalSearchActivated:true,
 		default_sort_column:0
 	}
@@ -248,28 +272,15 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 		pvt.misc_desc = pvt.misc.length>40 ? pvt.misc.substring(0,40)+'...' : pvt.misc
 		if(!(util.check_and_push($scope.records,pvt)&&Math.abs(pvt.lat)>0.001 && Math.abs(pvt.lon)>0.001))
 			return
-		var ng_html
-		ng_html  = '<div ng-controller="markerController">'
-		ng_html += '经度：'+pvt.lat+'°，'
-		ng_html += '纬度：'+pvt.lon+'°<br>'
-		ng_html += '海拔：'+pvt.alt+' 米<br>'
-		ng_html += '卫星：'+pvt.satellites+'<br>'
-		ng_html += '其他：'+pvt.misc+'<br>'
-		ng_html += 'GPS时间：{{'+pvt.timestamp.valueOf()+'|date:"yyyy-MM-dd HH:mm:ss"}}<br>'
-		ng_html += '上报时间：{{'+pvt.package_timestamp.valueOf()+'|date:"yyyy-MM-dd HH:mm:ss"}}<br>'
-		ng_html += '地址：<a ng-show="geocoding_parse==\'none\'" ng-click="geocoding({lat:'+pvt.lat+',lon:'+pvt.lon+'})">获取</a>'
-		ng_html += '<span ng-show="geocoding_parse==\'getting\'">正在获取...</span>'
-		ng_html += '<span ng-show="geocoding_parse==\'done\'">{{address}}</span>'
-		ng_html += '</div>'
 
 		var geo = {lat:pvt.lat,lng:pvt.lon}
 		$scope.paths.p1.latlngs.push(geo)
 
 		var marker = _.clone(geo)
-		marker.ng_html = ng_html
-
+		marker.data = pvt
 		$scope.marker_all[pvt._id] = marker
 	}
+	//if record is selected, show the corresponding marker
 	$scope.$watch(
 	function(scope){
 		var result = null
@@ -290,15 +301,15 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 		// console.log(marker,record)
 		if(!marker||!record) return
 		marker.focus = record.isSelected
-		if(record.isSelected)
+		if(record.isSelected){
 			$scope.markers[record._id] = marker
-		else
+		}else
 			delete $scope.markers[record._id]
 	}
 
 	function on_reset_scope(){
 		console.log('clear trace')
-		$scope.center = {}
+		$scope.center = $scope.center || {zoom:3,lat:39.9,lng:116.397}
 		$scope.records = []
 		$scope.paths = {p1: {color:'#008000', weight:5, latlngs:[]}}
 		$scope.markers = {}
@@ -310,10 +321,14 @@ app.controller("traceController", ["$scope","$compile","$filter", function($scop
 	meteor.on_doc_add(insert_pvt)
 	meteor.on_reset_scope(on_reset_scope)
 	meteor.resubscribe_if_change('user.profile.tracking','timestamp.start','timestamp.end')
+	//
+	setTimeout(invalidate_map,1000)
+	setTimeout(invalidate_map,5000)
+	setTimeout(invalidate_map,10000)
 }]);
 
 app.controller("loggerController", ["$scope", function($scope) {
-	console.log(my_global.timestamp)
+	//console.log(my_global.timestamp)
 	$scope.timestamp = my_global.timestamp
 	$scope.columns = [
 		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
@@ -330,7 +345,7 @@ app.controller("loggerController", ["$scope", function($scope) {
 	]
 	$scope.table_config={
 		itemsByPage:25,
-		maxSize:8,
+		maxSize:20,
 		isGlobalSearchActivated:true,
 		default_sort_column:0
 	}
@@ -346,7 +361,6 @@ app.controller("loggerController", ["$scope", function($scope) {
 	})
 	meteor.resubscribe_if_change('user.profile.tracking','timestamp.start','timestamp.end')
 }]);
-
 
 app.controller("configController", ["$scope",function($scope) {
 	$scope.freq_opt = [5,10,20,30,60,300]
@@ -389,16 +403,6 @@ app.controller("configController", ["$scope",function($scope) {
 		db_config.update({_id:old_setting._id},setting)
 	})
 }]);
-
-app.controller("loginController", ["$scope","$http", function($scope,$http) {
-	$scope.login = function(){
-		//alert(url)
-		$http.post('login',{user_name:$scope.user_name,password:$scope.password}).success(function(data){
-			$scope.resp = data
-		})
-	}
-}]);
-
 
 app.controller("registerController", ["$scope", function($scope) {
 	meteor = new meteor_helper($scope)
