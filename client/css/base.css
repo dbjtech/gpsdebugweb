@@ -1,7 +1,7 @@
 .main-one{padding-left: 7px;}
 .containers{padding:0px 0px 0px 0px;width:100%;height:90%;}
 .inline-labels label{display: inline-block;margin: 5px 50px 5px 5px;}
-.inline-labels label input{width: 120px;margin-bottom: 0px;}
+.inline-labels label input{width: 120px;margin-bottom: 0px;cursor: pointer;}
 .inline-labels label select{width: 134px;margin-bottom: 0px;}
 .inline-labels label .text-in-label{margin-left: 10px;width: 124px;display: inline-block;text-align: left;}
 

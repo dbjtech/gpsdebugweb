@@ -1177,10 +1177,13 @@ function ($compile, $parse, $document, $position, dateFilter, datepickerPopupCon
           setOpen( false );
         }
       };
-      scope.$watch('date',function(ndate,odate) {
+      $parse('date').assign(scope,originalScope.$eval(attrs.ngModel))
+      scope.$watch(function(){
+        return +scope.date
+      },function(ndate,odate) {
         if(ndate==odate) return
         // console.log(ndate,'<-',odate)
-        $setModelValue(originalScope, ndate)
+        $setModelValue(originalScope, new Date(ndate))
       })
       scope.$on('mode',function(e,m){scope.mode=m})
       // Outter change

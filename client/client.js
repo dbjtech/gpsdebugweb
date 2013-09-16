@@ -349,6 +349,10 @@ app.controller("loggerController", ["$scope", function($scope) {
 		isGlobalSearchActivated:true,
 		default_sort_column:0
 	}
+	$scope.reset_time = function(){
+		$scope.timestamp.start = new Date()
+		$scope.timestamp.end = new Date(new Date().getTime()+24*3600*1000)
+	}
 	var meteor = new meteor_helper($scope,'trace')
 	meteor.bind_user('user')
 	meteor.on_doc_add(function(doc,util){
