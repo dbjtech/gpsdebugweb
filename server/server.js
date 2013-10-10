@@ -192,7 +192,7 @@ Request_handler.prototype.on_request = function(req,post_body) {
 	req.end()
 }
 //return [http_code,{result:XXX}]
-Request_handler.prototype.on_response = function(post_body) {return [501,{result:'not implement'}]}
+Request_handler.prototype.on_response = function(err,post_body) {return [501,{result:'not implement'}]}
 
 var google_cell = new Request_handler()
 google_cell.protocol = https
@@ -225,7 +225,9 @@ google_cell.on_request_data_convert = function(get_body,post_body,raw){
 	get_body.key = 'AIzaSyDAZ8Qr-2uoHU8jVsTZ6eInxtI9OPtMlRM'
 	return good_format
 }
-google_cell.on_response = function(data){
+google_cell.on_response = function(err,data){
+	if(err)
+		return [502,{result:err}]
 	if(data.error)
 		return [502,{result:data.error}]
 	if(data.timeout)
@@ -258,7 +260,9 @@ juhe_cell.on_request_data_convert = function(get_body,post_body,raw){
 	post_body.key = 'e40e4ac4b12317914437bd3f742343f4'
 	return true
 }
-juhe_cell.on_response = function(data){
+juhe_cell.on_response = function(err,data){
+	if(err)
+		return [502,{result:err}]
 	if(data.resultcode!='200')
 		return [502,{result:data.reason}]
 	var raw = data.result.data[0]
@@ -288,7 +292,9 @@ baidu_geo_convert.on_request_data_convert = function(get_body,post_body,raw){
 	//console.log('request',get_body)
 	return true
 }
-baidu_geo_convert.on_response = function(data){
+baidu_geo_convert.on_response = function(err,data){
+	if(err)
+		return [502,{result:err}]
 	console.log('response',data)
 	if(data.error!=0)
 		return [502,{result:data.error}]
@@ -333,6 +339,59 @@ google_geo_convert.on_locally_handle = function(data){
 	return resp
 }
 
+var navizon_cell = new Request_handler()
+navizon_cell.set_options({
+	//http://my.navizon.com/Webapps/MergeService/LocateMe.aspx?license_key=&v=&device_id=&scans=1,460,0,9876,7953,-5
+	hostname: 'my.navizon.com',
+	port: 80,
+	path: '/Webapps/MergeService/LocateMe.aspx',
+	method: 'GET',
+})
+navizon_cell.on_request_data_convert = function(get_body,post_body,raw){
+	var format4cell = {cells:[{cid:Number,lac:Number,mnc:Number,mcc:Number,strength:null}]}
+	var format4wifi = {wifis:[{mac:String,strength:null}]}
+	var good_format = false
+	get_body.license_key = '0011-14EF-0FE9-1342-00A5-1678'
+	get_body.v = 2
+	get_body.device_id = raw.device_id||'www.dbjtech.com'
+	var scans = []
+	if(util.is_format_like(format4wifi,raw)){
+		good_format = true
+		for(var i=0; i<raw.wifis.length; i++){
+			var wifi = raw.wifis[i]
+			scans.push('0,'+wifi.mac+','+(wifi.strength||0))
+		}
+	}
+	if(util.is_format_like(format4cell,raw)){
+		good_format = true
+		for(var i=0; i<raw.cells.length; i++){
+			var cell = raw.cells[i]
+			scans.push('1,'+cell.mcc+','+cell.mnc+','+cell.lac+','+cell.cid+','+(cell.strength||0))
+		}
+	}
+	get_body.scans = scans.join(';')
+	return good_format
+}
+navizon_cell.on_response = function(err,json,data){
+	console.log(data)
+	var resp = [200,{result:{}}]
+	var future = new Future()
+	xml2js.parseString(data,{explicitArray:false,normalizeTags:true},function(err,result){
+		console.log(result.response.location)
+		if(result&&result.response&&result.response.code==1000){
+			resp[1].result.geo = {}
+			resp[1].result.accuracy = parseFloat(result.response.location.radius)
+			resp[1].result.geo.lat = parseFloat(result.response.location.latitude)
+			resp[1].result.geo.lng = parseFloat(result.response.location.longitude)
+		}else{
+			resp = [502,{result:result}]
+		}
+		future.return()
+	})
+	future.wait()
+	return resp
+}
+
 function remote_web_api_request(handler,get_body,post_body){
 	var resp
 	var future = new Future()
@@ -350,11 +409,13 @@ function remote_web_api_request(handler,get_body,post_body){
 		res.on('end', function(){
 			// console.log('body:\n',api_resp)
 			// console.log('time used:',new Date()-timestamp_start)
+			var json,err
 			try{
-				resp = handler.on_response(JSON.parse(api_resp))
+				json = JSON.parse(api_resp)
 			}catch(e){
-				resp = [502,{result:e.message}]
+				err = e
 			}
+			resp = handler.on_response(err,json,api_resp)
 			future.return()
 		})
 	})
@@ -382,6 +443,17 @@ function try_handlers(handlers,raw){
 		var handler = handlers.pop()
 		var get_body = {}
 		var post_body = {}
+		if(raw.source){
+			var match = false
+			if((raw.source instanceof Array)&&_.contains(raw.source,handler.options.hostname))
+				match = true
+			else if(raw.source==handler.options.hostname)
+				match = true
+			if(!match){
+				resp = resp || [400,{result:'bad param'}]
+				continue
+			}
+		}
 		if(!handler.on_request_data_convert(get_body,post_body,raw)){
 			resp = resp || [400,{result:'bad param'}]
 			continue
@@ -405,15 +477,15 @@ function try_handlers(handlers,raw){
 	return resp
 }
 
-//[input]	{cells:[{cid:Number,lac:Number,mnc:Number,mcc:Number,strength:Number&&null}],to:String&&null} //cells[0] treats as the current cell, other as neighbor cells
-//[input]	{wifis:[{mac:String,strength:Number},{mac:String,strength:Number&&null}],to:String&&null} //for wifi, at least 2 wifi addrs
+//[input]	{cells:[{cid:Number,lac:Number,mnc:Number,mcc:Number,strength:Number&&null}],to:String&&null,source:String&&null} //cells[0] treats as the current cell, other as neighbor cells
+//[input]	{wifis:[{mac:String,strength:Number},{mac:String,strength:Number&&null}],to:String&&null,source:String&&null} //for wifi, at least 2 wifi addrs
 //[output]	{result:{geo:{lat:0,lng:0},accuracy:0},source:'www.googleapis.com'}
-//[test]	curl localhost:3000/geo -H "Content-Type: application/json" -d '{"cells":[{"cid":28655,"lac":17695,"mnc":0}]}'
+//[test]	curl localhost:3000/geo -H "Content-Type: application/json" -d '{"cells":[{"cid":28655,"lac":17695,"mnc":0,"mcc":460}]}'
 Meteor.Router.add('/geo','POST',function() {
 	var body_data = this.request.body
 	console.log(body_data)
 
-	var geolocate_resp = try_handlers([google_cell,juhe_cell],body_data)
+	var geolocate_resp = try_handlers([google_cell,juhe_cell,navizon_cell],body_data)
 	if(geolocate_resp[0]==200&&body_data.to){
 		var convert_input = {geo:geolocate_resp[1].result.geo,to:body_data.to}
 		console.log(convert_input)

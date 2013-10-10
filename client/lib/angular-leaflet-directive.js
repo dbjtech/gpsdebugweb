@@ -87,7 +87,7 @@ function ($http, $log, $parse, $compile, $http, $templateCache) {
                     })
                 })
             }else{
-                console.log(e,'specified marker-template if you need to format markers')
+                console.log('specified marker-template if you need to format markers')
             }
             
             function setupMaxBounds() {

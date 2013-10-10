@@ -31,23 +31,24 @@ $(document).ready(function(){
 //angular//
 ///////////
 meteor_helper = function(scope,sub_name){
-	var $scope = scope
-	var subscribe_name = sub_name
-	var session_name = 'angular.$scope.'+subscribe_name
-	var watch_list
-	var reset_scope
-	var doc_add
-	var doc_change
-	var doc_remove
-	var get_query
+	this.$scope = scope
+	this.subscribe_name = sub_name
+	this.session_name = 'angular.$scope.'+this.subscribe_name
+	this.watch_list
+	this.reset_scope
+	this.doc_add
+	this.doc_change
+	this.doc_remove
+	this.get_query
 
-	function on_get_query(cb){get_query=cb}
-	function on_reset_scope(cb){reset_scope=cb;cb()}
-	function on_doc_add(cb){doc_add=cb}
-	function on_doc_change(cb){doc_change=cb}
-	function on_doc_remove(cb){doc_remove=cb}
+	this.on_get_query = function(cb){this.get_query=cb}
+	this.on_reset_scope = function(cb){this.reset_scope=cb;cb()}
+	this.on_doc_add = function(cb){this.doc_add=cb}
+	this.on_doc_change = function(cb){this.doc_change=cb}
+	this.on_doc_remove = function(cb){this.doc_remove=cb}
 
-	function scope_safe_apply(){
+	this.scope_safe_apply = function(){
+		var $scope = this.$scope
 		if($scope.__safe_apply__) return
 		$scope.__safe_apply__ = _.debounce(function() {
 			try {
@@ -60,8 +61,9 @@ meteor_helper = function(scope,sub_name){
 		$scope.__safe_apply__()
 	}
 
-	function observer_cursor(){
-		var cursor = get_query && get_query() || db[subscribe_name].find({})
+	this.observer_cursor = function(){
+		var self = this
+		var cursor = self.get_query && self.get_query() || db[this.subscribe_name].find({})
 		var observer = cursor.observe({
 			check_and_push: function(container,doc){
 				container.cache = container.cache || {}
@@ -74,24 +76,43 @@ meteor_helper = function(scope,sub_name){
 				container.cache[doc._id] = true
 				return true
 			},
-			added: function(doc){if(!doc_add)return;doc_add(doc,this);scope_safe_apply()},
-			changed: function(ndoc,odoc){if(!doc_change)return;doc_change(ndoc,odoc,this);scope_safe_apply()},
-			removed: function(doc){if(!doc_remove)return;doc_remove(doc,this);scope_safe_apply()},
+			added: function(doc){if(!self.doc_add)return;self.doc_add(doc,this);self.scope_safe_apply()},
+			changed: function(ndoc,odoc){if(!self.doc_change)return;self.doc_change(ndoc,odoc,this);self.scope_safe_apply()},
+			removed: function(doc){if(!self.doc_remove)return;self.doc_remove(doc,this);self.scope_safe_apply()},
 		})
 		cursor.fetch()
 		this.observer = observer
-		$scope.$on('$destroy',function(){
-			observer.stop()
-			console.log('destroy',subscribe_name,'.observer')
+		var last = this
+		var off = this.$scope.$on('$destroy',function(){
+			console.log('destroy',last.subscribe_name,'.observer')
+			if(last.observer)
+				last.observer.stop()
+			delete last.$scope
+			delete last.subscribe_name
+			delete last.session_name
+			delete last.watch_list
+			delete last.reset_scope
+			delete last.doc_add
+			delete last.doc_change
+			delete last.doc_remove
+			delete last.get_query
+			delete last.observer
+			delete last.observer_cursor
+			delete last
+			off()
 		})
 	}
 
-	function declare(self){
-		var first_time = my_global[subscribe_name]==undefined
-		my_global[subscribe_name] = self
+	this.declare = function(){
+		var subscribe_name = this.subscribe_name
+		var session_name = this.session_name
+		var last = my_global[subscribe_name]
+		my_global[subscribe_name] = this
 		// console.log(my_global[subscribe_name])
 		// can not run more than once per subscribe
-		if(!first_time) return
+		if(last){
+			return
+		}
 		Deps.autorun(function(c){
 			var obj = my_global[subscribe_name]
 			//console.log(obj)
@@ -100,7 +121,7 @@ meteor_helper = function(scope,sub_name){
 			var f = function(){
 				//console.log(subscribe_name,handle.ready())
 				if(handle.ready()){
-					obj.observer_cursor()
+					my_global[subscribe_name].observer_cursor()
 					if(to) clearTimeout(to)
 				}else
 					to = setTimeout(f,50)
@@ -110,6 +131,8 @@ meteor_helper = function(scope,sub_name){
 			if(!_.isEmpty(session_value)){
 				if(obj.observer){
 					obj.observer.stop()
+					delete this.observer
+					//delete this.observer_cursor
 					console.log('destroy',subscribe_name,'.observer when resubscribe')
 				}
 				if(obj.reset_scope){
@@ -118,49 +141,50 @@ meteor_helper = function(scope,sub_name){
 				}
 				handle = Meteor.subscribe(subscribe_name,session_value,f)
 			}
+			// delete obj
 		})
 	}
 
-	function multi_watch(value_names,callback){
+	this.multi_watch = function(value_names,callback){
+		var self = this
 		for(var i=0; i<value_names.length; i++){
 			(function(){
 				var value_name = value_names[i]
 				//console.log('watch',value_name)
-				$scope.$watch(value_name, function (new_value,old_value) {
+				self.$scope.$watch(value_name, function (new_value,old_value) {
 					if(new_value==old_value) return
 					console.log(value_name,'changed to',new_value,'from',old_value)
-					callback(value_name,new_value,old_value)
+					callback(self,value_name,new_value,old_value)
 				})
 			})()
 		}
 	}
 
-	function resubscribe_if_change(/*watch_list*/){
+	this.resubscribe_if_change = function(/*watch_list*/){
 		var session_value = {}
-		watch_list = []
+		this.watch_list = []
 		//console.log(arguments)
 		for(var i=0;i<arguments.length;i++){
 			var value_name = arguments[i]
-			watch_list[i] = value_name
-			session_value[value_name] = $scope.$eval(value_name)
+			this.watch_list[i] = value_name
+			session_value[value_name] = this.$scope.$eval(value_name)
 		}
 
-		multi_watch(watch_list,function(value_name,new_value,old_value){
+		this.multi_watch(this.watch_list,function(self,value_name,new_value,old_value){
 			session_value[value_name] = new_value
-			Session.set(session_name,session_value)
+			Session.set(self.session_name,session_value)
 		})
-		Session.set(session_name,session_value)
+		Session.set(this.session_name,session_value)
 		//private
-		this.observer_cursor = observer_cursor
 		this.observer_cursor()
-		this.reset_scope = reset_scope
-		declare(this)
+		this.declare()
 	}
 
-	function bind_user(value_name){
+	this.bind_user = function(value_name){
+		var self = this
 		function set_user(user){
-			$scope[value_name] = user
-			scope_safe_apply()
+			self.$scope[value_name] = user
+			self.scope_safe_apply()
 		}
 		var cursor = Meteor.users.find({})
 		var user_observer = cursor.observe({
@@ -168,25 +192,15 @@ meteor_helper = function(scope,sub_name){
 			changed: set_user,
 			removed: set_user
 		})
-		$scope.$on('$destroy',function(){
+		this.$scope.$on('$destroy',function(){
 			user_observer.stop()
 			console.log('destroy user.observer')
 			delete user_observer
+			delete self
 		})
 	}
 
-	return {
-		//public
-		on_reset_scope:on_reset_scope,
-		on_doc_add:on_doc_add,
-		on_doc_change:on_doc_change,
-		on_doc_remove:on_doc_remove,
-		on_get_query:on_get_query,
-		resubscribe_if_change:resubscribe_if_change,
-		scope_safe_apply:scope_safe_apply,
-		bind_user:bind_user,
-		multi_watch:multi_watch
-	}
+	return this
 }
 
 var app = angular.module("meteorapp",
