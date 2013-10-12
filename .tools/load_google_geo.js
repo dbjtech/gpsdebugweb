@@ -7,7 +7,7 @@ var inp = fs.createReadStream('google.geo.convert.gz');
 // var out = fs.createWriteStream('out.txt');
 
 var mongo = require('mongoskin')
-mongodb = mongo.db('localhost:3002/meteor?auto_reconnect',{w:1})
+mongodb = mongo.db('localhost:27017/meteor?auto_reconnect',{w:1})
 var google_geo = mongodb.collection('google_geo')
 
 var plain_data = ''

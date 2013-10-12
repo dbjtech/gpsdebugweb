@@ -64,6 +64,7 @@ var querystring = Npm.require('querystring')
 var trace = new Meteor.Collection("trace")
 var config = new Meteor.Collection("config")
 var google_geo_db = new Meteor.Collection("google_geo")
+var cached_geo = new Meteor.Collection("cached_geo")
 
 /*
 URL: ​http://gps.dbjtech.com/gpsdebug
@@ -194,13 +195,62 @@ Request_handler.prototype.on_request = function(req,post_body) {
 //return [http_code,{result:XXX}]
 Request_handler.prototype.on_response = function(err,post_body) {return [501,{result:'not implement'}]}
 
+var cache_cell = new Request_handler()
+cache_cell.set_options({hostname:'db.cached_geo'})
+cache_cell.on_request_data_convert = function(get_body,post_body,raw){
+	var format4cell = {cells:[{cid:Number,lac:Number,mnc:Number,mcc:Number}]}
+	var format4wifi = {wifis:[{mac:String}]}
+	get_body.selector = {}
+	if(util.is_format_like(format4wifi,raw)){
+		get_body.selector['request.wifis'] = {$all:[]}
+		for(var i=0; i<raw.wifis.length; i++){
+			get_body.selector['request.wifis'].$all.push({"$elemMatch": _.pick(raw.wifis[i],'mac')})
+		}
+	}
+	if(util.is_format_like(format4cell,raw)){
+		get_body.selector['request.cells'] = {$all:[]}
+		for(var i=0; i<raw.cells.length; i++){
+			get_body.selector['request.cells'].$all.push({"$elemMatch": _.pick(raw.cells[i],'cid','lac','mnc','mcc')})
+		}
+	}
+	return !_.isEmpty(get_body.selector)
+}
+cache_cell.on_locally_handle = function(query){
+	var geos = cached_geo.find(query.selector).fetch()
+	if(!geos||geos.length==0) return [404,{result:'not found'}]
+	console.log('cache hit',geos.length)
+	var geo = {lat:0,lng:0}
+	for(var i=0; i<geos.length; i++){
+		geo.lat += geos[i].response.result.geo.lat
+		geo.lng += geos[i].response.result.geo.lng
+	}
+	geo.lat /= geos.length
+	geo.lng /= geos.length
+	return [200,{result:geo}]
+}
+cache_cell.cache = function(request,response){
+	var query = {}
+	if(!this.on_request_data_convert(query,null,request)){
+		console.log('WARN logic should not go here')
+		return
+	}
+	var cnt = cached_geo.find(query.selector).count()
+	var doc = {request:request,response:response,timestamp:new Date()}
+	console.log(query,cnt)
+	if(cnt)
+		cached_geo.update(query.selector,{$set:doc},{multi:true})
+	else
+		cached_geo.insert(doc)
+}
+
 var google_cell = new Request_handler()
 google_cell.protocol = https
 google_cell.set_options({
 	hostname: 'www.googleapis.com',
 	path: '/geolocation/v1/geolocate',
 	method: 'POST',
-	headers: {'Content-Type':'application/json'}
+	headers: {'Content-Type':'application/json'},
+	google_keys: ['AIzaSyBpIRkyFg3NTp_1sxjjN0mmORxd9virTgU','AIzaSyDAZ8Qr-2uoHU8jVsTZ6eInxtI9OPtMlRM']
 })
 google_cell.on_request_data_convert = function(get_body,post_body,raw){
 	var format4cell = {cells:[{cid:Number,lac:Number,mnc:Number,mcc:Number,strength:null}]}
@@ -222,16 +272,20 @@ google_cell.on_request_data_convert = function(get_body,post_body,raw){
 			post_body.cellTowers.push(e)
 		}
 	}
-	get_body.key = 'AIzaSyDAZ8Qr-2uoHU8jVsTZ6eInxtI9OPtMlRM'
+	get_body.key = this.options.google_keys[0]
 	return good_format
 }
 google_cell.on_response = function(err,data){
 	if(err)
 		return [502,{result:err}]
+	if(data.error&&data.error.code==403){
+		this.options.google_keys.push(this.options.google_keys.shift())
+		return [403,{result:data.error}]
+	}
 	if(data.error)
 		return [502,{result:data.error}]
 	if(data.timeout)
-		return [502,{result:data.timeout}]
+		return [504,{result:data.timeout}]
 	var body = {result:{}}
 	body.result.accuracy = data.accuracy
 	body.result.geo = data.location
@@ -377,7 +431,7 @@ navizon_cell.on_response = function(err,json,data){
 	var resp = [200,{result:{}}]
 	var future = new Future()
 	xml2js.parseString(data,{explicitArray:false,normalizeTags:true},function(err,result){
-		console.log(result.response.location)
+		console.log(result)
 		if(result&&result.response&&result.response.code==1000){
 			resp[1].result.geo = {}
 			resp[1].result.accuracy = parseFloat(result.response.location.radius)
@@ -435,10 +489,10 @@ function remote_web_api_request(handler,get_body,post_body){
 	return resp
 }
 
-function try_handlers(handlers,raw){
+function try_handlers(handlers,raw,no_random){
 	var resp
-	//make random order
-	handlers.sort(function(a,b){return 0.5-Math.random()})
+	if(!no_random)//make random order
+		handlers.sort(function(a,b){return 0.5-Math.random()})
 	while(handlers.length!=0){
 		var handler = handlers.pop()
 		var get_body = {}
@@ -471,7 +525,7 @@ function try_handlers(handlers,raw){
 		handler.last_request_time_used = new Date()-handler.last_request_timestamp
 		resp[1].source = handler.options.hostname
 		console.log('request finish',_.pick(handler,'last_request_timestamp','last_request_time_used','request_times','fails_times'))
-		if(resp[0]!=504)
+		if(resp[0]==200)
 			break
 	}
 	return resp
@@ -485,7 +539,15 @@ Meteor.Router.add('/geo','POST',function() {
 	var body_data = this.request.body
 	console.log(body_data)
 
-	var geolocate_resp = try_handlers([google_cell,juhe_cell,navizon_cell],body_data)
+	var handlers = [google_cell,juhe_cell,navizon_cell]
+	handlers.sort(function(a,b){return 0.5-Math.random()})
+	handlers.push(cache_cell)//make cache run first(try_handlers use pop)
+	var geolocate_resp = try_handlers(handlers,body_data,true)
+	//save to cached
+	if(geolocate_resp[0]==200&&geolocate_resp[1].source!=cache_cell.options.hostname){
+		cache_cell.cache(body_data,geolocate_resp[1])
+	}
+	//convert
 	if(geolocate_resp[0]==200&&body_data.to){
 		var convert_input = {geo:geolocate_resp[1].result.geo,to:body_data.to}
 		console.log(convert_input)
