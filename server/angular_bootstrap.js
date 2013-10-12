@@ -10,9 +10,9 @@ var runtime_config = function (app_html) {
     return app_html;
 
   app_html = app_html.replace(
-    "// ##RUNTIME_CONFIG##",
-    "__meteor_runtime_config__ = " +
-      JSON.stringify(__meteor_runtime_config__) + ";");
+    "##RUNTIME_CONFIG##",
+    '<script type="text/javascript">__meteor_runtime_config__ = ' +
+      JSON.stringify(__meteor_runtime_config__) + ";</script>");
 
 	app_html = app_html.replace(
 		/##ROOT_URL_PATH_PREFIX##/g,
