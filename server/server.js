@@ -220,13 +220,16 @@ cache_cell.on_locally_handle = function(query){
 	if(!geos||geos.length==0) return [404,{result:'not found'}]
 	console.log('cache hit',geos.length)
 	var geo = {lat:0,lng:0}
+	var accuracy = 0
 	for(var i=0; i<geos.length; i++){
 		geo.lat += geos[i].response.result.geo.lat
 		geo.lng += geos[i].response.result.geo.lng
+		accuracy += geos[i].response.result.accuracy
 	}
 	geo.lat /= geos.length
 	geo.lng /= geos.length
-	return [200,{result:geo}]
+	accuracy /= geos.length
+	return [200,{result:geo, accuracy:accuracy}]
 }
 cache_cell.cache = function(request,response){
 	var query = {}
@@ -528,6 +531,7 @@ function try_handlers(handlers,raw,no_random){
 		if(resp[0]==200)
 			break
 	}
+	resp[1].status_code = resp[0]
 	return resp
 }
 
