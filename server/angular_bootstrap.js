@@ -15,7 +15,7 @@ var runtime_config = function (app_html) {
       JSON.stringify(__meteor_runtime_config__) + ";</script>");
 
 	app_html = app_html.replace(
-		/##ROOT_URL_PATH_PREFIX##/g,
+		/##BUNDLED_JS_CSS_PREFIX##/g,
 		__meteor_runtime_config__['ROOT_URL_PATH_PREFIX']
 	)
 

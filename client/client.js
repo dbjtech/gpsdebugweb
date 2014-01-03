@@ -341,7 +341,7 @@ app.controller("traceController", ["$scope", function($scope) {
 	setTimeout(invalidate_map,10000)
 }]);
 
-app.controller("loggerController", ["$scope", function($scope) {
+app.controller("loggerController", ["$scope","$filter", function($scope,$filter) {
 	//console.log(my_global.timestamp)
 	$scope.timestamp = my_global.timestamp
 	$scope.columns = [
@@ -378,6 +378,22 @@ app.controller("loggerController", ["$scope", function($scope) {
 		$scope.records = []
 	})
 	meteor.resubscribe_if_change('user.profile.tracking','timestamp.start','timestamp.end')
+	$scope.export_csv = function(){
+		var filename = $filter('date')($scope.timestamp.start, 'yyyyMMdd.HHmmss')
+		filename += $filter('date')($scope.timestamp.end, '-yyyyMMdd.HHmmss')
+		filename += ".csv"
+		var fields = _.map($scope.columns,function(col){return col.map})
+		var dataUri = "data:text/csv;charset=utf-8,"
+		dataUri += _.map($scope.columns,function(col){return col.label}).join(',')+'\n'
+		dataUri += _.map($scope.records,function(rc){
+			var values = _.values(_.pick(rc,fields))
+			values = _.map(values,JSON.stringify)//just add quotation mark
+			return values.join(',')
+		}).join('\n')
+		dataUri = "data:text/csv;charset=utf-8,"+encodeURIComponent(dataUri)
+		//window.open(dataUri)
+		$("<a download='" + filename + "' href='" + dataUri + "'></a>")[0].click()
+	}
 }]);
 
 app.controller("configController", ["$scope",function($scope) {
@@ -402,7 +418,7 @@ app.controller("configController", ["$scope",function($scope) {
 	meteor.on_reset_scope(on_reset_scope)
 	meteor.resubscribe_if_change('user.profile.tracking')
 
-	meteor.multi_watch(['config.freq','config.restart'],function(value_name,new_value,old_value){
+	meteor.multi_watch(['config.freq','config.restart'],function(self,value_name,new_value,old_value){
 		var value_name = value_name.split('.')[1]
 		var old_setting = db_config.findOne({})
 		console.dir(old_setting)
