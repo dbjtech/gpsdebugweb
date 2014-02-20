@@ -383,7 +383,7 @@ app.controller("loggerController", ["$scope","$filter", function($scope,$filter)
 		filename += $filter('date')($scope.timestamp.end, '-yyyyMMdd.HHmmss')
 		filename += ".csv"
 		var fields = _.map($scope.columns,function(col){return col.map})
-		var dataUri = "data:text/csv;charset=utf-8,"
+		var dataUri = ""
 		dataUri += _.map($scope.columns,function(col){return col.label}).join(',')+'\n'
 		dataUri += _.map($scope.records,function(rc){
 			var values = _.values(_.pick(rc,fields))

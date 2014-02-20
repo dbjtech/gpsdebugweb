@@ -90,7 +90,7 @@ Meteor.startup(function () {
 Meteor.Router.add('/gpsdebug','POST',function() {
 	var body = this.request.body
 	var e = /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/.exec(body.timestamp)
-	body.timestamp = new Date(e[1],e[2]-1,e[3],e[4],e[5],e[6])
+	body.timestamp = e ? new Date(e[1],e[2]-1,e[3],e[4],e[5],e[6]) : new Date()
 	body.package_timestamp = new Date()
 	util.convert_field(body,body,['lat','lon','alt','std_lat','std_lon','std_alt'],parseFloat)
 	console.log(JSON.stringify(body))
