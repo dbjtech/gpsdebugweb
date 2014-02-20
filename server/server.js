@@ -117,11 +117,60 @@ Meteor.Router.add('/gpsdebug','POST',function() {
 	return [200,resp]
 })
 
-Meteor.Router.add('/gpsdebug/:terminal_id','GET',function(terminal_id) {
-	//var query = this.request.query
-	var query = trace.find({mobile:terminal_id}).fetch()
-	console.log(terminal_id,'fetching',query.length,'docs')
+Meteor.Router.add('/api/trace','POST',function() {
+	var qs = this.request.body
+	if(!util.is_format_like({terminal_id:String,timestamp_start:String,timestamp_end:String},qs))
+		return 400
+	var timestamp_start = new Date(parseInt(qs.timestamp_start))
+	var timestamp_end = new Date(parseInt(qs.timestamp_end))
+	var query = trace.find({mobile:qs.terminal_id,package_timestamp:{$gt:timestamp_start,$lt:timestamp_end}}).fetch()
+	console.log(qs.terminal_id,'fetching',query.length,'docs')
 	this.response.write(JSON.stringify(query))
+	return 200
+})
+Meteor.Router.add('/api/last_info','POST',function() {
+	var qs = this.request.body
+	console.log('---------------------',qs)
+	if(!qs.terminal_id)
+		return 400
+	var timestamp_start, timestamp_end
+	var limit = (!qs.timestamp_start && !qs.timestamp_end) ? 1 : 0//return last one position if no timestamp
+	qs.timestamp_start = qs.timestamp_start ? parseInt(qs.timestamp_end) : 0
+	qs.timestamp_end = qs.timestamp_end ? parseInt(qs.timestamp_end) : new Date().getTime()
+	timestamp_end = new Date(qs.timestamp_end)
+	timestamp_start = new Date(qs.timestamp_start)
+	var rs_trace = trace.find(
+		{mobile:qs.terminal_id,package_timestamp:{$gt:timestamp_start,$lt:timestamp_end}},
+		{sort:{package_timestamp:1},limit:limit}
+	).fetch()
+	if(!rs_trace||rs_trace.length==0) return 404
+	console.log(qs.terminal_id,'fetching',rs_trace.length,'docs, limit',limit)
+	var rs_config = config.findOne({mobile:qs.terminal_id},{_id:-1})
+	this.response.write(JSON.stringify({trace:rs_trace,config:rs_config}))
+	return 200
+})
+Meteor.Router.add('/api/config/get','POST',function() {
+	var qs = this.request.body
+	if(!util.is_format_like({terminal_id:String},qs))
+		return 400
+	var setting = config.findOne({mobile:qs.terminal_id})
+	if(!setting)
+		return 404
+	delete setting._id
+	this.response.write(JSON.stringify(setting))
+	return 200
+})
+Meteor.Router.add('/api/config/set','POST',function() {
+	var qs = this.request.body
+	if(!util.is_format_like({terminal_id:String,freq:String,restart:String},qs))
+		return 400
+	var setting = config.findOne({mobile:qs.terminal_id})
+	if(!setting)
+		return 404
+	setting.freq = qs.freq
+	setting.restart = qs.restart
+	setting.unsynced = true
+	config.update({_id:setting._id},setting)
 	return 200
 })
 
@@ -229,7 +278,7 @@ cache_cell.on_locally_handle = function(query){
 	geo.lat /= geos.length
 	geo.lng /= geos.length
 	accuracy /= geos.length
-	return [200,{result:geo, accuracy:accuracy}]
+	return [200,{result:{geo:geo}, accuracy:accuracy}]
 }
 cache_cell.cache = function(request,response){
 	var query = {}

@@ -438,7 +438,7 @@ app.controller("configController", ["$scope",function($scope) {
 	})
 }]);
 
-app.controller("registerController", ["$scope", function($scope) {
+app.controller("registerController", ["$scope","$http", function($scope,$http) {
 	meteor = new meteor_helper($scope)
 	meteor.bind_user('user')
 	$scope.delete_terminal = function(sn){
@@ -448,6 +448,70 @@ app.controller("registerController", ["$scope", function($scope) {
 	$scope.add_terminal = function(){
 		Meteor.users.update({_id:Meteor.user()._id}, {$addToSet:{'profile.terminals':$scope.terminal_sn}})
 	}
+
+		var websocket = {}
+	function ensure_connect(url,callback){
+		// var socket = websocket[url]
+		// if(socket){
+		// 	return socket
+		// }
+		// socket = io.connect(url)
+		// socket.on('api/resp', callback)
+		// socket.on('disconnect', function() {
+		// 	console.log('socket disconnect')
+		// 	websocket[url] = undefined
+		// })
+		// socket.on('error', function(event){
+		// 	console.log('socket error',event)
+		// 	socket.removeAllListeners()
+		// 	websocket[url] = undefined
+		// })
+		// websocket[url] = socket
+		// return socket
+	}
+	// var app = angular.module('myapp', [])
+	//app.controller('Ctrl', ['$scope','$http','$location',function($scope,$http,$location){
+		var qs// = require('querystring')
+		$scope.methods = ['websocket','json','get','post','put','delete']
+		$scope.url = '/api/last_info'
+		$scope.method = 'json'
+		var param = {}
+		param.terminal_id = '24208'
+
+		$scope.body = JSON.stringify(param)
+		$scope.submit = function(){
+			console.log($scope.method,$scope.url,$scope.body)
+			var config = {url:$scope.url,method:$scope.method}
+			var method = $scope.method.toLowerCase()
+			var p
+			if(method=='websocket'){
+				var socket = ensure_connect($location.path()+config.url,function(data){
+					console.log(data)
+				})
+				config.data = JSON.parse($scope.body)
+				socket.emit('api',config)
+				return
+			}else if(method=='get'){
+				config.url += '?'+qs.stringify(JSON.parse($scope.body))
+				console.log(config.url)
+				p = $http(config)
+			}else if(method=='json'){
+				config.data = JSON.parse($scope.body)
+				config.headers = {'Content-Type': 'application/json; charset=UTF-8'}
+				p = $http.post(config.url,config.data,config)
+			}else{
+				config.data = $.param(JSON.parse($scope.body))
+				config.headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+				p = $http[method](config.url,config.data,config)
+			}
+			p.success(function(data){
+				console.log(data)
+				//console.log(qs.parse(data))
+			}).error(function(data,status){
+				console.log(status,data)
+			})
+		}
+	//}])
 }])
 
 app.controller("webapiController",["$scope","$http",function($scope,$http){
@@ -474,3 +538,4 @@ app.controller("webapiController",["$scope","$http",function($scope,$http){
 		})
 	}
 }])
+

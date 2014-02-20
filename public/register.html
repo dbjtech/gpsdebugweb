@@ -14,3 +14,10 @@
 </ul>
 </div>
 </div>
+	<form>
+		<label>url<input type='text' ng-model='url'/></label>
+		<label>method<select ng-model="method" ng-options="methods for methods in methods"></select></label>
+		<label>body<textarea ng-model='body'></textarea></label>
+		<input type='button' ng-click='submit()' value='submit'/>
+		<input type="button" ng-click='export_csv()' value="export csv">
+	</form>
