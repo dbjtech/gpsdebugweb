@@ -11,6 +11,8 @@
 	End Date:
 	<input type="text" datepicker-popup="yyyy-MM-dd HH:mm" ng-model="timestamp.end" open="timestamp.start_end" datepicker-options="timestamp.date_options" readonly="" />
 </label>
+	<button class="btn btn-primary" ng-click="show_main=!show_main">Debug Info</button>
+	<button class="btn btn-primary" title="Config" bs-popover="'config.html'" data-placement="bottom" ng-controller="configController">Config</button>
 </div>
 
 <div class="leaflet"><leaflet paths='paths' center='center' cluster='marker_all' markers='markers' marker-template="'/marker.html'"></leaflet></div>
@@ -20,23 +22,19 @@
 		<smart-table config="table_config" rows="records" columns="columns"></smart-table>
 	</div>
 	</div>
-	<div class="debug-button">
-		<button class="btn btn-primary" ng-click="show_main=!show_main">Debug Info</button>
-		<button class="btn btn-primary" title="Config" bs-popover="'config.html'" data-placement="top" ng-controller="configController">Config</button>
-	</div>
 </div>
-
 <script type="text/ng-template" id="/marker.html">
 <div ng-controller="markerController">
-	经度：{{current_marker.data.lat}}°，
-	纬度：{{current_marker.data.lon}}°<br>
-	海拔：{{current_marker.data.alt}} 米<br>
-	卫星：{{current_marker.data.satellites}}<br>
-	其他：{{current_marker.data.misc}}<br>
-	GPS时间：{{current_marker.data.timestamp|date:"yyyy-MM-dd HH:mm:ss"}}<br>
-	上报时间：{{current_marker.data.package_timestamp|date:"yyyy-MM-dd HH:mm:ss"}}<br>
-	地址：<a ng-show="address_cache[current_marker.data._id]==undefined" ng-click="geocoding(current_marker.data)">获取</a>
-	<span ng-show="address_cache[current_marker.data._id]>0">正在获取...</span>
-	<span ng-show="address_cache[current_marker.data._id]">{{address_cache[current_marker.data._id]}}</span>
+<ul>
+	<li>经度：{{current_marker.data.lat}}°，纬度：{{current_marker.data.lon}}°</li>
+	<li>海拔：{{current_marker.data.alt}} 米</li>
+	<li>卫星：{{current_marker.data.satellites}}</li>
+	<li>其他：{{current_marker.data.misc}}</li>
+	<li>GPS时间：{{current_marker.data.timestamp|date:"yyyy-MM-dd HH:mm:ss"}}</li>
+	<li>上报时间：{{current_marker.data.package_timestamp|date:"yyyy-MM-dd HH:mm:ss"}}</li>
+	<li>地址：<a ng-show="address_cache[current_marker.data._id]==undefined" ng-click="geocoding(current_marker.data)">获取</a>
+		<span ng-show="address_cache[current_marker.data._id]>0">正在获取...</span>
+		<span ng-show="address_cache[current_marker.data._id]">{{address_cache[current_marker.data._id]}}</span></li>
+</ul>
 </div>
 </script>

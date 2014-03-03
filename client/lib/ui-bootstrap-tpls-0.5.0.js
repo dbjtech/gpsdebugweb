@@ -3308,9 +3308,7 @@ angular.module("template/datepicker/popup.html", []).run(["$templateCache", func
     "		<span class=\"btn-group\">\n" +
     "			<button class=\"btn btn-small btn-inverse\" ng-click=\"today()\">Today</button>\n" +
     "			<button class=\"btn btn-small btn-info\" ng-click=\"showWeeks = ! showWeeks\" ng-class=\"{active: showWeeks}\">Weeks</button>\n" +
-    "			<button class=\"btn btn-small btn-danger\" ng-click=\"clear()\">Clear</button>\n" +
     "		</span>\n" +
-    "{{date}}" +
     "		<button class=\"btn btn-small btn-success pull-right\" ng-click=\"isOpen = false\">Close</button>\n" +
     "	</li>\n" +
     "</ul>");

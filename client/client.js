@@ -263,8 +263,8 @@ app.controller("traceController", ["$scope", function($scope) {
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
 		//{label:'range_rms', map:'range_rms'},
-		{label:'Satellites', map:'satellites_desc', title:'satellites'},
-		{label:'Misc', map:'misc_desc', title:'misc'}
+		{label:'Satellites', map:'satellites', title:'satellites'},
+		{label:'Misc', map:'misc', title:'misc'}
 	]
 	$scope.table_config={
 		selectionMode: 'single',
@@ -282,8 +282,8 @@ app.controller("traceController", ["$scope", function($scope) {
 
 	function insert_pvt(pvt,util){
 		//shorten satellites, misc
-		pvt.satellites_desc = pvt.satellites.length>40 ? pvt.satellites.substring(0,40)+'...' : pvt.satellites
-		pvt.misc_desc = pvt.misc.length>40 ? pvt.misc.substring(0,40)+'...' : pvt.misc
+		// pvt.satellites_desc = pvt.satellites.length>40 ? pvt.satellites.substring(0,40)+'...' : pvt.satellites
+		// pvt.misc_desc = pvt.misc.length>40 ? pvt.misc.substring(0,40)+'...' : pvt.misc
 		if(!(util.check_and_push($scope.records,pvt)&&Math.abs(pvt.lat)>0.001 && Math.abs(pvt.lon)>0.001))
 			return
 
@@ -312,11 +312,13 @@ app.controller("traceController", ["$scope", function($scope) {
 		record_select(omarker,o)
 	})
 	function record_select(marker,record){
-		// console.log(marker,record)
+		console.log(marker,record)
 		if(!marker||!record) return
 		marker.focus = record.isSelected
 		if(record.isSelected){
 			$scope.markers[record._id] = marker
+			$scope.center.lat = marker.lat
+			$scope.center.lng = marker.lng
 		}else
 			delete $scope.markers[record._id]
 	}

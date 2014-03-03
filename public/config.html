@@ -1,7 +1,7 @@
-<div class="config-panel">
-<div class="inline-labels">
+<div ngClass="{config-panel:config!=undefined, config-panel-unconnected:config==undefined}">
+<div class="inline-labels" ng-show='config!=undefined'>
 	<label>Terminal SN : <span class="text-in-label">{{user.profile.tracking}}</span></label>
-	<div ng-show='config!=undefined'>
+	<div>
 		<label>Upload Frequency(s) : <select ng-model="config.freq" ng-options="v for v in freq_opt"></select></label>
 		<label>Restart : <select ng-model="config.restart" ng-options="v.value as v.text for v in restart_opt"></select></label>
 		<label>Is Synced : 
@@ -9,6 +9,6 @@
 		<span class="text-in-label" ng-show="!config.unsynced">Yes</span>
 		</label>
 	</div>
-	<div ng-show='config==undefined'>terminal has never connected</div>
 </div>
+<div ng-show='config==undefined'>Terminal {{user.profile.tracking}} has never connected</div>
 </div>

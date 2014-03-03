@@ -90,7 +90,7 @@ Meteor.startup(function () {
 Meteor.Router.add('/gpsdebug','POST',function() {
 	var body = this.request.body
 	var e = /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/.exec(body.timestamp)
-	body.timestamp = e ? new Date(e[1],e[2]-1,e[3],e[4],e[5],e[6]) : new Date()
+	body.timestamp = e ? new Date(Date.UTC(e[1],e[2]-1,e[3],e[4],e[5],e[6])) : new Date()
 	body.package_timestamp = new Date()
 	util.convert_field(body,body,['lat','lon','alt','std_lat','std_lon','std_alt'],parseFloat)
 	console.log(JSON.stringify(body))
@@ -135,13 +135,13 @@ Meteor.Router.add('/api/last_info','POST',function() {
 		return 400
 	var timestamp_start, timestamp_end
 	var limit = (!qs.timestamp_start && !qs.timestamp_end) ? 1 : 0//return last one position if no timestamp
-	qs.timestamp_start = qs.timestamp_start ? parseInt(qs.timestamp_end) : 0
+	qs.timestamp_start = qs.timestamp_start ? parseInt(qs.timestamp_start) : 0
 	qs.timestamp_end = qs.timestamp_end ? parseInt(qs.timestamp_end) : new Date().getTime()
 	timestamp_end = new Date(qs.timestamp_end)
 	timestamp_start = new Date(qs.timestamp_start)
 	var rs_trace = trace.find(
 		{mobile:qs.terminal_id,package_timestamp:{$gt:timestamp_start,$lt:timestamp_end}},
-		{sort:{package_timestamp:1},limit:limit}
+		{sort:{package_timestamp:-1},limit:limit}
 	).fetch()
 	if(!rs_trace||rs_trace.length==0) return 404
 	console.log(qs.terminal_id,'fetching',rs_trace.length,'docs, limit',limit)
