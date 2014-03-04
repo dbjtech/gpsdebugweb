@@ -247,6 +247,18 @@ app.controller("markerController", ["$scope","$http", function($scope,$http) {
 			delete $scope.address_cache[id]
 		})
 	}
+	var reg = /([^:]*):([^,]*),?/g
+	$scope.format_html_desc = function(str){
+		var first = true
+		var html = ''
+		while(true){
+			var rs = reg.exec(str)
+			if(!rs) break
+			html += (first?'':',')+rs[1]+':<span>'+rs[2]+'</span>'
+			first = false
+		}
+		return html==''?str:html
+	}
 }])
 
 app.controller("traceController", ["$scope", function($scope) {

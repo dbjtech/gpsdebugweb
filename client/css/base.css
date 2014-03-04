@@ -131,11 +131,12 @@ rder:0px;color:#000000;border-radius:3px;}
 	word-break: break-all;
 	padding-right: 5px;
 }
-.marker-table td {cursor: default;}
+.marker-table td {cursor: default;word-break: break-all;}
 .marker-table td a{cursor: pointer;}
+.marker-table td div span{color: red;}
 .marker-table-td-head {
 	vertical-align: top;
-	width: 65px;
+	width: 61px;
 	text-align: right;
 }
 .smart-table-data-row.selected{

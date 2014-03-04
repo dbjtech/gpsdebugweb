@@ -28,7 +28,7 @@
 <table class="marker-table">
 	<tr><td class="marker-table-td-head">经度：</td><td>{{current_marker.data.lat}}°，纬度：{{current_marker.data.lon}}°</td></tr>
 	<tr><td class="marker-table-td-head">海拔：</td><td>{{current_marker.data.alt}} 米</td></tr>
-	<tr><td class="marker-table-td-head">卫星：</td><td>{{current_marker.data.satellites}}</td></tr>
+	<tr><td class="marker-table-td-head">卫星：</td><td><div ng-bind-html-unsafe='format_html_desc(current_marker.data.satellites)'></div></td></tr>
 	<tr><td class="marker-table-td-head">其他：</td><td>{{current_marker.data.misc}}</td></tr>
 	<tr><td class="marker-table-td-head">GPS时间：</td><td>{{current_marker.data.timestamp|date:"yyyy-MM-dd HH:mm:ss"}}</td></tr>
 	<tr><td class="marker-table-td-head">上报时间：</td><td>{{current_marker.data.package_timestamp|date:"yyyy-MM-dd HH:mm:ss"}}</td></tr>

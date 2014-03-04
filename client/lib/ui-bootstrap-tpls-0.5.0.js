@@ -1190,7 +1190,7 @@ function ($compile, $parse, $document, $position, dateFilter, datepickerPopupCon
       scope.$watch(function() {
         return ngModel.$modelValue;
       }, function(value) {
-        console.log(scope)
+        //console.log(scope)
         if (angular.isString(value)) {
           var date = parseDate(value);
 

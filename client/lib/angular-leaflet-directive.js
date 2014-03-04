@@ -336,8 +336,8 @@ function ($http, $log, $parse, $compile, $http, $templateCache) {
                             var latlngs = convertToLeafletLatLngs(data.latlngs);
                             polyline.setLatLngs(latlngs);
                             var bounds = new L.LatLngBounds(latlngs)
-                            if(bounds._northEast&&bounds._southWest)
-                                setTimeout(function(){map.fitBounds(bounds)},10);//no trigger the $scope.$apply() of current turn
+                            // if(bounds._northEast&&bounds._southWest)
+                            //     setTimeout(function(){map.fitBounds(bounds)},10);//no trigger the $scope.$apply() of current turn
                         }
 
                         if (data.weight !== undefined && data.weight !== oldData.weight) {
