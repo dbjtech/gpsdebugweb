@@ -15,7 +15,6 @@
 rder:0px;color:#000000;border-radius:3px;}
 .ng-scope ul{margin: 0px;list-style-type: none;}
 .ng-scope ul li{word-break: break-all;}
-.ng-scope ul li a{cursor: pointer;}
 /*smart-table*/
 .table{bottom: 5px;margin:0px 0px 5px;}
 .smart-table-one{max-height: 315px;overflow-y: hidden;overflow-x:hidden;}
@@ -129,6 +128,15 @@ rder:0px;color:#000000;border-radius:3px;}
 }
 .smart-table-two .table td{
 	white-space: normal;
+	word-break: break-all;
+	padding-right: 5px;
+}
+.marker-table td {cursor: default;}
+.marker-table td a{cursor: pointer;}
+.marker-table-td-head {
+	vertical-align: top;
+	width: 65px;
+	text-align: right;
 }
 .smart-table-data-row.selected{
 	background-color: #e8e8e8;

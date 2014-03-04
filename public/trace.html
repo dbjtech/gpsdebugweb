@@ -25,16 +25,16 @@
 </div>
 <script type="text/ng-template" id="/marker.html">
 <div ng-controller="markerController">
-<ul>
-	<li>经度：{{current_marker.data.lat}}°，纬度：{{current_marker.data.lon}}°</li>
-	<li>海拔：{{current_marker.data.alt}} 米</li>
-	<li>卫星：{{current_marker.data.satellites}}</li>
-	<li>其他：{{current_marker.data.misc}}</li>
-	<li>GPS时间：{{current_marker.data.timestamp|date:"yyyy-MM-dd HH:mm:ss"}}</li>
-	<li>上报时间：{{current_marker.data.package_timestamp|date:"yyyy-MM-dd HH:mm:ss"}}</li>
-	<li>地址：<a ng-show="address_cache[current_marker.data._id]==undefined" ng-click="geocoding(current_marker.data)">获取</a>
+<table class="marker-table">
+	<tr><td class="marker-table-td-head">经度：</td><td>{{current_marker.data.lat}}°，纬度：{{current_marker.data.lon}}°</td></tr>
+	<tr><td class="marker-table-td-head">海拔：</td><td>{{current_marker.data.alt}} 米</td></tr>
+	<tr><td class="marker-table-td-head">卫星：</td><td>{{current_marker.data.satellites}}</td></tr>
+	<tr><td class="marker-table-td-head">其他：</td><td>{{current_marker.data.misc}}</td></tr>
+	<tr><td class="marker-table-td-head">GPS时间：</td><td>{{current_marker.data.timestamp|date:"yyyy-MM-dd HH:mm:ss"}}</td></tr>
+	<tr><td class="marker-table-td-head">上报时间：</td><td>{{current_marker.data.package_timestamp|date:"yyyy-MM-dd HH:mm:ss"}}</td></tr>
+	<tr><td class="marker-table-td-head">地址：</td><td><a ng-show="address_cache[current_marker.data._id]==undefined" ng-click="geocoding(current_marker.data)">获取</a>
 		<span ng-show="address_cache[current_marker.data._id]>0">正在获取...</span>
-		<span ng-show="address_cache[current_marker.data._id]">{{address_cache[current_marker.data._id]}}</span></li>
-</ul>
+		<span ng-show="address_cache[current_marker.data._id]">{{address_cache[current_marker.data._id]}}</span></td></tr>
+</table>
 </div>
 </script>

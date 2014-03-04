@@ -281,9 +281,6 @@ app.controller("traceController", ["$scope", function($scope) {
 	}
 
 	function insert_pvt(pvt,util){
-		//shorten satellites, misc
-		// pvt.satellites_desc = pvt.satellites.length>40 ? pvt.satellites.substring(0,40)+'...' : pvt.satellites
-		// pvt.misc_desc = pvt.misc.length>40 ? pvt.misc.substring(0,40)+'...' : pvt.misc
 		if(!(util.check_and_push($scope.records,pvt)&&Math.abs(pvt.lat)>0.001 && Math.abs(pvt.lon)>0.001))
 			return
 
@@ -312,7 +309,7 @@ app.controller("traceController", ["$scope", function($scope) {
 		record_select(omarker,o)
 	})
 	function record_select(marker,record){
-		console.log(marker,record)
+		//console.log(marker,record)
 		if(!marker||!record) return
 		marker.focus = record.isSelected
 		if(record.isSelected){
