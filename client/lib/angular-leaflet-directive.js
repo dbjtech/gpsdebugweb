@@ -206,9 +206,14 @@ function ($http, $log, $parse, $compile, $http, $templateCache) {
                     }
                 });
 
-                $scope.$watch(model_name+'.'+name, function (data, oldData) {
+                var unreg = $scope.$watch(model_name+'.'+name, function (data, oldData) {
                     if (!data) {
+                        console.log(model_name+'.'+name,'unreg')
                         map.removeLayer(marker);
+                        marker.unbindPopup()
+                        marker = null
+                        map = null
+                        unreg()
                         return;
                     }
 
@@ -282,15 +287,15 @@ function ($http, $log, $parse, $compile, $http, $templateCache) {
                 }
 
                 $log.warn("[AngularJS - Leaflet] Creating polylines and adding them to the map will break the directive's scope's inspection in AngularJS Batarang");
-
+                var lazy_create_path = _.debounce(createPath,500)
                 for (var name in $scope.paths) {
-                    paths[name] = createPath(name, $scope.paths[name], map);
+                    paths[name] = lazy_create_path(name, $scope.paths[name], map);
                 }
 
                 $scope.$watch("paths", function (newPaths) {
                     for (var new_name in newPaths) {
                         if (paths[new_name] === undefined) {
-                            paths[new_name] = createPath(new_name, newPaths[new_name], map);
+                            paths[new_name] = lazy_create_path(new_name, newPaths[new_name], map);
                         }
                     }
                     // Delete paths from the array
@@ -325,9 +330,13 @@ function ($http, $log, $parse, $compile, $http, $templateCache) {
 
                 map.addLayer(polyline);
 
-                $scope.$watch('paths.' + name, function (data, oldData) {
+                var unreg = $scope.$watch('paths.' + name, function (data, oldData) {
                     if (!data) {
+                        console.log('paths.'+name,'unreg')
                         map.removeLayer(polyline);
+                        polyline = null
+                        map = null
+                        unreg()
                         return;
                     }
 

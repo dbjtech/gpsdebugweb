@@ -332,11 +332,18 @@ app.controller("traceController", ["$scope", function($scope) {
 			delete $scope.markers[record._id]
 	}
 
+	function clear_obj(obj){
+		if(!obj) return
+		for(var k in obj)
+			delete obj[k]
+	}
 	function on_reset_scope(){
 		console.log('clear trace')
 		$scope.center = $scope.center || {zoom:3,lat:39.9,lng:116.397}
 		$scope.records = []
 		$scope.paths = {p1: {color:'#008000', weight:5, latlngs:[]}}
+		clear_obj($scope.markers)
+		clear_obj($scope.marker_all)
 		$scope.markers = {}
 		$scope.marker_all = {}
 	}
