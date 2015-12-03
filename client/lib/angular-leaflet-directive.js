@@ -208,7 +208,7 @@ function ($http, $log, $parse, $compile, $http, $templateCache) {
 
                 var unreg = $scope.$watch(model_name+'.'+name, function (data, oldData) {
                     if (!data) {
-                        console.log(model_name+'.'+name,'unreg')
+                        //console.log(model_name+'.'+name,'unreg')
                         map.removeLayer(marker);
                         marker.unbindPopup()
                         marker = null
@@ -332,7 +332,7 @@ function ($http, $log, $parse, $compile, $http, $templateCache) {
 
                 var unreg = $scope.$watch('paths.' + name, function (data, oldData) {
                     if (!data) {
-                        console.log('paths.'+name,'unreg')
+                        //console.log('paths.'+name,'unreg')
                         map.removeLayer(polyline);
                         polyline = null
                         map = null

@@ -101,8 +101,8 @@ Meteor.Router.add('/gpsdebug','POST',function() {
 	if(!setting){
 		setting = {}
 		setting.mobile = body.mobile
-		setting.freq = 20
 		setting.restart = 'hot'
+		setting.freq = 20
 		setting.unsynced = true
 		config.insert(setting)
 		console.log('init config',setting)
@@ -111,7 +111,8 @@ Meteor.Router.add('/gpsdebug','POST',function() {
 	var resp = ''
 	if(setting.unsynced){
 		delete setting.unsynced
-		resp = querystring.stringify(_.omit(setting,'_id','mobile','unsynced'))
+		//resp = querystring.stringify(_.omit(setting,'_id','mobile','unsynced'))
+		resp = ''+(setting.restart?('restart='+setting.restart):'')+(setting.freq?('&freq='+setting.freq):'')
 	}
 	config.update({_id:setting._id},setting)
 	return [200,resp]
