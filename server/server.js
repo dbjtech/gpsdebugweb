@@ -87,7 +87,7 @@ Meteor.startup(function () {
 	//console.log('code to run on server at startup')
 })
 
-Meteor.Router.add('/gpsdebug','POST',function() {
+Router.route('/gpsdebug',function() {
 	var body = this.request.body
 	var e = /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/.exec(body.timestamp)
 	body.timestamp = e ? new Date(Date.UTC(e[1],e[2]-1,e[3],e[4],e[5],e[6])) : new Date()
@@ -118,7 +118,7 @@ Meteor.Router.add('/gpsdebug','POST',function() {
 	return [200,resp]
 })
 
-Meteor.Router.add('/api/trace','POST',function() {
+Router.route('/api/trace',function() {
 	var qs = this.request.body
 	if(!util.is_format_like({terminal_id:String,timestamp_start:String,timestamp_end:String},qs))
 		return 400
@@ -129,7 +129,7 @@ Meteor.Router.add('/api/trace','POST',function() {
 	this.response.write(JSON.stringify(query))
 	return 200
 })
-Meteor.Router.add('/api/last_info','POST',function() {
+Router.route('/api/last_info',function() {
 	var qs = this.request.body
 	console.log('---------------------',qs)
 	if(!qs.terminal_id)
@@ -150,7 +150,7 @@ Meteor.Router.add('/api/last_info','POST',function() {
 	this.response.write(JSON.stringify({trace:rs_trace,config:rs_config}))
 	return 200
 })
-Meteor.Router.add('/api/config/get','POST',function() {
+Router.route('/api/config/get',function() {
 	var qs = this.request.body
 	if(!util.is_format_like({terminal_id:String},qs))
 		return 400
@@ -161,7 +161,7 @@ Meteor.Router.add('/api/config/get','POST',function() {
 	this.response.write(JSON.stringify(setting))
 	return 200
 })
-Meteor.Router.add('/api/config/set','POST',function() {
+Router.route('/api/config/set',function() {
 	var qs = this.request.body
 	if(!util.is_format_like({terminal_id:String,freq:String,restart:String},qs))
 		return 400
@@ -589,7 +589,7 @@ function try_handlers(handlers,raw,no_random){
 //[input]	{wifis:[{mac:String,strength:Number},{mac:String,strength:Number&&null}],to:String&&null,source:String&&null} //for wifi, at least 2 wifi addrs
 //[output]	{result:{geo:{lat:0,lng:0},accuracy:0},source:'www.googleapis.com'}
 //[test]	curl localhost:3000/geo -H "Content-Type: application/json" -d '{"cells":[{"cid":28655,"lac":17695,"mnc":0,"mcc":460}]}'
-Meteor.Router.add('/geo','POST',function() {
+Router.route('/geo',function() {
 	var body_data = this.request.body
 	console.log(body_data)
 
@@ -621,7 +621,7 @@ Meteor.Router.add('/geo','POST',function() {
 
 //[input]	{geo:{lng:Number,lat:Number},to:String} //'to' can only set to 'baidu'/'google' right now
 //[output]	{result:{geo:{"lng":0,"lat":0}},"source":"api.map.baidu.com"}
-Meteor.Router.add('/convert','POST',function(){
+Router.route('/convert',function(){
 	var body_data = this.request.body
 	console.log(body_data)
 
@@ -631,5 +631,12 @@ Meteor.Router.add('/convert','POST',function(){
 	return resp
 })
 
-Meteor.Router.add('/',[200,{'Content-Type':'text/html'},'<html><meta HTTP-EQUIV="REFRESH" content="0; url=/html"></html>'])
-Meteor.Router.add('*',[404,'not found'])
+Router.route('/',function(){
+	this.response.write('<html><meta HTTP-EQUIV="REFRESH" content="0; url=/html"></html>')
+	return 200//[200,{'Content-Type':'text/html'},'<html><meta HTTP-EQUIV="REFRESH" content="0; url=/html"></html>']
+})
+Router.route('*',function(){
+	//[404,'not found']
+	this.response.write('not found')
+	return 404
+})

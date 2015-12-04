@@ -11,8 +11,7 @@
 .table.ng-scope{margin-top: 5px;max-height: 150px;overflow-y: auto;overflow-x:hidden;}
 .smart-table-global-search.ng-isolate-scope.ng-scope {width: 100%;padding-left:24px;}
 .smart-table-global-search.ng-isolate-scope.ng-scope label{width:60px;display: inline-block;}
-.smart-table-global-search.ng-isolate-scope.ng-scope input{display: inline-block;height:16px;width:120px;position:relative;left:-2px;top:3px;font-size:14px;border: solid 1px #b0aeae;line-height:14px;bo
-rder:0px;color:#000000;border-radius:3px;}
+.smart-table-global-search.ng-isolate-scope.ng-scope input{display: inline-block;height:16px;width:120px;position:relative;left:-2px;top:3px;font-size:14px;border: solid 1px #b0aeae;line-height:14px;border:0px;color:#000000;border-radius:3px;}
 .ng-scope ul{margin: 0px;list-style-type: none;}
 .ng-scope ul li{word-break: break-all;}
 /*smart-table*/
