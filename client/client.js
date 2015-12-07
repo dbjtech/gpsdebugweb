@@ -204,7 +204,7 @@ meteor_helper = function(scope,sub_name){
 }
 
 var app = angular.module("meteorapp",
-['leaflet-directive', 'smartTable.table', '$strap.directives', 'ui.bootstrap'],
+['leaflet-directive', 'smartTable.table', '$strap.directives', 'ui.bootstrap', 'angular-meteor', 'accounts.ui'],
 function($routeProvider, $locationProvider) {
 	$routeProvider.
 		when('/register', {templateUrl:'/register.html', controller:'registerController'}).

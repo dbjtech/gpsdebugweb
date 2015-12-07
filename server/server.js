@@ -87,8 +87,20 @@ Meteor.startup(function () {
 	//console.log('code to run on server at startup')
 })
 
-Router.route('/gpsdebug',function() {
-	var body = this.request.body
+var Router = {route:function(){}}
+var require = Npm.require
+var querystring = require('querystring')
+var app = Express()
+//var bodyParser = require('body-parser')
+
+app.use(function(__,__,next){
+	Meteor.bindEnvironment(next)()
+})
+//app.use(bodyParser.json())
+//app.use(bodyParser.urlencoded({ extended: true }))
+
+app.all('/gpsdebug',function(request,response) {
+	var body = querystring.parse(request.body)
 	var e = /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/.exec(body.timestamp)
 	body.timestamp = e ? new Date(Date.UTC(e[1],e[2]-1,e[3],e[4],e[5],e[6])) : new Date()
 	body.package_timestamp = new Date()
@@ -115,7 +127,7 @@ Router.route('/gpsdebug',function() {
 		resp = ''+(setting.restart?('restart='+setting.restart):'')+(setting.freq?('&freq='+setting.freq):'')
 	}
 	config.update({_id:setting._id},setting)
-	return [200,resp]
+	response.send(resp)
 })
 
 Router.route('/api/trace',function() {
@@ -631,7 +643,7 @@ Router.route('/convert',function(){
 	return resp
 })
 
-Router.route('/',function(){
+/*Router.route('/',function(){
 	this.response.write('<html><meta HTTP-EQUIV="REFRESH" content="0; url=/html"></html>')
 	return 200//[200,{'Content-Type':'text/html'},'<html><meta HTTP-EQUIV="REFRESH" content="0; url=/html"></html>']
 })
@@ -639,4 +651,4 @@ Router.route('*',function(){
 	//[404,'not found']
 	this.response.write('not found')
 	return 404
-})
+})*/
