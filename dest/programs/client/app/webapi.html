@@ -1,0 +1,62 @@
+<div class="mains">
+	<div class="main-top" ng-show=false>top show</div>
+	<div class="main-center">
+		<div class="main-center-one">
+			<div class="center-one">
+			 WEB API调试
+			</div>		
+		</div>
+		<div class="main-center-two">
+			<div class="center-two">
+				<div class="center-two-left">
+					<div class="two-left-top">
+						<div>GPS:API测试工具</div>
+					</div>
+					<div class="two-left-center">
+						<ul>
+							<li><div>连接方式:
+								<select ng-model="linkway">
+									<option value="1">WIFI连接方式</option>
+									<option value="2">普通连接方式</option>
+								</select>
+								</div>
+							</li>
+							<li><div>请求方式:<label>post方式<input ng-model="requestway" value="post方式" type="radio" checked></label></div></li>
+							<li><div>返回格式:<label>json格式<input ng-model="requestway" type="radio" checked></label></div></li>
+							<Li>
+								<ul>
+									<li>API 参数:</li>
+									<Li><div>cid:</div><input type="text" ng-model="cids" required></li>
+									<Li><div>lac:</div><input type="text" ng-model="lacs" required></li>
+									<Li><div>mnc:</div><input type="text" ng-model="mncs" required></li>
+									<Li><div>mcc:</div><input type="text" min="0" max="99" ng-model="mccs" required></li>
+									<Li><div>strength:</div><input type="text" ng-model="strengths" required></li>
+									<Li><label><input ng-click="fetch()" type="button" value="调用接口"></label></li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div class="center-two-right">
+					<div class="two-right-top">
+						<ul>
+							<li>请求:</li>
+							<li>
+								<div>
+									<ul>
+									<li>请求方式:{{list.one}}</li>
+									<li>请求url:{{list.two}}</li>
+									<li>请求参数:{{list.three}}</li>
+									</ul>
+								</div>
+							</li>
+							<li>返回内容:</li>
+							<li><div><pre>{{returns | json}}</pre></div></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="main-bottom"></div>
+</div>

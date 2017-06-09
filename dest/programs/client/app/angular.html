@@ -1,0 +1,32 @@
+<!--[if lte IE 8]>
+    <link href="css/leaflet.ie.css" rel="stylesheet"/>
+    <script>
+        (function(fn){
+            if (!fn.map) fn.map=function(f){var r=[];for(var i=0;i<this.length;i++)r.push(f(this[i]));return r}
+            if (!fn.filter) fn.filter=function(f){var r=[];for(var i=0;i<this.length;i++)if(f(this[i]))r.push(this[i]);return r}
+            if (!fn.indexOf) fn.indexOf = function(e){for(var i=0,j; j=this[i]; i++){if(j==e){return i;}}return -1;}
+            if (typeof(console)=='undifined') console={log:function(){}}
+            if (console.log&&!console.dir) console.dir=function(obj){console.log(JSON.stringify(obj))}
+        })(Array.prototype);
+        document.createElement('leaflet');
+    </script>
+<![endif]-->
+<div ng-app="meteorapp">
+<div class="navbar" bs-navbar>
+  <div class="navbar-inner">
+    <div class="brand" style="padding-top:1px;padding-bottom:1px;"><img src='images/dbj.png' style="height:38px;" /></div>
+    <ul class="nav">
+      <!-- You can use regular expressions -->
+      <li data-match-route="/register"><a href="#/register">register</a></li>
+      <li data-match-route="/trace"><a href="#/trace">trace</a></li>
+      <!-- <li data-match-route="/config"><a href="#/config">config</a></li> -->
+      <li data-match-route="/logger"><a href="#/logger">logger</a></li>
+      <!-- <li data-match-route="/webapi"><a href="#/webapi">webapi</a></li> -->
+    </ul>
+  </div>
+</div>
+<div class="containers">
+    <div ng-view></div>
+</div>
+</div>
+

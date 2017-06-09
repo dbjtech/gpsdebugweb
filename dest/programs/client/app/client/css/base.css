@@ -1,0 +1,177 @@
+.main-one{padding-left: 7px;}
+.containers{padding:0px 0px 0px 0px;width:100%;height:90%;}
+.inline-labels label{display: inline-block;margin: 5px 50px 5px 5px;cursor: default;}
+.inline-labels label input{width: 120px;margin-bottom: 0px;}
+.inline-labels label input[disabled]{cursor: pointer;}
+.inline-labels label select{width: 134px;margin-bottom: 0px;}
+.inline-labels label .text-in-label{margin-left: 10px;width: 124px;display: inline-block;text-align: left;}
+
+.labels{padding-left: 7px;}
+.labels label{display: inline-block;margin:0px 50px 0px 0px;}
+.table.ng-scope{margin-top: 5px;max-height: 150px;overflow-y: auto;overflow-x:hidden;}
+.smart-table-global-search.ng-isolate-scope.ng-scope {width: 100%;padding-left:24px;}
+.smart-table-global-search.ng-isolate-scope.ng-scope label{width:60px;display: inline-block;}
+.smart-table-global-search.ng-isolate-scope.ng-scope input{display: inline-block;height:16px;width:120px;position:relative;left:-2px;top:3px;font-size:14px;border: solid 1px #b0aeae;line-height:14px;bo
+rder:0px;color:#000000;border-radius:3px;}
+.ng-scope ul{margin: 0px;list-style-type: none;}
+.ng-scope ul li{word-break: break-all;}
+/*smart-table*/
+.table{bottom: 5px;margin:0px 0px 5px;}
+.smart-table-one{max-height: 315px;overflow-y: hidden;overflow-x:hidden;}
+.smart-table-two{/*max-height: 600px;*/overflow-y: auto;overflow-x:hidden;}
+.pagination{float: right;}
+.pagination ul{float: right;margin-right: 30px;}
+/*smart-table*/
+.navbar{
+	margin-bottom: 0px;
+}
+.main{
+	margin-top:0px;width:100%;padding: 0px;
+	position: absolute;
+	bottom: 0px;
+	background-color: whitesmoke;
+}
+.main_left{
+	display:inline-block;width:5%;min-width:150px;float:left;
+}
+.main_right{
+	display:inline-block;width:95%;float:right;
+}
+.lists{
+	margin:0px;
+}
+.lists li{
+	padding:3px;list-style-type: none;border-bottom:1px solid #dddddd;
+}
+.lists li div.lists_div{display: inline-block;width: 250px;}
+.lists li div{
+	display: inline-block;width: 100px;
+}
+/*.bottom{height: 150px;max-height: 20%;overflow-y: auto;float: bottom;width: 100%;}*/
+.main_bottom{display: inline-block;padding:3px;border-bottom:1px solid #dddddd;}
+.main_bottom div.lists_div{display: inline-block;width: 250px;}
+.main_bottom div{
+	display: inline-block;width: 100px;
+}
+.li_div{
+	float:bottom;
+	max-height: 20%;
+	height: 250px;
+}
+/*.leaflet{
+	width: 100%;
+	height:100%;
+}*/
+.angular-leaflet-map {
+	width: 100%;
+	height:100%;
+	min-height: 600px;
+	/*max-height: 600px;*/
+}
+.leaflet-popup-content{
+	min-width: 300px;
+}
+/* CSS declarations go here */
+.mains{width:98%;margin: 0px;}
+.main-top{background-color: #2c2c2c;width: 100%;height: 30px;}
+.main-center{min-height: 600px;}
+.main-center-one{width:100%;}.center-one{margin:10px;heigt:66px;}
+.main-center-two{width:100%;padding:0px 3px 10px 3px;}
+.center-two{border:2px solid #00b7ee;display: inline-block;width:100%;border-radius: 5px 0px 5px 0px;}
+.center-two-left{width:30%;background-color:red;display: inline-block;float:left;}
+.center-two-rigth{width:70%;background-color:#777777;display: inline-block;float:right;}
+.two-left-top{height:30px;background-color: #2aabe4;font-size: 14px;color: white;}
+.two-left-top div{padding:5px;}
+.two-left-center{heigth:500px;background-color: #f7f7f7;padding: 20px 15px 20px 15px;}
+.two-left-center ul{margin:0px;list-style: none;}
+.two-left-center ul li{padding: 10px 0px 0px 0px;}
+.two-left-center ul li div{padding-left: 10px;display:inline-block;}
+.two-left-center ul li div select{position: relative;;left:-2px;top:2px;font-size: 12px;border:solid 1px #b0aeae;line-height: 14px;color:#000000;border-radius: 3px;}
+.two-left-center ul li div label{padding-left: 15px;display:inline-block;}
+.two-left-center ul li ul{padding-left:10px;margin:auto 0px;background-color: #ffffff;border-radius:5px;list-style: none;}
+.two-left-center ul li ul li{padding:10px 0px 0px 0px;}
+.two-left-center ul li ul li div{width:80px;float:left;padding-top:3px;padding-left:20px;}
+.two-left-center ul li ul li input{width:50%;}
+.two-left-center ul li ul li label input{width:100px;margin:10px 0px 10px 150px;height: 30px;color:white;width: 70px;background-color:#2aabe4; }
+.two-right-top{margin:30px 0px 0px 0px;display: inline-block;width:60%;}
+.two-right-top ul{list-style: none;margin-left:15px;width:100%;}
+.two-right-top ul li{margin:0px;padding:0px;}
+.two-right-top ul li div{height:160px;width:100%;border:1px solid #999999;margin:10px 0px 10px 0px;padding:10px;overflow-y: auto;overflow-x:hidden; }
+.two-right-top ul li div ul li{padding: 10px;}
+/*button*/
+.orange {
+	color: #000000;
+	border: solid 1px #b0aeae;
+	background: -webkit-gradient(linear, left top, left bottom, from(#fefefe), to(#f1f1f1));
+	background: -moz-linear-gradient(top,  #fefefe,  #f1f1f1);
+	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#fefefe', endColorstr='#f1f1f1');
+	border-radius:3px;
+	height:24px;
+}
+.orange:hover {
+	border: solid 1px #767676;
+	background: -webkit-gradient(linear, left top, left bottom, from(#fefefe), to(#dad8d8));
+	background: -moz-linear-gradient(top,  #fefefe,  #dad8d8);
+	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#fefefe', endColorstr='#dad8d8');
+}
+.sm-fix-header {
+	width: 6% !important;
+}
+.sm-fix-header-plus {
+	width: 2% !important;
+}
+.table td{
+	white-space: nowrap;
+	max-width: 50px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.smart-table-two .table td{
+	white-space: normal;
+	word-break: break-all;
+	padding-right: 5px;
+}
+.marker-table td {cursor: default;word-break: break-all;}
+.marker-table td a{cursor: pointer;}
+.marker-table td div span{color: red;}
+.marker-table-td-head {
+	vertical-align: top;
+	width: 61px;
+	text-align: right;
+}
+.smart-table-data-row.selected{
+	background-color: #e8e8e8;
+}
+.leaflet-bottom {
+	z-index: 0;
+}
+.debug-button {
+	float: left;
+	position: absolute;
+	bottom: 2px;
+	left: 5px;
+}
+.debug-button .btn{
+	margin-left: 20px;
+}
+.config-panel {
+	width: 300px;
+	height: 160px;
+	text-align: right;
+}
+.config-panel-unconnected {
+	width: 250px;
+	height: 20px;
+	text-align: left;	
+}
+.config-panel label{
+	margin-right: 0px;
+}
+.popover {
+	max-width: 600px;
+}
+input[readonly] {
+	background-color: white;
+	cursor: pointer;
+}
+/*button*/

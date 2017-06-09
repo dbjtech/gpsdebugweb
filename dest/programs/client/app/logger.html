@@ -1,0 +1,22 @@
+<div class="inline-labels">
+<label>
+	Terminal SN :
+	<select ng-model="user.profile.tracking" ng-options="terminal for terminal in user.profile.terminals" ng-change="change_tracking()"></select>
+</label>
+<label>
+	Start Date :
+	<input type="text" datepicker-popup="yyyy-MM-dd HH:mm" ng-model="timestamp.start" open="timestamp.start_open" datepicker-options="timestamp.date_options" readonly="" />
+</label>
+<label>
+	End Date :
+	<input type="text" datepicker-popup="yyyy-MM-dd HH:mm" ng-model="timestamp.end" open="timestamp.start_end" datepicker-options="timestamp.date_options" readonly="" />
+</label>
+	<button class="btn btn-primary" ng-click="reset_time()">Reset</button>
+	<button class="btn btn-primary" title="Config" bs-popover="'config.html'" data-placement="bottom" ng-controller="configController">Config</button>
+	<button class="btn btn-primary" ng-click='export_csv()'>Export CVS</button>
+</div>
+<div class="smart-table-two">
+<div class="table">
+	<smart-table config="table_config" rows="records" columns="columns"></smart-table>
+</div>
+</div>

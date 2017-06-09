@@ -1,11 +1,14 @@
-FROM node:alpine
+FROM node:4.8-alpine
 
-RUN apk add --update --no-cache curl git
-RUN curl "https://install.meteor.com/" | sh
-# RUN npm i meteorite -g && npm cache clean --force
+RUN apk add tzdata --update --no-cache && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" /etc/localtime && apk del tzdata
 
-RUN mkdir /src
-WORKDIR /src
-RUN git clone --depth 1 https://github.com/dbjtech/gpsdebugweb
+COPY ./dest /src/app
+WORKDIR /src/app/programs/server
 
-CMD ash
+RUN apk add --no-cache python make g++ && npm i fibers@^1.0.0 && npm cache clean && apk del python make g++
+
+WORKDIR /src/app
+
+CMD node main.js
+
+EXPOSE 80

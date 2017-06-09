@@ -1,0 +1,40 @@
+<div class="inline-labels">
+<label>
+	Tracking terminal:
+	<select ng-model="user.profile.tracking" ng-options="terminal for terminal in user.profile.terminals" ng-change="change_tracking()"></select>
+</label>
+<label>
+	Start Date:
+	<input type="text" datepicker-popup="yyyy-MM-dd HH:mm" ng-model="timestamp.start" open="timestamp.start_open" datepicker-options="timestamp.date_options" readonly="" />
+</label>
+<label>
+	End Date:
+	<input type="text" datepicker-popup="yyyy-MM-dd HH:mm" ng-model="timestamp.end" open="timestamp.start_end" datepicker-options="timestamp.date_options" readonly="" />
+</label>
+	<button class="btn btn-primary" ng-click="show_main=!show_main">Debug Info</button>
+	<button class="btn btn-primary" title="Config" bs-popover="'config.html'" data-placement="bottom" ng-controller="configController">Config</button>
+</div>
+
+<div class="leaflet"><leaflet paths='paths' center='center' cluster='marker_all' markers='markers' marker-template="'/marker.html'"></leaflet></div>
+<div class="main">
+	<div class="smart-table-one" collapse="!show_main">
+	<div class="table">
+		<smart-table config="table_config" rows="records" columns="columns"></smart-table>
+	</div>
+	</div>
+</div>
+<script type="text/ng-template" id="/marker.html">
+<div ng-controller="markerController">
+<table class="marker-table">
+	<tr><td class="marker-table-td-head">经度：</td><td>{{current_marker.data.lat}}°，纬度：{{current_marker.data.lon}}°</td></tr>
+	<tr><td class="marker-table-td-head">海拔：</td><td>{{current_marker.data.alt}} 米</td></tr>
+	<tr><td class="marker-table-td-head">卫星：</td><td><div ng-bind-html-unsafe='format_html_desc(current_marker.data.satellites)'></div></td></tr>
+	<tr><td class="marker-table-td-head">其他：</td><td>{{current_marker.data.misc}}</td></tr>
+	<tr><td class="marker-table-td-head">GPS时间：</td><td>{{current_marker.data.timestamp|date:"yyyy-MM-dd HH:mm:ss"}}</td></tr>
+	<tr><td class="marker-table-td-head">上报时间：</td><td>{{current_marker.data.package_timestamp|date:"yyyy-MM-dd HH:mm:ss"}}</td></tr>
+	<tr><td class="marker-table-td-head">地址：</td><td><a ng-show="address_cache[current_marker.data._id]==undefined" ng-click="geocoding(current_marker.data)">获取</a>
+		<span ng-show="address_cache[current_marker.data._id]>0">正在获取...</span>
+		<span ng-show="address_cache[current_marker.data._id]">{{address_cache[current_marker.data._id]}}</span></td></tr>
+</table>
+</div>
+</script>
