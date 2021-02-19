@@ -87,20 +87,21 @@ Meteor.startup(function () {
 	//console.log('code to run on server at startup')
 })
 
-Meteor.Router.add('/gpsdebug','POST',function() {
-	var body = this.request.body
+function handle_location(mobile, location) {
+	var body = location
+	body.mobile = mobile
 	var e = /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/.exec(body.timestamp)
 	body.timestamp = e ? new Date(Date.UTC(e[1],e[2]-1,e[3],e[4],e[5],e[6])) : new Date()
 	body.package_timestamp = new Date()
 	util.convert_field(body,body,['lat','lon','alt','std_lat','std_lon','std_alt'],parseFloat)
-	console.log(JSON.stringify(body))
 	trace.insert(body)
-	//load or init setting
-	var setting = config.findOne({mobile:body.mobile},{_id:0})
-	console.log(JSON.stringify(setting))
+}
+
+function handle_config(mobile) {
+	var setting = config.findOne({mobile:mobile},{_id:0})
 	if(!setting){
 		setting = {}
-		setting.mobile = body.mobile
+		setting.mobile = mobile
 		setting.restart = 'hot'
 		setting.freq = 20
 		setting.unsynced = true
@@ -115,6 +116,32 @@ Meteor.Router.add('/gpsdebug','POST',function() {
 		resp = ''+(setting.restart?('restart='+setting.restart):'')+(setting.freq?('&freq='+setting.freq):'')
 	}
 	config.update({_id:setting._id},setting)
+	return resp
+}
+
+Meteor.Router.add('/gpsdebug','POST',function() {
+	var body = this.request.body
+	console.log(this.request.url, '>>', JSON.stringify(body))
+	if(!util.is_format_like({ mobile: String, timestamp: String, lat: String, lon: String }, body)) {
+		return 400
+	}
+	handle_location(body.mobile, body)
+	var resp = handle_config(body.mobile)
+	console.log(this.request.url, '<<', JSON.stringify(resp))
+	return [200,resp]
+})
+
+Meteor.Router.add('/gpsdebugs','POST',function() {
+	var body = this.request.body
+	console.log(this.request.url, '>>', JSON.stringify(body))
+	if(!util.is_format_like({ mobile: String, locations: [{ timestamp: String, lat: Number, lon: Number }] }, body)) {
+		return 400
+	}
+	for (var i = 0; i < body.locations.length; i += 1) {
+		handle_location(body.mobile, body.locations[i])
+	}
+	var resp = handle_config(body.mobile)
+	console.log(this.request.url, '<<', JSON.stringify(resp))
 	return [200,resp]
 })
 

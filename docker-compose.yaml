@@ -3,7 +3,8 @@ services:
   mongodb:
     image: mongo:3.2
   meteor:
-    image: dbjtech/gpsdebugweb
+    build: .
+    # image: dbjtech/gpsdebugweb
     depends_on:
       - mongodb
     environment:

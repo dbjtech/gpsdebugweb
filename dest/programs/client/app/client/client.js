@@ -27,6 +27,39 @@ $(document).ready(function(){
 	$(window).resize(invalidate_map)
 })
 
+function formatNumber(n) {
+	return Number(Number(n).toFixed(2))
+}
+function calcTop3avg(satellites) {
+	if (!satellites) {
+	  return 0
+	}
+	var arr = satellites.split(",").filter(function (e) { return !!e })
+	return formatNumber(
+		arr
+			.map(function (item) { return Number(item.split(':')[1]) })
+			.sort(function (a, b) { return b - a })
+			.slice(0, 3)
+			.reduce(function (acc, cur) { return acc + cur }, 0) / Math.min(arr.length, 3)
+	)
+}
+
+function getStrength(top3avg) {
+	return top3avg < 30 ? "weak" : top3avg > 38 ? "strong" : "normal"
+}
+function mutateStrength(arr, index, strength) {
+	return arr[index - 1].top3avg - arr[index].top3avg > 3 ? strength + "*" : strength
+}
+function processDesc(arr) {
+	return arr
+		.sort(function (a, b) { return a.timestamp - b.timestamp })
+		.map(function(item, index) {
+			var strength = getStrength(item.top3avg)
+			item.strength = !index ? strength : mutateStrength(arr, index, strength)
+			return item
+		})
+}
+
 ///////////
 //angular//
 ///////////
@@ -72,8 +105,10 @@ meteor_helper = function(scope,sub_name){
 					return false
 				}
 				//console.log('insert',doc)
+				doc.top3avg = calcTop3avg(doc.satellites)
 				container.push(doc)
 				container.cache[doc._id] = true
+				processDesc(container)
 				return true
 			},
 			added: function(doc){if(!self.doc_add)return;self.doc_add(doc,this);self.scope_safe_apply()},
@@ -237,7 +272,7 @@ app.controller("markerController", ["$scope","$http", function($scope,$http) {
 			if(!$scope.$$phase&&!$scope.$root.$$phase)
 				$scope.$apply()
 		})()
-		$http.get('http://nominatim.openstreetmap.org/reverse?format=json&lat='+geo.lat+'&lon='+geo.lon+'&zoom=18&addressdetails=1')
+		$http.get('https://nominatim.openstreetmap.org/reverse?format=json&lat='+geo.lat+'&lon='+geo.lon+'&zoom=18&addressdetails=1')
 		.success(function(data){
 			//console.log(data)
 			$scope.address_cache[id] = data.display_name
@@ -268,13 +303,15 @@ app.controller("traceController", ["$scope", function($scope) {
 	$scope.columns = [
 		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
 		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
-		{label:'Longitude', map:'lon',headerClass:'sm-fix-header-plus'},
-		{label:'Latitude', map:'lat',headerClass:'sm-fix-header-plus'},
-		{label:'Altitude', map:'alt',headerClass:'sm-fix-header-plus'},
+		{label:'Lon', title: 'longitude', map:'lon', headerClass:'sm-fix-header-plus'},
+		{label:'Lat', titile: 'latitude', map:'lat', headerClass:'sm-fix-header-plus'},
+		{label:'Alt', title: 'altitude', map:'alt', headerClass:'sm-fix-header-plus'},
 		//{label:'std_lon', map:'std_lon'},
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
 		//{label:'range_rms', map:'range_rms'},
+		{label:'Top3 Avg', title: 'top 3 snr avg', map:'top3avg', headerClass:'sm-fix-header-plus'},
+		{label:'SNR Desc', title: 'top 3 snr avg desc', map:'strength', headerClass:'sm-fix-header-plus'},
 		{label:'Satellites', map:'satellites', title:'satellites'},
 		{label:'Misc', map:'misc', title:'misc'}
 	]
@@ -365,13 +402,15 @@ app.controller("loggerController", ["$scope","$filter", function($scope,$filter)
 	$scope.columns = [
 		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
 		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
-		{label:'Longitude', map:'lon',headerClass:'sm-fix-header-plus'},
-		{label:'Latitude', map:'lat',headerClass:'sm-fix-header-plus'},
-		{label:'Altitude', map:'alt',headerClass:'sm-fix-header-plus'},
+		{label:'Lon', title: 'longitude', map:'lon', headerClass:'sm-fix-header-plus'},
+		{label:'Lat', titile: 'latitude', map:'lat', headerClass:'sm-fix-header-plus'},
+		{label:'Alt', title: 'altitude', map:'alt', headerClass:'sm-fix-header-plus'},
 		//{label:'std_lon', map:'std_lon'},
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
 		//{label:'range_rms', map:'range_rms'},
+		{label:'Top3 Avg', title: 'top 3 snr avg', map:'top3avg', headerClass:'sm-fix-header-plus'},
+		{label:'SNR Desc', title: 'top 3 snr avg desc', map:'strength', headerClass:'sm-fix-header-plus'},
 		{label:'Satellites', map:'satellites'},
 		{label:'Misc', map:'misc'}
 	]

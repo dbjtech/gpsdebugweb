@@ -119,6 +119,7 @@ rder:0px;color:#000000;border-radius:3px;}
 }
 .sm-fix-header-plus {
 	width: 2% !important;
+	white-space: nowrap;
 }
 .table td{
 	white-space: nowrap;
