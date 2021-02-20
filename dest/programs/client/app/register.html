@@ -1,23 +1,24 @@
 <div class="inline-labels">
-<label>
+<label style="margin: 10px;">
 	Terminal SN:
 	<input type="text" ng-model="terminal_sn"></input>
 	<button ng-click="add_terminal()" ng-disabled="!terminal_sn" class="orange">add</button>
 </label>
+</div>
 
+<div style="padding: 10px">
+	<div>Registered Terminals</div>
+	<div class="register">
+		<ul ng-repeat='terminal in user.profile.terminals'>
+			<li><a ng-click='delete_terminal(terminal)'>[X] </a> {{terminal}}</li>
+		</ul>
+	</div>
 </div>
-<div class="main-one">
-<div>Registered Terminals</div>
-<div class="register">
-<ul ng-repeat='terminal in user.profile.terminals'>
-	<li><a ng-click='delete_terminal(terminal)'>[X] </a> {{terminal}}</li>
-</ul>
+
+<hr />
+
+<div style="padding: 10px">
+	<label><span style="min-width: 100px; display: inline-block;">SNR Weak: </span><input type="number" ng-model="user.profile.weak"></input></label>
+	<label><span style="min-width: 100px; display: inline-block;">SNR Normal: </span><input type="number" ng-model="user.profile.normal"></input></label>
+	<label><span style="min-width: 100px; display: inline-block;">SNR Alert: </span><input type="number" ng-model="user.profile.alert"></input></label>
 </div>
-</div>
-	<form ng-show='false'>
-		<label>url<input type='text' ng-model='url'/></label>
-		<label>method<select ng-model="method" ng-options="methods for methods in methods"></select></label>
-		<label>body<textarea ng-model='body'></textarea></label>
-		<input type='button' ng-click='submit()' value='submit'/>
-		<input type="button" ng-click='export_csv()' value="export csv">
-	</form>

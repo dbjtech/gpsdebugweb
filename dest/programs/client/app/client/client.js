@@ -1,4 +1,5 @@
-(function(){var db_trace = new Meteor.Collection('trace')
+(function(){
+var db_trace = new Meteor.Collection('trace')
 var db_config = new Meteor.Collection('config')
 //var db_user = new Meteor.Collection('users')
 var db = {
@@ -28,7 +29,7 @@ $(document).ready(function(){
 })
 
 function formatNumber(n) {
-	return Number(Number(n).toFixed(2))
+	return Number.isNaN(n) ? 0 : Number(Number(n).toFixed(2))
 }
 function calcTop3avg(satellites) {
 	if (!satellites) {
@@ -50,18 +51,18 @@ function calcTop3avg(satellites) {
 	)
 }
 
-function getStrength(top3avg) {
-	return top3avg < 30 ? "weak" : top3avg > 38 ? "strong" : "normal"
+function getStrength(top3avg, setting) {
+	return top3avg < setting.weak ? "weak" : top3avg > setting.normal ? "strong" : "normal"
 }
-function mutateStrength(arr, index, strength) {
-	return arr[index - 1].top3avg - arr[index].top3avg > 3 ? strength + "*" : strength
+function mutateStrength(arr, index, strength, setting) {
+	return arr[index - 1].top3avg - arr[index].top3avg > setting.alert ? strength + "*" : strength
 }
-function processDesc(arr) {
+function processDesc(arr, setting) {
 	return arr
 		.sort(function (a, b) { return a.timestamp - b.timestamp })
 		.map(function(item, index) {
-			var strength = getStrength(item.top3avg)
-			item.strength = !index ? strength : mutateStrength(arr, index, strength)
+			var strength = getStrength(item.top3avg, setting)
+			item.strength = !index ? strength : mutateStrength(arr, index, strength, setting)
 			return item
 		})
 }
@@ -114,7 +115,8 @@ meteor_helper = function(scope,sub_name){
 				doc.top3avg = calcTop3avg(doc.satellites)
 				container.push(doc)
 				container.cache[doc._id] = true
-				processDesc(container)
+				var setting = scope.user.profile
+				processDesc(container, { weak: setting.weak || 30, normal: setting.normal || 38, alert: setting.alert || 3 })
 				return true
 			},
 			added: function(doc){if(!self.doc_add)return;self.doc_add(doc,this);self.scope_safe_apply()},
@@ -430,6 +432,11 @@ app.controller("loggerController", ["$scope","$filter", function($scope,$filter)
 		$scope.timestamp.start = new Date()
 		$scope.timestamp.end = new Date(new Date().getTime()+24*3600*1000)
 	}
+	$scope.change_tracking = function(){
+		console.log('select',$scope.user.profile.tracking)
+		Meteor.users.update({_id:Meteor.user()._id}, {$set:{'profile.tracking':$scope.user.profile.tracking}})
+	}
+
 	var meteor = new meteor_helper($scope,'trace')
 	meteor.bind_user('user')
 	meteor.on_doc_add(function(doc,util){
@@ -499,11 +506,26 @@ app.controller("configController", ["$scope",function($scope) {
 		console.log('config upload',setting)
 		db_config.update({_id:old_setting._id},setting)
 	})
-}]);
+}])
 
 app.controller("registerController", ["$scope","$http", function($scope,$http) {
 	meteor = new meteor_helper($scope)
 	meteor.bind_user('user')
+	const initialValues = {}
+	if (!$scope.user.profile.weak) {
+		initialValues['profile.weak'] = 30
+	}
+	if (!$scope.user.profile.normal) {
+		initialValues['profile.normal'] = 38
+	}
+	if (!$scope.user.profile.alert) {
+		initialValues['profile.alert'] = 3
+	}
+	if (!_.isEmpty(initialValues)) {
+		console.log('setting init', initialValues)
+		Meteor.users.update({ _id: Meteor.user()._id}, { $set: initialValues })
+	}
+
 	$scope.delete_terminal = function(sn){
 		console.log('remove',sn)
 		Meteor.users.update({_id:Meteor.user()._id}, {$pull:{'profile.terminals':sn}})
@@ -511,70 +533,23 @@ app.controller("registerController", ["$scope","$http", function($scope,$http) {
 	$scope.add_terminal = function(){
 		Meteor.users.update({_id:Meteor.user()._id}, {$addToSet:{'profile.terminals':$scope.terminal_sn}})
 	}
-
-		var websocket = {}
-	function ensure_connect(url,callback){
-		// var socket = websocket[url]
-		// if(socket){
-		// 	return socket
-		// }
-		// socket = io.connect(url)
-		// socket.on('api/resp', callback)
-		// socket.on('disconnect', function() {
-		// 	console.log('socket disconnect')
-		// 	websocket[url] = undefined
-		// })
-		// socket.on('error', function(event){
-		// 	console.log('socket error',event)
-		// 	socket.removeAllListeners()
-		// 	websocket[url] = undefined
-		// })
-		// websocket[url] = socket
-		// return socket
-	}
-	// var app = angular.module('myapp', [])
-	//app.controller('Ctrl', ['$scope','$http','$location',function($scope,$http,$location){
-		var qs// = require('querystring')
-		$scope.methods = ['websocket','json','get','post','put','delete']
-		$scope.url = '/api/last_info'
-		$scope.method = 'json'
-		var param = {}
-		param.terminal_id = '24208'
-
-		$scope.body = JSON.stringify(param)
-		$scope.submit = function(){
-			console.log($scope.method,$scope.url,$scope.body)
-			var config = {url:$scope.url,method:$scope.method}
-			var method = $scope.method.toLowerCase()
-			var p
-			if(method=='websocket'){
-				var socket = ensure_connect($location.path()+config.url,function(data){
-					console.log(data)
-				})
-				config.data = JSON.parse($scope.body)
-				socket.emit('api',config)
-				return
-			}else if(method=='get'){
-				config.url += '?'+qs.stringify(JSON.parse($scope.body))
-				console.log(config.url)
-				p = $http(config)
-			}else if(method=='json'){
-				config.data = JSON.parse($scope.body)
-				config.headers = {'Content-Type': 'application/json; charset=UTF-8'}
-				p = $http.post(config.url,config.data,config)
-			}else{
-				config.data = $.param(JSON.parse($scope.body))
-				config.headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
-				p = $http[method](config.url,config.data,config)
-			}
-			p.success(function(data){
-				console.log(data)
-				//console.log(qs.parse(data))
-			}).error(function(data,status){
-				console.log(status,data)
-			})
+	meteor.multi_watch(['user.profile.weak', 'user.profile.normal', 'user.profile.alert'],function(self, value_name, new_value, old_value){
+		var split = value_name.split('.')
+		var old_setting = Meteor.user().profile
+		console.dir(old_setting)
+		if(!old_setting) {
+			console.log('setting not found')
+			return
 		}
-	//}])
+		if(old_setting[split[2]] == new_value) {
+			console.log('setting not change')
+			return
+		}
+		var setting = {}
+		setting[split[1] + '.' + split[2]] = new_value
+		console.log('setting upload', setting)
+		Meteor.users.update({ _id: Meteor.user()._id}, { $set: setting })
+	})
 }])
 
 app.controller("webapiController",["$scope","$http",function($scope,$http){
