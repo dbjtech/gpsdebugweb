@@ -309,9 +309,9 @@ app.controller("traceController", ["$scope", function($scope) {
 	$scope.columns = [
 		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
 		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
-		{label:'Lon', title: 'longitude', map:'lon', headerClass:'sm-fix-header-plus'},
-		{label:'Lat', titile: 'latitude', map:'lat', headerClass:'sm-fix-header-plus'},
-		{label:'Alt', title: 'altitude', map:'alt', headerClass:'sm-fix-header-plus'},
+		{label: 'Lon', title: 'longitude', map: 'lon', headerClass: 'sm-fix-header-plus'},
+		{label: 'Lat', titile: 'latitude', map: 'lat', headerClass: 'sm-fix-header-plus'},
+		{label: 'Alt', title: 'altitude', map: 'alt', headerClass: 'sm-fix-header-plus'},
 		//{label:'std_lon', map:'std_lon'},
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
@@ -408,17 +408,17 @@ app.controller("loggerController", ["$scope","$filter", function($scope,$filter)
 	$scope.columns = [
 		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
 		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
-		{label:'Lon', title: 'longitude', map:'lon', headerClass:'sm-fix-header-plus'},
-		{label:'Lat', titile: 'latitude', map:'lat', headerClass:'sm-fix-header-plus'},
-		{label:'Alt', title: 'altitude', map:'alt', headerClass:'sm-fix-header-plus'},
+		{label: 'Lon', title: 'longitude', map: 'lon', headerClass: 'sm-fix-header-plus'},
+		{label: 'Lat', titile: 'latitude', map: 'lat', headerClass: 'sm-fix-header-plus'},
+		{label: 'Alt', title: 'altitude', map: 'alt', headerClass: 'sm-fix-header-plus'},
 		//{label:'std_lon', map:'std_lon'},
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
 		//{label:'range_rms', map:'range_rms'},
-		{label:'Top3 Avg', title: 'top 3 snr avg', map:'top3avg', headerClass:'sm-fix-header-plus'},
-		{label:'SNR Desc', title: 'top 3 snr avg desc', map:'strength', headerClass:'sm-fix-header-plus'},
-		{label:'Satellites', map:'satellites'},
-		{label:'Misc', map:'misc'}
+		{label: 'Top3 Avg', title: 'top 3 snr avg', map: 'top3avg', headerClass: 'sm-fix-header-plus'},
+		{label: 'SNR Desc', title: 'top 3 snr avg desc', map: 'strength', headerClass: 'sm-fix-header-plus'},
+		{label: 'Satellites', map: 'satellites', cellClass: 'break-cell'},
+		{label: 'Misc', map: 'misc', cellClass: 'break-cell'}
 	]
 	$scope.table_config={
 		itemsByPage:25,
