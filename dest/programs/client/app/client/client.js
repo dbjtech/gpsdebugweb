@@ -34,10 +34,16 @@ function calcTop3avg(satellites) {
 	if (!satellites) {
 	  return 0
 	}
-	var arr = satellites.split(",").filter(function (e) { return !!e })
+	var arr = satellites.split(",")
+		.filter(function (e) { return !!e })
+		.map(function (e) {
+			var split = e.split(':')
+			return [Number(split[0]), Number(split[1])]
+		})
+		.filter(function (e) { return !Number.isNaN(e[0]) && !Number.isNaN(e[1]) })
 	return formatNumber(
 		arr
-			.map(function (item) { return Number(item.split(':')[1]) })
+			.map(function (e) { return e[1] })
 			.sort(function (a, b) { return b - a })
 			.slice(0, 3)
 			.reduce(function (acc, cur) { return acc + cur }, 0) / Math.min(arr.length, 3)
