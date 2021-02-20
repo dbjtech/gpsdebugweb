@@ -11,7 +11,7 @@
 .table.ng-scope{margin-top: 5px;max-height: 150px;overflow-y: auto;overflow-x:hidden;}
 .smart-table-global-search.ng-isolate-scope.ng-scope {width: 100%;padding-left:24px;}
 .smart-table-global-search.ng-isolate-scope.ng-scope label{width:60px;display: inline-block;}
-.smart-table-global-search.ng-isolate-scope.ng-scope input{display: inline-block;height:16px;width:120px;position:relative;left:-2px;top:3px;font-size:14px;border: solid 1px #b0aeae;line-height:14px;border:0px;color:#000000;border-radius:3px;}
+.smart-table-global-search.ng-isolate-scope.ng-scope input{display: inline-block;height:16px;width:120px;position:relative;left:-2px;top:3px;font-size:14px;border: solid 1px #b0aeae;line-height:14px;border-radius:3px;}
 .ng-scope ul{margin: 0px;list-style-type: none;}
 .ng-scope ul li{word-break: break-all;}
 /*smart-table*/
@@ -19,7 +19,13 @@
 .smart-table-one{max-height: 315px;overflow-y: hidden;overflow-x:hidden;}
 .smart-table-two{/*max-height: 600px;*/overflow-y: auto;overflow-x:hidden;}
 .pagination{float: right;}
-.pagination ul{float: right;margin-right: 30px;}
+.pagination ul { float: right; margin: 5px 5px 0 0; }
+.smart-table-one .smart-table-global-search.ng-isolate-scope.ng-scope {
+	padding-left: 0px;
+	position: absolute;
+	bottom: 0;
+	overflow: visible;
+}
 /*smart-table*/
 .navbar{
 	margin-bottom: 0px;
@@ -119,6 +125,9 @@
 .sm-fix-header-plus {
 	width: 2% !important;
 	white-space: nowrap;
+}
+.color-cell[title="weak*"], .color-cell[title="normal*"], .color-cell[title="strong*"] {
+	color: lightcoral;
 }
 .table td{
 	white-space: nowrap;

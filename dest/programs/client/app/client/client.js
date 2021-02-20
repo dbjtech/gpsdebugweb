@@ -316,8 +316,8 @@ app.controller("traceController", ["$scope", function($scope) {
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
 		//{label:'range_rms', map:'range_rms'},
-		{label:'Top3 Avg', title: 'top 3 snr avg', map:'top3avg', headerClass:'sm-fix-header-plus'},
-		{label:'SNR Desc', title: 'top 3 snr avg desc', map:'strength', headerClass:'sm-fix-header-plus'},
+		{label:'Top3 Avg', title: 'top3avg', map:'top3avg', headerClass:'sm-fix-header-plus'},
+		{label:'SNR Desc', title: 'strength', map:'strength', headerClass:'sm-fix-header-plus', cellClass: 'color-cell'},
 		{label:'Satellites', map:'satellites', title:'satellites'},
 		{label:'Misc', map:'misc', title:'misc'}
 	]
@@ -326,7 +326,7 @@ app.controller("traceController", ["$scope", function($scope) {
 		//displaySelectionCheckbox: true,
 		itemsByPage:12,
 		maxSize:10,
-		//isGlobalSearchActivated:true,
+		isGlobalSearchActivated:true,
 		default_sort_column:0
 	}
 
@@ -415,8 +415,8 @@ app.controller("loggerController", ["$scope","$filter", function($scope,$filter)
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
 		//{label:'range_rms', map:'range_rms'},
-		{label: 'Top3 Avg', title: 'top 3 snr avg', map: 'top3avg', headerClass: 'sm-fix-header-plus'},
-		{label: 'SNR Desc', title: 'top 3 snr avg desc', map: 'strength', headerClass: 'sm-fix-header-plus'},
+		{label: 'Top3 Avg', title: 'top3avg', map: 'top3avg', headerClass: 'sm-fix-header-plus'},
+		{label: 'SNR Desc', title: 'strength', map: 'strength', headerClass: 'sm-fix-header-plus', cellClass: 'color-cell'},
 		{label: 'Satellites', map: 'satellites', cellClass: 'break-cell'},
 		{label: 'Misc', map: 'misc', cellClass: 'break-cell'}
 	]
