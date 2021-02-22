@@ -9,7 +9,7 @@ docker run -it -p 8080:80 -e MONGO_URL=mongodb://mongodb:27017/meteor -e PORT=80
 ### use docker compose
 
 ```
-docker-compose up
+docker-compose up --build
 ```
 
 ## Old readme

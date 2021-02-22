@@ -185,3 +185,31 @@ input[readonly] {
 	cursor: pointer;
 }
 /*button*/
+
+/* register */
+.terminal-card {
+	display: inline-flex;
+	margin-right: 16px;
+	margin-bottom: 12px;
+	border: 1px black solid;
+	padding: 4px;
+	min-width: 128px;
+	justify-content: space-between;
+	align-items: center;
+}
+.terminal-card span {
+	margin-left: 4px;
+	margin-right: 8px;
+}
+[class^="icon-"] {
+	margin-top: 0;
+}
+.icon-remove {
+	margin-top: 1px;
+}
+.icon-remove:hover {
+	background-color: rgba(255,0,0,.25);
+}
+.snr-manual {
+	margin-left: 32px;
+}

@@ -6,11 +6,17 @@
 </label>
 </div>
 
-<div style="padding: 10px">
+<div style="padding: 10px;">
 	<div>Registered Terminals</div>
 	<div class="register">
-		<ul ng-repeat='terminal in user.profile.terminals'>
-			<li><a ng-click='delete_terminal(terminal)'>[X] </a> {{terminal}}</li>
+		<ul style="margin-top: 8px;">
+			<li ng-repeat='terminal in user.profile.terminals' class="terminal-card">
+				<i class="icon-screenshot"></i>
+				<span>{{terminal}}</span>
+				<a ng-click='delete_terminal(terminal)'>
+					<i class="icon-remove"></i>
+				</a>
+			</li>
 		</ul>
 	</div>
 </div>
@@ -18,7 +24,20 @@
 <hr />
 
 <div style="padding: 10px">
-	<label><span style="min-width: 100px; display: inline-block;">SNR Weak: </span><input type="number" ng-model="user.profile.weak"></input></label>
-	<label><span style="min-width: 100px; display: inline-block;">SNR Normal: </span><input type="number" ng-model="user.profile.normal"></input></label>
-	<label><span style="min-width: 100px; display: inline-block;">SNR Alert: </span><input type="number" ng-model="user.profile.alert"></input></label>
+	<label>
+		<span style="min-width: 100px; display: inline-block;">SNR Weak: </span>
+		<input type="number" ng-model="user.profile.weak"></input>
+		<span class="snr-manual">以最强的三颗卫星SNR的平均值作判决;Weak：低于此数值，将标记为Weak</span>
+	</label>
+	<label>
+		<span style="min-width: 100px; display: inline-block;">SNR Normal: </span>
+		<input type="number" ng-model="user.profile.normal"></input>
+		<span class="snr-manual">Normal：低于此数值，将标记为Normal；高于此数值将标记为Strong</span>
+	</label>
+	<label>
+		<span style="min-width: 100px; display: inline-block;">SNR Alert: </span>
+		<input type="number" ng-model="user.profile.alert"></input>
+		<span class="snr-manual">Alert：比较当前SNR值与上一个数据的SNR值，若差大于此数值，将标记Alert</span>
+	</label>
+	
 </div>
