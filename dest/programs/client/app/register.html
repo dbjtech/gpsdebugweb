@@ -6,11 +6,17 @@
 </label>
 </div>
 
-<div style="padding: 10px">
+<div style="padding: 10px;">
 	<div>Registered Terminals</div>
 	<div class="register">
-		<ul ng-repeat='terminal in user.profile.terminals'>
-			<li><a ng-click='delete_terminal(terminal)'>[X] </a> {{terminal}}</li>
+		<ul style="margin-top: 8px;">
+			<li ng-repeat='terminal in user.profile.terminals' class="terminal-card">
+				<i class="icon-screenshot"></i>
+				<span>{{terminal}}</span>
+				<a ng-click='delete_terminal(terminal)'>
+					<i class="icon-remove"></i>
+				</a>
+			</li>
 		</ul>
 	</div>
 </div>
