@@ -55,7 +55,7 @@ function getStrength(top3avg, setting) {
 	return top3avg < setting.weak ? "weak" : top3avg > setting.normal ? "strong" : "normal"
 }
 function mutateStrength(arr, index, strength, setting) {
-	return arr[index - 1].top3avg - arr[index].top3avg > setting.alert ? strength + "*" : strength
+	return arr[index - 1].top3avg - arr[index].top3avg > setting.alert ? strength + "(alert)" : strength
 }
 function processDesc(arr, setting) {
 	return arr
@@ -302,6 +302,25 @@ app.controller("markerController", ["$scope","$http", function($scope,$http) {
 		}
 		return html==''?str:html
 	}
+}])
+
+angular.module('partials/globalSearchCell.html', []).run(['$templateCache', function($templateCache) {
+	const options = [
+		{ k: 'All', v: '' },
+		{ k: 'SNR Weak', v: 'weak' },
+		{ k: 'SNR Normal', v: 'normal' },
+		{ k: 'SNR Strong', v: 'strong' },
+		{ k: 'ALERT', v: '(alert)' },
+	]
+	$templateCache.put('partials/globalSearchCell.html',
+		'<label>Search :</label>\n' +
+		'<input type=\"text\" ng-model=\"searchValue\"/>' +
+		'<select ' +
+		'	style="max-width: 100px; max-height: 26px; margin: 0 0 3px 5px;"' +
+		'	ng-model="searchValue"' +
+		'	ng-options=\'o.v as o.k for o in ' + JSON.stringify(options) +'\'' +
+		'></select>'
+	)
 }])
 
 app.controller("traceController", ["$scope", function($scope) {

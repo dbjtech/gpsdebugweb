@@ -125,7 +125,7 @@
 	width: 2% !important;
 	white-space: nowrap;
 }
-.color-cell[title="weak*"], .color-cell[title="normal*"], .color-cell[title="strong*"] {
+.color-cell[title="weak(alert)"], .color-cell[title="normal(alert)"], .color-cell[title="strong(alert)"] {
 	color: lightcoral;
 }
 .table td{
