@@ -23,16 +23,19 @@
 
 <hr />
 
-<div style="padding: 10px">
+<div class="snr">
+	<label>
+		<span style="margin-left: 350px;">Top3 AVG: 以最强的三颗卫星SNR的平均值作判决</span>
+	</label>
 	<label>
 		<span style="min-width: 100px; display: inline-block;">SNR Weak: </span>
 		<input type="number" ng-model="user.profile.weak"></input>
-		<span class="snr-manual">以最强的三颗卫星SNR的平均值作判决;Weak：低于此数值，将标记为Weak</span>
+		<span class="snr-manual">Weak：平均值低于此数值，将标记为Weak</span>
 	</label>
 	<label>
 		<span style="min-width: 100px; display: inline-block;">SNR Normal: </span>
 		<input type="number" ng-model="user.profile.normal"></input>
-		<span class="snr-manual">Normal：低于此数值，将标记为Normal；高于此数值将标记为Strong</span>
+		<span class="snr-manual">Normal：平均值低于此数值，将标记为Normal；高于此数值将标记为Strong</span>
 	</label>
 	<label>
 		<span style="min-width: 100px; display: inline-block;">SNR Alert: </span>
