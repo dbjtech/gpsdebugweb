@@ -1,7 +1,7 @@
 (function(){
 var db_trace = new Meteor.Collection('trace')
 var db_config = new Meteor.Collection('config')
-//var db_user = new Meteor.Collection('users')
+// var db_user = new Meteor.Collection('users')
 var db = {
 	trace: db_trace,
 	config: db_config
@@ -508,10 +508,17 @@ app.controller("configController", ["$scope",function($scope) {
 	})
 }])
 
-app.controller("registerController", ["$scope","$http", function($scope,$http) {
+app.controller("registerController", ["$scope","$http", function($scope, $locationProvider) {
 	meteor = new meteor_helper($scope)
 	meteor.bind_user('user')
 	const initialValues = {}
+	if (!$scope.user) {
+		alert('please login')
+		return location.reload()
+	}
+	if (!$scope.user.profile) {
+		$scope.user.profile = {}
+	}
 	if (!$scope.user.profile.weak) {
 		initialValues['profile.weak'] = 30
 	}
