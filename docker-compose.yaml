@@ -2,6 +2,8 @@ version: "3"
 services:
   mongodb:
     image: mongo:3.2
+    networks:
+      default:
     volumes:
       - "meteor_mongo_data:/data/db"
   meteor:
@@ -13,6 +15,8 @@ services:
       - MONGO_URL=mongodb://mongodb:27017/meteor
       - PORT=80
       - ROOT_URL=http://localhost:8080/
+    networks:
+      default:
     ports:
       - "8080:80"
 
