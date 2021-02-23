@@ -58,13 +58,13 @@ function mutateStrength(arr, index, strength, setting) {
 	return arr[index - 1].top3avg - arr[index].top3avg > setting.alert ? strength + "(alert)" : strength
 }
 function processDesc(arr, setting) {
-	return arr
-		.sort(function (a, b) { return a.timestamp - b.timestamp })
-		.map(function(item, index) {
-			var strength = getStrength(item.top3avg, setting)
-			item.strength = !index ? strength : mutateStrength(arr, index, strength, setting)
-			return item
-		})
+	_.clone(arr)
+	.sort(function (a, b) { return a.timestamp - b.timestamp })
+	.forEach(function(item, index) {
+		var strength = getStrength(item.top3avg, setting)
+		item.strength = !index ? strength : mutateStrength(arr, index, strength, setting)
+		return item
+	})
 }
 
 ///////////
