@@ -60,10 +60,9 @@ function mutateStrength(arr, index, strength, setting) {
 function processDesc(arr, setting) {
 	_.clone(arr)
 	.sort(function (a, b) { return a.timestamp - b.timestamp })
-	.forEach(function(item, index) {
+	.forEach(function(item, index, array) {
 		var strength = getStrength(item.top3avg, setting)
-		item.strength = !index ? strength : mutateStrength(arr, index, strength, setting)
-		return item
+		item.strength = !index ? strength : mutateStrength(array, index, strength, setting)
 	})
 }
 

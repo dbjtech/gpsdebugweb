@@ -4,19 +4,20 @@ leafletDirective.directive("leaflet", ["$http", "$log", "$parse", "$compile", "$
 function ($http, $log, $parse, $compile, $http, $templateCache) {
 
     var defaults = {
-        maxZoom: 20,
-        tileLayer: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        minZoom: 3,
+        maxZoom: 18,
+        tileLayer: '//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         tileLayerOptions: {
         },
         icon: {
-            url: 'http://cdn.leafletjs.com/leaflet-0.5.1/images/marker-icon.png',
-            retinaUrl: 'http://cdn.leafletjs.com/leaflet-0.5.1/images/marker-icon@2x.png',
+            url: '//cdn.leafletjs.com/leaflet-0.5.1/images/marker-icon.png',
+            retinaUrl: '//cdn.leafletjs.com/leaflet-0.5.1/images/marker-icon@2x.png',
             size: [25, 41],
             anchor: [12, 40],
             popup: [0, -40],
             shadow: {
-                url: 'http://cdn.leafletjs.com/leaflet-0.5.1/images/marker-shadow.png',
-                retinaUrl: 'http://cdn.leafletjs.com/leaflet-0.5.1/images/marker-shadow.png',
+                url: '//cdn.leafletjs.com/leaflet-0.5.1/images/marker-shadow.png',
+                retinaUrl: '//cdn.leafletjs.com/leaflet-0.5.1/images/marker-shadow.png',
                 size: [41, 41],
                 anchor: [12, 40]
             }
@@ -45,9 +46,12 @@ function ($http, $log, $parse, $compile, $http, $templateCache) {
         link: function ($scope, element, attrs /*, ctrl */) {
             $scope.leaflet = {};
             $scope.leaflet.maxZoom = !!(attrs.defaults && $scope.defaults && $scope.defaults.maxZoom) ? parseInt($scope.defaults.maxZoom, 10) : defaults.maxZoom;
+            $scope.leaflet.minZoom = !!(attrs.defaults && $scope.defaults && $scope.defaults.minZoom) ? parseInt($scope.defaults.minZoom, 10) : defaults.minZoom;
 
             var map = new L.Map(element[0], {
-                maxZoom: $scope.leaflet.maxZoom});
+                maxZoom: $scope.leaflet.maxZoom,
+                minZoom: $scope.leaflet.minZoom,
+            });
             map.setView([0, 0], 1);
             var markergroup = new L.MarkerClusterGroup();
             map.addLayer(markergroup)
