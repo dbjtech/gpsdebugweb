@@ -30,17 +30,28 @@
 	<label>
 		<span style="min-width: 100px; display: inline-block;">SNR Weak: </span>
 		<input type="number" ng-model="user.profile.weak"></input>
-		<span class="snr-manual">Weak：平均值低于此数值，将标记为Weak</span>
+		<span class="snr-manual">
+			Weak：平均值低于此数值，将标记为
+			<span class="color-cell" title="weak">Weak</span>
+		</span>
 	</label>
 	<label>
 		<span style="min-width: 100px; display: inline-block;">SNR Normal: </span>
 		<input type="number" ng-model="user.profile.normal"></input>
-		<span class="snr-manual">Normal：平均值低于此数值，将标记为Normal；高于此数值将标记为Strong</span>
+		<span class="snr-manual">
+			Normal：平均值低于此数值，将标记为
+			<span class="color-cell" title="normal">Normal</span>
+			；高于此数值将标记为
+			<span class="color-cell" title="strong">Strong</span>
+		</span>
 	</label>
 	<label>
 		<span style="min-width: 100px; display: inline-block;">SNR Alert: </span>
 		<input type="number" ng-model="user.profile.alert"></input>
-		<span class="snr-manual">Alert：比较当前SNR值与上一个数据的SNR值，若差大于此数值，将标记Alert</span>
+		<span class="snr-manual">
+			Alert：比较当前SNR值与上一个数据的SNR值，若差大于此数值，将标记
+			<span class="color-cell" title="normal(alert)">Alert</span>
+		</span>
 	</label>
 	
 </div>

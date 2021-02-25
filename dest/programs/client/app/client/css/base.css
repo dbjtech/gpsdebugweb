@@ -125,9 +125,20 @@
 	width: 2% !important;
 	white-space: nowrap;
 }
+
+.color-cell[title="weak"] {
+	color: gray;
+}
+.color-cell[title="normal"] {
+	color: goldenrod;
+}
+.color-cell[title="strong"] {
+	color: limegreen;
+}
 .color-cell[title="weak(alert)"], .color-cell[title="normal(alert)"], .color-cell[title="strong(alert)"] {
 	color: lightcoral;
 }
+
 .table td{
 	white-space: nowrap;
 	max-width: 50px;
