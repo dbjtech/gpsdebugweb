@@ -57,13 +57,40 @@ function getStrength(top3avg, setting) {
 function mutateStrength(arr, index, strength, setting) {
 	return arr[index - 1].top3avg - arr[index].top3avg > setting.alert ? strength + "(alert)" : strength
 }
-function processDesc(arr, setting) {
+var processDesc = function(arr, setting) {
 	_.clone(arr)
-	.sort(function (a, b) { return a.timestamp - b.timestamp })
+	.sort(function(a, b) { return a.timestamp - b.timestamp })
 	.forEach(function(item, index, array) {
 		var strength = getStrength(item.top3avg, setting)
 		item.strength = !index ? strength : mutateStrength(array, index, strength, setting)
 	})
+}
+
+function check_and_push(container, doc){
+	container.cache = container.cache || {}
+	if(container.cache[doc._id]){
+		console.log('skip',doc)
+		return false
+	}
+	//console.log('insert',doc)
+	doc.top3avg = calcTop3avg(doc.satellites)
+	container.push(doc)
+	container.cache[doc._id] = true
+	return true
+}
+
+function scope_safe_apply($scope) {
+	if($scope.__safe_apply__) return
+	$scope.__safe_apply__ = _.debounce(function() {
+		try {
+			console.log('update', $scope)
+			$scope.$digest()
+			delete $scope.__safe_apply__
+		} catch(e) {
+			setTimeout($scope.__safe_apply__, 1)
+		}
+	}, 100)
+	$scope.__safe_apply__()
 }
 
 ///////////
@@ -86,41 +113,13 @@ meteor_helper = function(scope,sub_name){
 	this.on_doc_change = function(cb){this.doc_change=cb}
 	this.on_doc_remove = function(cb){this.doc_remove=cb}
 
-	this.scope_safe_apply = function(){
-		var $scope = this.$scope
-		if($scope.__safe_apply__) return
-		$scope.__safe_apply__ = _.debounce(function() {
-			try {
-				$scope.$digest();
-				delete $scope.__safe_apply__
-			} catch(e) {
-				setTimeout($scope.__safe_apply__, 1);
-			}
-		}, 100)
-		$scope.__safe_apply__()
-	}
-
 	this.observer_cursor = function(){
 		var self = this
 		var cursor = self.get_query && self.get_query() || db[this.subscribe_name].find({})
 		var observer = cursor.observe({
-			check_and_push: function(container,doc){
-				container.cache = container.cache || {}
-				if(container.cache[doc._id]){
-					console.log('skip',doc)
-					return false
-				}
-				//console.log('insert',doc)
-				doc.top3avg = calcTop3avg(doc.satellites)
-				container.push(doc)
-				container.cache[doc._id] = true
-				var setting = scope.user.profile
-				processDesc(container, { weak: setting.weak || 30, normal: setting.normal || 38, alert: setting.alert || 3 })
-				return true
-			},
-			added: function(doc){if(!self.doc_add)return;self.doc_add(doc,this);self.scope_safe_apply()},
-			changed: function(ndoc,odoc){if(!self.doc_change)return;self.doc_change(ndoc,odoc,this);self.scope_safe_apply()},
-			removed: function(doc){if(!self.doc_remove)return;self.doc_remove(doc,this);self.scope_safe_apply()},
+			added: function(doc){if(!self.doc_add)return;self.doc_add(doc,this);scope_safe_apply(self.$scope)},
+			changed: function(ndoc,odoc){if(!self.doc_change)return;self.doc_change(ndoc,odoc,this);scope_safe_apply(self.$scope)},
+			removed: function(doc){if(!self.doc_remove)return;self.doc_remove(doc,this);scope_safe_apply(self.$scope)},
 		})
 		cursor.fetch()
 		this.observer = observer
@@ -179,7 +178,7 @@ meteor_helper = function(scope,sub_name){
 				}
 				if(obj.reset_scope){
 					obj.reset_scope()
-					obj.scope_safe_apply()
+					scope_safe_apply(obj.$scope)
 				}
 				handle = Meteor.subscribe(subscribe_name,session_value,f)
 			}
@@ -226,7 +225,7 @@ meteor_helper = function(scope,sub_name){
 		var self = this
 		function set_user(user){
 			self.$scope[value_name] = user
-			self.scope_safe_apply()
+			scope_safe_apply(self.$scope)
 		}
 		var cursor = Meteor.users.find({})
 		var user_observer = cursor.observe({
@@ -355,9 +354,13 @@ app.controller("traceController", ["$scope", function($scope) {
 		Meteor.users.update({_id:Meteor.user()._id}, {$set:{'profile.tracking':$scope.user.profile.tracking}})
 	}
 
-	function insert_pvt(pvt,util){
-		if(!(util.check_and_push($scope.records,pvt)&&Math.abs(pvt.lat)>0.001 && Math.abs(pvt.lon)>0.001))
+	function insert_pvt(pvt){
+		if(!(check_and_push($scope.records, pvt) && Math.abs(pvt.lat) > 0.001 && Math.abs(pvt.lon) > 0.001)) {
 			return
+		}
+
+		var setting = $scope.user.profile
+		processDesc($scope.records, { weak: setting.weak || 30, normal: setting.normal || 38, alert: setting.alert || 3 })
 
 		var geo = {lat:pvt.lat,lng:pvt.lon}
 		$scope.paths.p1.latlngs.push(geo)
@@ -457,9 +460,11 @@ app.controller("loggerController", ["$scope","$filter", function($scope,$filter)
 
 	var meteor = new meteor_helper($scope,'trace')
 	meteor.bind_user('user')
-	meteor.on_doc_add(function(doc,util){
+	meteor.on_doc_add(function(doc){
 		//console.log('add',doc)
-		util.check_and_push($scope.records,doc)
+		check_and_push($scope.records, doc)
+		var setting = $scope.user.profile
+		processDesc($scope.records, { weak: setting.weak || 30, normal: setting.normal || 38, alert: setting.alert || 3 })
 	})
 	meteor.on_reset_scope(function(){
 		console.log('clear records')
