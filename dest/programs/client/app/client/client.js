@@ -31,9 +31,12 @@ $(document).ready(function(){
 function formatNumber(n) {
 	return Number.isNaN(n) ? 0 : Number(Number(n).toFixed(2))
 }
-function calcTop3avg(satellites) {
+function calcTopNAvg(satellites, n) {
 	if (!satellites) {
 	  return 0
+	}
+	if (!n) {
+		n = 5
 	}
 	var arr = satellites.split(",")
 		.filter(function (e) { return !!e })
@@ -46,25 +49,27 @@ function calcTop3avg(satellites) {
 		arr
 			.map(function (e) { return e[1] })
 			.sort(function (a, b) { return b - a })
-			.slice(0, 3)
-			.reduce(function (acc, cur) { return acc + cur }, 0) / Math.min(arr.length, 3)
+			.slice(0, n)
+			.reduce(function (acc, cur) { return acc + cur }, 0) / Math.min(arr.length, n)
 	)
 }
 
-function getStrength(top3avg, setting) {
-	return top3avg < setting.weak ? "weak" : top3avg > setting.normal ? "strong" : "normal"
+function getStrength(snrAvg, setting) {
+	return snrAvg < setting.weak ? "weak" : snrAvg > setting.normal ? "strong" : "normal"
 }
 function mutateStrength(arr, index, strength, setting) {
-	return arr[index - 1].top3avg - arr[index].top3avg > setting.alert ? strength + "(alert)" : strength
+	return arr[index - 1].snrAvg - arr[index].snrAvg > setting.alert ? strength + "(alert)" : strength
 }
 var processDesc = function(arr, setting) {
 	_.clone(arr)
 	.sort(function(a, b) { return a.timestamp - b.timestamp })
 	.forEach(function(item, index, array) {
-		var strength = getStrength(item.top3avg, setting)
+		var strength = getStrength(item.snrAvg, setting)
 		item.strength = !index ? strength : mutateStrength(array, index, strength, setting)
 	})
 }
+
+function toFixed2(n) { return Number(n).toFixed(2) }
 
 function check_and_push(container, doc){
 	container.cache = container.cache || {}
@@ -73,7 +78,8 @@ function check_and_push(container, doc){
 		return false
 	}
 	//console.log('insert',doc)
-	doc.top3avg = calcTop3avg(doc.satellites)
+	doc.snrAvg = calcTopNAvg(doc.satellites)
+	doc.location = toFixed2(doc.lon) + ', ' + toFixed2(doc.lat) + ', ' + doc.alt
 	container.push(doc)
 	container.cache[doc._id] = true
 	return true
@@ -325,15 +331,14 @@ app.controller("traceController", ["$scope", function($scope) {
 	//console.log(my_global.timestamp)
 	$scope.timestamp = my_global.timestamp
 	$scope.show_main = true
+	var formatFunc = function (n) { return Number(n).toFixed(2) }
 	$scope.columns = [
 		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header hidden', cellClass: 'hidden'},
 		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
-		{label: 'Lon', title: 'lon', map: 'lon', headerClass: 'sm-fix-header-plus'},
-		{label: 'Lat', title: 'lat', map: 'lat', headerClass: 'sm-fix-header-plus'},
-		{label: 'Alt', title: 'alt', map: 'alt', headerClass: 'sm-fix-header-plus'},
-		{label:'Top3 Avg', title: 'top3avg', map:'top3avg', headerClass:'sm-fix-header-plus'},
-		{label:'SNR Desc', title: 'strength', map:'strength', headerClass:'sm-fix-header-plus', cellClass: 'color-cell'},
+		{label: 'Location', title: 'location', map: 'location', headerClass: 'sm-fix-header'},
 		{label:'Satellites', map:'satellites', title:'satellites'},
+		{label:'SNR Avg', title: 'snrAvg', map:'snrAvg', headerClass:'sm-fix-header-plus'},
+		{label:'SNR Desc', title: 'strength', map:'strength', headerClass:'sm-fix-header-plus', cellClass: 'color-cell'},
 		{label:'Misc', map:'misc', title:'misc', headerClass: 'hidden', cellClass: 'hidden'},
 	]
 	$scope.table_config={
@@ -435,7 +440,7 @@ app.controller("loggerController", ["$scope","$filter", function($scope,$filter)
 		//{label:'std_lat', map:'std_lat'},
 		//{label:'std_alt', map:'std_alt'},
 		//{label:'range_rms', map:'range_rms'},
-		{label: 'Top3 Avg', title: 'top3avg', map: 'top3avg', headerClass: 'sm-fix-header-plus'},
+		{label: 'SNR Avg', title: 'snrAvg', map: 'snrAvg', headerClass: 'sm-fix-header-plus'},
 		{label: 'SNR Desc', title: 'strength', map: 'strength', headerClass: 'sm-fix-header-plus', cellClass: 'color-cell'},
 		{label: 'Satellites', map: 'satellites', cellClass: 'break-cell'},
 		{label: 'Misc', map: 'misc', cellClass: 'break-cell'}
