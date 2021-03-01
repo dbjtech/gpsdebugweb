@@ -13,9 +13,13 @@
 </label>
 	<button class="btn btn-primary" ng-click="show_main=!show_main">Data</button>
 	<button class="btn btn-primary" title="Config" bs-popover="'config.html'" data-placement="bottom" ng-controller="configController">Config</button>
+	<label style="margin: 5px 0px 5px 50px;">
+		<strong>Table: </strong>Page Size
+		<select ng-model="table_config.itemsByPage" ng-options="v for v in [3,12]"></select>
+	</label>
 	<label style="line-height: 28px;">
 		<input type="checkbox" style="width: 16px; margin-bottom: 6px;" ng-model="showAllFields" />
-		All Fields
+		Show All Fields
 	</label>
 </div>
 

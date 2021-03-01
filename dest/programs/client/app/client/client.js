@@ -344,7 +344,7 @@ app.controller("traceController", ["$scope", function($scope) {
 	$scope.table_config={
 		selectionMode: 'single',
 		//displaySelectionCheckbox: true,
-		itemsByPage:12,
+		itemsByPage: 3,
 		maxSize:10,
 		isGlobalSearchActivated:true,
 		default_sort_column:0

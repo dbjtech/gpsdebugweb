@@ -70,11 +70,16 @@
 
                     var templateObject;
 
-                    scope.$watch('config', function (config) {
+                    scope.$watch('config', function (config, oldConfig) {
                         var newConfig = angular.extend({}, defaultConfig, config),
                             length = scope.columns !== undefined ? scope.columns.length : 0;
 
                         ctrl.setGlobalConfig(newConfig);
+
+                        // vincent: change item per page
+                        if (newConfig.itemsByPage !== oldConfig.itemsByPage) {
+                            ctrl.updateItemsPerPage()
+                        }
 
                         //remove the checkbox column if needed
                         if (newConfig.selectionMode !== 'multiple' || newConfig.displaySelectionCheckbox !== true) {
@@ -406,6 +411,12 @@
             this.setGlobalConfig = function (config) {
                 angular.extend(scope, defaultConfig, config);
             };
+
+            // vincent: update item per page
+            this.updateItemsPerPage = function() {
+                scope.numberOfPages = calculateNumberOfPages(scope.dataCollection)
+                this.changePage({ page: 1 })
+            }
 
             /**
              * change the current page displayed
