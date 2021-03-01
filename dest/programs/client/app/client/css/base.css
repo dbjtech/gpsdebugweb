@@ -166,6 +166,9 @@
 .leaflet-bottom {
 	z-index: 0;
 }
+.leaflet-marker-pane img[title="focus"] {
+	filter: hue-rotate(160deg);
+}
 .debug-button {
 	float: left;
 	position: absolute;

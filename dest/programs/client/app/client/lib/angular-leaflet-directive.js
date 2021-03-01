@@ -254,7 +254,9 @@ function ($http, $log, $parse, $compile, $http, $templateCache) {
                 var marker = new L.marker(data,
                         {
                             icon: buildIcon(),
-                            draggable: data.draggable ? true : false
+                            draggable: data.draggable ? true : false,
+                            title: data.title || '',
+                            zIndexOffset: data.zIndexOffset || 0
                         }
                 );
                 if (compiled_template) {

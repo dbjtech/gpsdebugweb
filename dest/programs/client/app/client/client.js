@@ -391,6 +391,9 @@ app.controller("traceController", ["$scope", function($scope) {
 		//console.log(marker,record)
 		if (!marker||!record) return
 		if (record.isSelected) {
+			marker = _.clone(marker)
+			marker.title = 'focus'
+			marker.zIndexOffset = 1000
 			$scope.markers[record._id] = marker
 			$scope.center.lat = marker.lat
 			$scope.center.lng = marker.lng
