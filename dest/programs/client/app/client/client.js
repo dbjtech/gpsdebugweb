@@ -384,8 +384,8 @@ app.controller("traceController", ["$scope", function($scope) {
 	function(n,o){
 		var nmarker = n && $scope.marker_all[n._id] || null
 		var omarker = o && $scope.marker_all[o._id] || null
-		record_select(nmarker,n)
 		record_select(omarker,o)
+		record_select(nmarker,n)
 	})
 	function record_select(marker,record){
 		//console.log(marker,record)
@@ -394,8 +394,13 @@ app.controller("traceController", ["$scope", function($scope) {
 			$scope.markers[record._id] = marker
 			$scope.center.lat = marker.lat
 			$scope.center.lng = marker.lng
+			$scope.paths.p2.latlngs = $scope
+				.records
+				.filter(function(e) { return Math.abs(marker.data.timestamp - e.timestamp) < 3 * 60000 })
+				.map(function(e) { return { lat: e.lat, lng: e.lon } })
 		} else {
 			delete $scope.markers[record._id]
+			$scope.paths.p2.latlngs = []
 			marker.focus = false
 		}
 	}
@@ -409,7 +414,10 @@ app.controller("traceController", ["$scope", function($scope) {
 		console.log('clear trace')
 		$scope.center = $scope.center || {zoom:3,lat:39.9,lng:116.397}
 		$scope.records = []
-		$scope.paths = {p1: {color:'#008000', weight:5, latlngs:[]}}
+		$scope.paths = {
+			p1: { weight: 5, opacity: 0.5, latlngs: [], color: 'green' },
+			p2: { weight: 5, opacity: 0.5, latlngs: [], color: 'red' },
+		}
 		clear_obj($scope.markers)
 		clear_obj($scope.marker_all)
 		$scope.markers = {}

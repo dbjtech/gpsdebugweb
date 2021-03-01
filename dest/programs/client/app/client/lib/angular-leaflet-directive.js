@@ -291,15 +291,18 @@ function ($http, $log, $parse, $compile, $http, $templateCache) {
                 }
 
                 $log.warn("[AngularJS - Leaflet] Creating polylines and adding them to the map will break the directive's scope's inspection in AngularJS Batarang");
-                var lazy_create_path = _.debounce(createPath,500)
+                var lazyFunc = {}
                 for (var name in $scope.paths) {
-                    paths[name] = lazy_create_path(name, $scope.paths[name], map);
+                    if (!lazyFunc[name]) {
+                        lazyFunc[name] = _.debounce(createPath,500)
+                    }
+                    paths[name] = lazyFunc[name](name, $scope.paths[name], map);
                 }
 
                 $scope.$watch("paths", function (newPaths) {
                     for (var new_name in newPaths) {
                         if (paths[new_name] === undefined) {
-                            paths[new_name] = lazy_create_path(new_name, newPaths[new_name], map);
+                            paths[new_name] = lazyFunc[new_name](new_name, newPaths[new_name], map);
                         }
                     }
                     // Delete paths from the array
