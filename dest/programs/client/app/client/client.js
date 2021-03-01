@@ -326,19 +326,15 @@ app.controller("traceController", ["$scope", function($scope) {
 	$scope.timestamp = my_global.timestamp
 	$scope.show_main = true
 	$scope.columns = [
-		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
+		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header hidden', cellClass: 'hidden'},
 		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
 		{label: 'Lon', title: 'lon', map: 'lon', headerClass: 'sm-fix-header-plus'},
 		{label: 'Lat', title: 'lat', map: 'lat', headerClass: 'sm-fix-header-plus'},
 		{label: 'Alt', title: 'alt', map: 'alt', headerClass: 'sm-fix-header-plus'},
-		//{label:'std_lon', map:'std_lon'},
-		//{label:'std_lat', map:'std_lat'},
-		//{label:'std_alt', map:'std_alt'},
-		//{label:'range_rms', map:'range_rms'},
 		{label:'Top3 Avg', title: 'top3avg', map:'top3avg', headerClass:'sm-fix-header-plus'},
 		{label:'SNR Desc', title: 'strength', map:'strength', headerClass:'sm-fix-header-plus', cellClass: 'color-cell'},
 		{label:'Satellites', map:'satellites', title:'satellites'},
-		{label:'Misc', map:'misc', title:'misc'}
+		{label:'Misc', map:'misc', title:'misc', headerClass: 'hidden', cellClass: 'hidden'},
 	]
 	$scope.table_config={
 		selectionMode: 'single',
@@ -388,14 +384,15 @@ app.controller("traceController", ["$scope", function($scope) {
 	})
 	function record_select(marker,record){
 		//console.log(marker,record)
-		if(!marker||!record) return
-		marker.focus = record.isSelected
-		if(record.isSelected){
+		if (!marker||!record) return
+		if (record.isSelected) {
 			$scope.markers[record._id] = marker
 			$scope.center.lat = marker.lat
 			$scope.center.lng = marker.lng
-		}else
+		} else {
 			delete $scope.markers[record._id]
+			marker.focus = false
+		}
 	}
 
 	function clear_obj(obj){

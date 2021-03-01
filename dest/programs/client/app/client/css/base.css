@@ -231,3 +231,9 @@ input[readonly] {
 .snr-manual {
 	margin-left: 32px;
 }
+.table-all-fields .hidden {
+	display: table-cell;
+}
+.hidden {
+	display: none;
+}
