@@ -45,13 +45,16 @@ function calcTopNAvg(satellites, n) {
 			return [Number(split[0]), Number(split[1])]
 		})
 		.filter(function (e) { return !Number.isNaN(e[0]) && !Number.isNaN(e[1]) })
-	return formatNumber(
-		arr
-			.map(function (e) { return e[1] })
-			.sort(function (a, b) { return b - a })
-			.slice(0, n)
-			.reduce(function (acc, cur) { return acc + cur }, 0) / Math.min(arr.length, n)
-	)
+	return {
+		snrAvg: formatNumber(
+			arr
+				.map(function (e) { return e[1] })
+				.sort(function (a, b) { return b - a })
+				.slice(0, n)
+				.reduce(function (acc, cur) { return acc + cur }, 0) / Math.min(arr.length, n)
+		),
+		satellitesBetterFormat: arr.map(function (e) { return e[0] + ':(' + e[1] + ')' })
+	}
 }
 
 function getStrength(snrAvg, setting) {
@@ -78,7 +81,7 @@ function check_and_push(container, doc){
 		return false
 	}
 	//console.log('insert',doc)
-	doc.snrAvg = calcTopNAvg(doc.satellites)
+	_.extend(doc, calcTopNAvg(doc.satellites))
 	doc.location = toFixed2(doc.lon) + ', ' + toFixed2(doc.lat) + ', ' + doc.alt
 	container.push(doc)
 	container.cache[doc._id] = true
@@ -331,12 +334,11 @@ app.controller("traceController", ["$scope", function($scope) {
 	//console.log(my_global.timestamp)
 	$scope.timestamp = my_global.timestamp
 	$scope.show_main = true
-	var formatFunc = function (n) { return Number(n).toFixed(2) }
 	$scope.columns = [
 		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header hidden', cellClass: 'hidden'},
 		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
 		{label: 'Location', title: 'location', map: 'location', headerClass: 'sm-fix-header'},
-		{label:'Satellites', map:'satellites', title:'satellites'},
+		{label:'Satellites', map:'satellitesBetterFormat', title:'satellites'},
 		{label:'SNR Avg', title: 'snrAvg', map:'snrAvg', headerClass:'sm-fix-header-plus'},
 		{label:'SNR Desc', title: 'strength', map:'strength', headerClass:'sm-fix-header-plus', cellClass: 'color-cell'},
 		{label:'Misc', map:'misc', title:'misc', headerClass: 'hidden', cellClass: 'hidden'},
@@ -442,20 +444,29 @@ app.controller("loggerController", ["$scope","$filter", function($scope,$filter)
 	//console.log(my_global.timestamp)
 	$scope.timestamp = my_global.timestamp
 	$scope.columns = [
-		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
+		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header hidden', cellClass: 'hidden'},
 		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
-		{label: 'Lon', title: 'lon', map: 'lon', headerClass: 'sm-fix-header-plus'},
-		{label: 'Lat', title: 'lat', map: 'lat', headerClass: 'sm-fix-header-plus'},
-		{label: 'Alt', title: 'alt', map: 'alt', headerClass: 'sm-fix-header-plus'},
-		//{label:'std_lon', map:'std_lon'},
-		//{label:'std_lat', map:'std_lat'},
-		//{label:'std_alt', map:'std_alt'},
-		//{label:'range_rms', map:'range_rms'},
-		{label: 'SNR Avg', title: 'snrAvg', map: 'snrAvg', headerClass: 'sm-fix-header-plus'},
-		{label: 'SNR Desc', title: 'strength', map: 'strength', headerClass: 'sm-fix-header-plus', cellClass: 'color-cell'},
-		{label: 'Satellites', map: 'satellites', cellClass: 'break-cell'},
-		{label: 'Misc', map: 'misc', cellClass: 'break-cell'}
+		{label: 'Location', title: 'location', map: 'location', headerClass: 'sm-fix-header'},
+		{label:'Satellites', map:'satellitesBetterFormat', title:'satellites'},
+		{label:'SNR Avg', title: 'snrAvg', map:'snrAvg', headerClass:'sm-fix-header-plus'},
+		{label:'SNR Desc', title: 'strength', map:'strength', headerClass:'sm-fix-header-plus', cellClass: 'color-cell'},
+		{label:'Misc', map:'misc', title:'misc', headerClass: 'hidden', cellClass: 'hidden'},
 	]
+	// $scope.columns = [
+	// 	{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header'},
+	// 	{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
+	// 	{label: 'Lon', title: 'lon', map: 'lon', headerClass: 'sm-fix-header-plus'},
+	// 	{label: 'Lat', title: 'lat', map: 'lat', headerClass: 'sm-fix-header-plus'},
+	// 	{label: 'Alt', title: 'alt', map: 'alt', headerClass: 'sm-fix-header-plus'},
+	// 	//{label:'std_lon', map:'std_lon'},
+	// 	//{label:'std_lat', map:'std_lat'},
+	// 	//{label:'std_alt', map:'std_alt'},
+	// 	//{label:'range_rms', map:'range_rms'},
+	// 	{label: 'SNR Avg', title: 'snrAvg', map: 'snrAvg', headerClass: 'sm-fix-header-plus'},
+	// 	{label: 'SNR Desc', title: 'strength', map: 'strength', headerClass: 'sm-fix-header-plus', cellClass: 'color-cell'},
+	// 	{label: 'Satellites', map: 'satellitesBetterFormat', cellClass: 'break-cell'},
+	// 	{label: 'Misc', map: 'misc', cellClass: 'break-cell'}
+	// ]
 	$scope.table_config={
 		itemsByPage:25,
 		maxSize:20,

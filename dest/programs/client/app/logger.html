@@ -14,9 +14,17 @@
 	<button class="btn btn-primary" ng-click="reset_time()">Reset</button>
 	<button class="btn btn-primary" title="Config" bs-popover="'config.html'" data-placement="bottom" ng-controller="configController">Config</button>
 	<button class="btn btn-primary" ng-click='export_csv()'>Export CVS</button>
+	<label style="margin: 5px 0px 5px 30px;">
+		<strong>Table: </strong>Page Size
+		<select ng-model="table_config.itemsByPage" ng-options="v for v in [25, 100, 500]"></select>
+	</label>
+	<label style="line-height: 28px;">
+		<input type="checkbox" style="width: 16px; margin-bottom: 6px;" ng-model="showAllFields" />
+		Show All Fields
+	</label>
 </div>
 <div class="smart-table-two">
-<div class="table">
+<div class="table" ng-class="showAllFields && 'table-all-fields' || ''">
 	<smart-table config="table_config" rows="records" columns="columns"></smart-table>
 </div>
 </div>
