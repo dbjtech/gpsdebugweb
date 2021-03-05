@@ -53,7 +53,7 @@ function calcTopNAvg(satellites, n) {
 				.slice(0, n)
 				.reduce(function (acc, cur) { return acc + cur }, 0) / Math.min(arr.length, n)
 		),
-		satellitesBetterFormat: arr.map(function (e) { return e[0] + ':(' + e[1] + ')' })
+		satellitesBetterFormat: arr.map(function (e) { return e[0] + ':(' + e[1] + ')' }).join(', ')
 	}
 }
 
