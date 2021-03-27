@@ -92,7 +92,7 @@ function scope_safe_apply($scope) {
 	if($scope.__safe_apply__) return
 	$scope.__safe_apply__ = _.debounce(function() {
 		try {
-			console.log('update', $scope)
+			// console.log('update', $scope)
 			$scope.$digest()
 			delete $scope.__safe_apply__
 		} catch(e) {
@@ -358,12 +358,15 @@ app.controller("traceController", ["$scope", function($scope) {
 	}
 
 	function insert_pvt(pvt){
-		if(!(check_and_push($scope.records, pvt) && Math.abs(pvt.lat) > 0.001 && Math.abs(pvt.lon) > 0.001)) {
-			return
+		var inserted = check_and_push($scope.records, pvt)
+		if (inserted) {
+			var setting = $scope.user.profile
+			processDesc($scope.records, { weak: setting.weak || 30, normal: setting.normal || 38, alert: setting.alert || 3 })
 		}
 
-		var setting = $scope.user.profile
-		processDesc($scope.records, { weak: setting.weak || 30, normal: setting.normal || 38, alert: setting.alert || 3 })
+		if(!(inserted && Math.abs(pvt.lat) > 0.001 && Math.abs(pvt.lon) > 0.001)) {
+			return
+		}
 
 		var geo = {lat:pvt.lat,lng:pvt.lon}
 		$scope.paths.p1.latlngs.push(geo)
