@@ -7,18 +7,22 @@ var db = {
 	config: db_config
 }
 
+function updateTimeRange(timestamp) {
+	timestamp.start = new Date()
+	timestamp.end = new Date(Date.now() + 24*3600*3600)
+}
+
 var my_global = {
 	timestamp: {
 		date_options: {
 			'month-format': '"yyyy-MM"',
 			'day-title-format': '"yyyy-MM"'
 		},
-		start: new Date(),
-		end: new Date(new Date().getTime()+24*3600*1000),
 		start_open: false,
 		end_open: false
 	}
 }
+updateTimeRange(my_global.timestamp)
 
 function invalidate_map(){
 	$('.angular-leaflet-map').height($(window).height()-83)
@@ -46,13 +50,13 @@ function calcTopNAvg(satellites, n) {
 		})
 		.filter(function (e) { return !Number.isNaN(e[0]) && !Number.isNaN(e[1]) })
 	return {
-		snrAvg: formatNumber(
+		snrAvg: Number(10 * Math.log10(formatNumber(
 			arr
 				.map(function (e) { return e[1] })
 				.sort(function (a, b) { return b - a })
 				.slice(0, n)
-				.reduce(function (acc, cur) { return acc + cur }, 0) / Math.min(arr.length, n)
-		),
+				.reduce(function (acc, cur) { return acc + Math.pow(10, cur / 10) }, 0) / Math.min(arr.length, n)
+		))).toFixed(2),
 		satellitesBetterFormat: arr.map(function (e) { return e[0] + ':(' + e[1] + ')' }).join(', ')
 	}
 }
@@ -314,9 +318,9 @@ app.controller("markerController", ["$scope","$http", function($scope,$http) {
 angular.module('partials/globalSearchCell.html', []).run(['$templateCache', function($templateCache) {
 	const options = [
 		{ k: 'All', v: '' },
-		{ k: 'SNR Weak', v: 'weak' },
-		{ k: 'SNR Normal', v: 'normal' },
-		{ k: 'SNR Strong', v: 'strong' },
+		{ k: 'CN0 Weak', v: 'weak' },
+		{ k: 'CN0 Normal', v: 'normal' },
+		{ k: 'CN0 Strong', v: 'strong' },
 		{ k: 'ALERT', v: '(alert)' },
 	]
 	$templateCache.put('partials/globalSearchCell.html',
@@ -333,14 +337,15 @@ angular.module('partials/globalSearchCell.html', []).run(['$templateCache', func
 app.controller("traceController", ["$scope", function($scope) {
 	//console.log(my_global.timestamp)
 	$scope.timestamp = my_global.timestamp
+	$scope.reset_time = function () { updateTimeRange($scope.timestamp) }
 	$scope.show_main = true
 	$scope.columns = [
 		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header hidden', cellClass: 'hidden'},
 		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
 		{label: 'Location', title: 'location', map: 'location', headerClass: 'sm-fix-header'},
 		{label:'Satellites', map:'satellitesBetterFormat', title:'satellitesBetterFormat'},
-		{label:'SNR Avg', title: 'snrAvg', map:'snrAvg', headerClass:'sm-fix-header-plus'},
-		{label:'SNR Desc', title: 'strength', map:'strength', headerClass:'sm-fix-header-plus', cellClass: 'color-cell'},
+		{label:'CN0 Avg', title: 'snrAvg', map:'snrAvg', headerClass:'sm-fix-header-plus'},
+		{label:'CN0 Desc', title: 'strength', map:'strength', headerClass:'sm-fix-header-plus', cellClass: 'color-cell'},
 		{label:'Misc', map:'misc', title:'misc', headerClass: 'hidden', cellClass: 'hidden'},
 	]
 	$scope.table_config={
@@ -446,13 +451,14 @@ app.controller("traceController", ["$scope", function($scope) {
 app.controller("loggerController", ["$scope","$filter", function($scope,$filter) {
 	//console.log(my_global.timestamp)
 	$scope.timestamp = my_global.timestamp
+	$scope.reset_time = function () { updateTimeRange($scope.timestamp) }
 	$scope.columns = [
 		{label:'Packet Time', map:'package_timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',sortPredicate:'-package_timestamp',headerClass:'sm-fix-header hidden', cellClass: 'hidden'},
 		{label:'GPS Time', map:'timestamp', formatFunction:'date',formatParameter:'yyyy-MM-dd HH:mm:ss',headerClass:'sm-fix-header'},
 		{label: 'Location', title: 'location', map: 'location', headerClass: 'sm-fix-header'},
 		{label:'Satellites', map:'satellitesBetterFormat', title:'satellitesBetterFormat'},
-		{label:'SNR Avg', title: 'snrAvg', map:'snrAvg', headerClass:'sm-fix-header-plus'},
-		{label:'SNR Desc', title: 'strength', map:'strength', headerClass:'sm-fix-header-plus', cellClass: 'color-cell'},
+		{label:'CN0 Avg', title: 'snrAvg', map:'snrAvg', headerClass:'sm-fix-header-plus'},
+		{label:'CN0 Desc', title: 'strength', map:'strength', headerClass:'sm-fix-header-plus', cellClass: 'color-cell'},
 		{label:'Misc', map:'misc', title:'misc', headerClass: 'hidden', cellClass: 'hidden'},
 	]
 	// $scope.columns = [
@@ -475,10 +481,6 @@ app.controller("loggerController", ["$scope","$filter", function($scope,$filter)
 		maxSize:20,
 		isGlobalSearchActivated:true,
 		default_sort_column:0
-	}
-	$scope.reset_time = function(){
-		$scope.timestamp.start = new Date()
-		$scope.timestamp.end = new Date(new Date().getTime()+24*3600*1000)
 	}
 	$scope.change_tracking = function(){
 		console.log('select',$scope.user.profile.tracking)

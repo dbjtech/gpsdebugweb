@@ -11,11 +11,12 @@
 	End Date:
 	<input type="text" datepicker-popup="yyyy-MM-dd HH:mm" ng-model="timestamp.end" open="timestamp.start_end" datepicker-options="timestamp.date_options" readonly="" />
 </label>
+	<button class="btn btn-primary" ng-click="reset_time()">Reset</button>
 	<button class="btn btn-primary" ng-click="show_main=!show_main">Data</button>
 	<button class="btn btn-primary" title="Config" bs-popover="'config.html'" data-placement="bottom" ng-controller="configController">Config</button>
 	<label style="margin: 5px 0px 5px 40px;">
 		<strong>Table: </strong>Page Size
-		<select ng-model="table_config.itemsByPage" ng-options="v for v in [3,12]"></select>
+		<select style="max-width: 64px;" ng-model="table_config.itemsByPage" ng-options="v for v in [3,12]"></select>
 	</label>
 	<label style="line-height: 28px;">
 		<input type="checkbox" style="width: 16px; margin-bottom: 6px;" ng-model="showAllFields" />

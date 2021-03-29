@@ -213,7 +213,13 @@ Meteor.publish('trace', function(args) {
 	var tracking = args['user.profile.tracking']
 	var cur = Meteor.users.find({_id:this.userId,'profile.terminals':tracking}).fetch()
 	if(cur.length==1)
-		return trace.find({mobile:tracking,package_timestamp:{$gt:args['timestamp.start'],$lt:args['timestamp.end']}},{sort:{package_timestamp:-1,timestamp:-1}})
+		return trace.find({
+			mobile: tracking,
+			package_timestamp: { $gt: args['timestamp.start'], $lt: args['timestamp.end'] },
+		}, {
+			sort: {package_timestamp:-1,timestamp:-1},
+			limit: 10000,
+		})
 	else
 		console.log('not alow')
 })
