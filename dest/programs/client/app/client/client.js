@@ -37,7 +37,7 @@ function formatNumber(n) {
 }
 function calcTopNAvg(satellites, n) {
 	if (!satellites) {
-	  return 0
+		return { snrAvg: 0, satellitesBetterFormat: '' }
 	}
 	if (!n) {
 		n = 5

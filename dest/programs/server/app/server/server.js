@@ -66,6 +66,8 @@ var config = new Meteor.Collection("config")
 var google_geo_db = new Meteor.Collection("google_geo")
 var cached_geo = new Meteor.Collection("cached_geo")
 
+trace.ensureIndex({ mobile: 1, package_timestamp: 1 })
+
 /*
 URL: ​http://gps.dbjtech.com/gpsdebug
 Method: POST
